@@ -92,3 +92,7 @@ body .todo-list input[type="checkbox"]:not(:checked):before {
 .btn-close {
     filter: invert(1);
 }
+
+.ck-widget.table td.ck-editor__nested-editable:focus {
+    background: var(--input-background-color);
+}

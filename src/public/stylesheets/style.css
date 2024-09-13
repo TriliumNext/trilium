@@ -107,7 +107,7 @@ input::placeholder,
     /* Fix center vertical alignment of table cells */
     vertical-align: middle;
     color: var(--main-text-color);
-    background: transparent;
+    background: var(--input-background-color);
 }
 
 .ck .todo-list__checkmark {
@@ -718,7 +718,8 @@ div[data-notify="container"] {
     background-color: var(--accented-background-color);
 }
 
-.ck-content .image > figcaption {
+.ck-content .image > figcaption,
+.ck-content .table > figcaption {
     color: var(--main-text-color) !important;
     background-color: var(--accented-background-color) !important;
 }
