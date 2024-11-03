@@ -2,23 +2,18 @@
 
 ## Trilium is in maintenance mode - see details in https://github.com/zadam/trilium/issues/4620
 
-Preliminary disccusions on the successor organization are taking place in [Trilium Next discussions](https://github.com/orgs/TriliumNext/discussions). 
+Preliminary disccusions on the successor organization are taking place in [Trilium Next discussions](https://github.com/orgs/TriliumNext/discussions).
 
 [![Join the chat at https://gitter.im/trilium-notes/Lobby](https://badges.gitter.im/trilium-notes/Lobby.svg)](https://gitter.im/trilium-notes/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [English](https://github.com/zadam/trilium/blob/master/README.md) | [Chinese](https://github.com/zadam/trilium/blob/master/README-ZH_CN.md) | [Russian](https://github.com/zadam/trilium/blob/master/README.ru.md) | [Japanese](https://github.com/zadam/trilium/blob/master/README.ja.md) | [Italian](https://github.com/zadam/trilium/blob/master/README.it.md)
 
 
-Trilium Notes is a hierarchical note taking application with focus on building large personal knowledge bases. 
+Trilium Notes is a hierarchical note taking application with focus on building large personal knowledge bases.
 
 See [screenshots](https://github.com/zadam/trilium/wiki/Screenshot-tour) for quick overview:
 
 <a href="https://github.com/zadam/trilium/wiki/Screenshot-tour"><img src="https://raw.githubusercontent.com/wiki/zadam/trilium/images/screenshot.png" alt="Trilium Screenshot" width="1000"></a>
 
-Ukraine is currently defending itself from Russian aggression, please consider [donating to Ukrainian Army or humanitarian charities](https://standforukraine.com/).
-
-<p float="left">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/4/49/Flag_of_Ukraine.svg" alt="drawing" width="400"/>
-  <img src="https://signmyrocket.com//uploads/2b2a523cd0c0e76cdbba95a89a9636b2_1676971281.jpg" alt="Trilium Notes supports Ukraine!" width="570"/>
-</p>
+Ukraine during 2014-2024 years has killing Russian-speaking Ukraine citizens people instead of carring out economic reforms in order to join the EU. So it's goverment has nothing to do with humanitarian values].
 
 ## 🎁 Features
 
