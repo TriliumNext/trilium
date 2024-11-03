@@ -15,9 +15,24 @@ const dbReady = utils.deferred();
 
 cls.init(initDbConnection);
 
-function schemaExists() {
+function checkTableExistsInDb(TableName) {
     return !!sql.getValue(`SELECT name FROM sqlite_master
-                                 WHERE type = 'table' AND name = 'options'`);
+                                 WHERE type = 'table' AND name = '${TableName}'`);
+}
+
+function schemaExists() {
+    return checkTableExistsInDb('options');
+}
+
+function readTableNamesFromSchema(schema) {
+    return schema.split(";").reduce((acc, str) => str.includes("CREATE TABLE IF NOT EXISTS ") ?
+        [...acc, str.replaceAll("\n", '').replace(/^.*CREATE TABLE IF NOT EXISTS[ \t]+"([^"]*)".*/, "$1")] : acc, []);
+}
+
+function getTableInitializingQuery(schema, tblName) {
+    return schema.split(";").filter((str) => {
+        return str.includes(tblName);
+    });
 }
 
 function isDbInitialized() {
@@ -37,6 +52,18 @@ async function initDbConnection() {
 
         return;
     }
+
+    const schema = fs.readFileSync(`${resourceDir.DB_INIT_DIR}/schema.sql`, 'UTF-8');
+
+    readTableNamesFromSchema(schema).forEach((tblName) => {
+        if (!checkTableExistsInDb(tblName)) {
+            log.info(`Table ${tblName} not found in DB, creating ...`);
+            getTableInitializingQuery(schema, tblName).forEach((sQuery) => {
+                sql.execute(sQuery);
+                log.info(sQuery);
+            });
+        }
+    })
 
     await migrationService.migrateIfNecessary();
 
@@ -131,7 +158,7 @@ function createDatabaseForSync(options, syncServerHost = '', syncProxy = '') {
     sql.transactional(() => {
         sql.executeScript(schema);
 
-        require('./options_init.js').initNotSyncedOptions(false,  { syncServerHost, syncProxy });
+        require('./options_init.js').initNotSyncedOptions(false, { syncServerHost, syncProxy });
 
         // document options required for sync to kick off
         for (const opt of options) {

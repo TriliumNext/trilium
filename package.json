@@ -31,6 +31,8 @@
     "test-jasmine": "TRILIUM_DATA_DIR=~/trilium/data-test jasmine",
     "test-es6": "node -r esm spec-es6/attribute_parser.spec.js ",
     "test": "npm run test-jasmine && npm run test-es6",
+    "debug-node": "cross-env TRILIUM_SAFE_MODE=1 TRILIUM_DATA_DIR=./data TRILIUM_ENV=dev TRILIUM_SYNC_SERVER_HOST=http://tsyncserver:4000 nodemon --inspect src/www.js",
+    "debug-chrome": "cross-env TRILIUM_SAFE_MODE=1 TRILIUM_DATA_DIR=./data TRILIUM_ENV=dev TRILIUM_SYNC_SERVER_HOST=http://tsyncserver:4000 nodemon --inspect-brk src/www.js",
     "postinstall": "rimraf ./node_modules/canvas"
   },
   "dependencies": {
