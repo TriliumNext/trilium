@@ -9,11 +9,13 @@ const TPL = `
         Uses <a href="https://day.js.org/docs/en/display/format" target="_blank" rel="noopener noreferrer">Day.js format tokens</a>.
         Refer to the Day.js documentation for valid tokens.
     </p>
-    <p>
-        <strong>Important:</strong> If you provide a string that Day.js cannot interpret as a format,
-        the literal string you typed might be inserted. If the format string is empty, or if Day.js
-        encounters an internal error with your format, a default format (e.g., YYYY-MM-DD HH:mm) will be used.
-    </p>
+<p>
+    <strong>Important:</strong> If you provide a format string that Day.js does not recognize
+    (e.g., mostly plain text without valid <a href="https://day.js.org/docs/en/display/format" target="_blank" rel="noopener noreferrer">Day.js tokens</a>),
+    the text you typed might be inserted literally. If the format string is left empty,
+    or if Day.js encounters a critical internal error with your format,
+    a default format (e.g., YYYY-MM-DD HH:mm) will be used.
+</p>
 
     <div class="form-group">
         <label for="customDateTimeFormatInput" style="margin-right: 10px;">Format String:</label>
@@ -39,8 +41,8 @@ export default class DateTimeFormatOptions extends OptionsWidget {
         //listen to input
         this.$formatInput.on("input", () => {
             const formatString = this.$formatInput.val();
-            
-            this.updateOption("customDateTimeFormatString", formatString); 
+
+            this.updateOption("customDateTimeFormatString", formatString);
         });
 
         return this.$widget; //render method to return the widget
@@ -49,7 +51,7 @@ export default class DateTimeFormatOptions extends OptionsWidget {
     async optionsLoaded(options) {
         const currentFormat = options.customDateTimeFormatString || "";
 
-        
+
         if (this.$formatInput) {
             this.$formatInput.val(currentFormat);
         } else {
