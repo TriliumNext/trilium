@@ -47,7 +47,6 @@ export default class DateTimeFormatOptions extends OptionsWidget {
     }
 
     async optionsLoaded(options) {
-        //todo: update the key in updateOption
         const currentFormat = options.customDateTimeFormatString || "";
 
         

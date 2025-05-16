@@ -57,7 +57,8 @@ const ALLOWED_OPTIONS = new Set([
     'customSearchEngineName',
     'customSearchEngineUrl',
     'promotedAttributesOpenInRibbon',
-    'editedNotesOpenInRibbon'
+    'editedNotesOpenInRibbon',
+    'customDateTimeFormatString'
 ]);
 
 function getOptions() {
