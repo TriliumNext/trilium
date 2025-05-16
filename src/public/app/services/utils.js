@@ -81,23 +81,25 @@ function formatDateISO(date) {
 // In utils.js
 // import dayjs from 'dayjs'; // Assuming dayjs is available in this scope
 
+// new version
 function formatDateTime(date, userSuppliedFormat) {
-    const DEFAULT_FORMAT = 'YYYY-MM-DD HH:mm';
-    let formatToUse = DEFAULT_FORMAT; 
+    let formatToUse;
 
     if (userSuppliedFormat && typeof userSuppliedFormat === 'string' && userSuppliedFormat.trim() !== "") {
         formatToUse = userSuppliedFormat.trim();
+    } else {
+        formatToUse = 'YYYY-MM-DD HH:mm'; // Trilium's default format
     }
 
     if (!date) {
-        date = new Date(); 
+        date = new Date();
     }
 
     try {
         return dayjs(date).format(formatToUse);
     } catch (e) {
-        console.warn(`Trilium: Day.js encountered an error with format string "${formatToUse}". Falling back to default. Error: ${e.message}`);
-        return dayjs(date).format(DEFAULT_FORMAT); 
+        console.warn(`Day.js: Invalid format string "${formatToUse}". Falling back. Error:`, e.message);
+        return dayjs(date).format('YYYY-MM-DD HH:mm');
     }
 }
 

@@ -9,6 +9,7 @@ import AbstractTextTypeWidget from "./abstract_text_type_widget.js";
 import link from "../../services/link.js";
 import appContext from "../../components/app_context.js";
 import dialogService from "../../services/dialog.js";
+import server from '../../services/server.js';
 
 const ENABLE_INSPECTOR = false;
 
