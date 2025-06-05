@@ -1,7 +1,7 @@
 import options from "./options.js";
 
 const MIME_TYPES_DICT = [
-    { default: true, title: "Plain text", mime: "text/plain" },
+    { default: true, title: "Plain text", name: "Plaintext", mime: "text/plain" },
     { title: "APL", mime: "text/apl" },
     { title: "ASN.1", mime: "text/x-ttcn-asn" },
     { title: "ASP.NET", mime: "application/x-aspx" },
@@ -59,8 +59,8 @@ const MIME_TYPES_DICT = [
     { default: true, title: "Java", mime: "text/x-java" },
     { title: "Java Server Pages", mime: "application/x-jsp" },
     { title: "Jinja2", mime: "text/jinja2" },
-    { default: true, title: "JS backend", mime: "application/javascript;env=backend" },
-    { default: true, title: "JS frontend", mime: "application/javascript;env=frontend" },
+    { default: true, title: "JS backend", name: "Javascript", mime: "application/javascript;env=backend" },
+    { default: true, title: "JS frontend", name: "Javascript", mime: "application/javascript;env=frontend" },
     { default: true, title: "JSON", mime: "application/json" },
     { title: "JSON-LD", mime: "application/ld+json" },
     { title: "JSX", mime: "text/jsx" },

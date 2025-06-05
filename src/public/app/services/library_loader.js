@@ -1,4 +1,8 @@
 const CKEDITOR = {"js": ["libraries/ckeditor/ckeditor.js"]};
+const HIGHLIGHT_JS = {
+    js: ["libraries/highlight_js/highlight.min.js"],
+    css: ["libraries/highlight_js/styles/stackoverflow-dark.min.css"]
+};
 
 const CODE_MIRROR = {
     js: [
@@ -119,6 +123,7 @@ export default {
     requireCss,
     requireLibrary,
     CKEDITOR,
+    HIGHLIGHT_JS,
     CODE_MIRROR,
     ESLINT,
     RELATION_MAP,

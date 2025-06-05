@@ -9,6 +9,7 @@ import AbstractTextTypeWidget from "./abstract_text_type_widget.js";
 import link from "../../services/link.js";
 import appContext from "../../components/app_context.js";
 import dialogService from "../../services/dialog.js";
+import { force_highlight_codeblocks, add_codeblock_highlight} from "../../services/codeblock_highlight.js";
 
 const ENABLE_INSPECTOR = false;
 
@@ -104,12 +105,13 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
 
     async initEditor() {
         await libraryLoader.requireLibrary(libraryLoader.CKEDITOR);
+        await libraryLoader.requireLibrary(libraryLoader.HIGHLIGHT_JS);
 
         const codeBlockLanguages =
             (await mimeTypesService.getMimeTypes())
-                .filter(mt => mt.enabled)
+                .filter(mt => mt.enabled && hljs.getLanguage(mt.name ?? mt.title)!==undefined)
                 .map(mt => ({
-                        language: mt.mime.toLowerCase().replace(/[\W_]+/g,"-"),
+                        language: mt.name ?? mt.title,
                         label: mt.title
                     }));
 
@@ -156,8 +158,11 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
         this.watchdog.setCreator(async (elementOrData, editorConfig) => {
             const editor = await BalloonEditor.create(elementOrData, editorConfig);
 
-            editor.model.document.on('change:data', () => this.spacedUpdate.scheduleUpdate());
-
+            // syntax highlight logic
+            add_codeblock_highlight(editor);
+            editor.model.document.on('change:data', () => {
+                this.spacedUpdate.scheduleUpdate();
+            });
             if (glob.isDev && ENABLE_INSPECTOR) {
                 await import(/* webpackIgnore: true */'../../../libraries/ckeditor/inspector.js');
                 CKEditorInspector.attach(editor);
@@ -185,8 +190,10 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
     async doRefresh(note) {
         const blob = await note.getBlob();
 
-        await this.spacedUpdate.allowUpdateWithoutChange(() =>
-            this.watchdog.editor.setData(blob.content || ""));
+        await this.spacedUpdate.allowUpdateWithoutChange(() =>{
+            this.watchdog.editor.setData(blob.content || "");
+            force_highlight_codeblocks(this.watchdog.editor);
+        });
     }
 
     getData() {
