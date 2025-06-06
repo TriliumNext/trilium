@@ -9,6 +9,7 @@ import AbstractTextTypeWidget from "./abstract_text_type_widget.js";
 import link from "../../services/link.js";
 import appContext from "../../components/app_context.js";
 import dialogService from "../../services/dialog.js";
+import server from '../../services/server.js';
 
 const ENABLE_INSPECTOR = false;
 
@@ -109,9 +110,9 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
             (await mimeTypesService.getMimeTypes())
                 .filter(mt => mt.enabled)
                 .map(mt => ({
-                        language: mt.mime.toLowerCase().replace(/[\W_]+/g,"-"),
-                        label: mt.title
-                    }));
+                    language: mt.mime.toLowerCase().replace(/[\W_]+/g, "-"),
+                    label: mt.title
+                }));
 
         // CKEditor since version 12 needs the element to be visible before initialization. At the same time,
         // we want to avoid flicker - i.e., show editor only once everything is ready. That's why we have separate
@@ -211,7 +212,7 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
         this.watchdog?.editor.editing.view.focus();
     }
 
-    show() {}
+    show() { }
 
     getEditor() {
         return this.watchdog?.editor;
@@ -225,10 +226,29 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
         }
     }
 
-    insertDateTimeToTextCommand() {
-        const date = new Date();
-        const dateString = utils.formatDateTime(date);
+    // old version
+    // insertDateTimeToTextCommand() {
+    //     const date = new Date();
+    //     const dateString = utils.formatDateTime(date);
 
+    //     this.addTextToEditor(dateString);
+    // }
+
+    // new version
+    async insertDateTimeToTextCommand() {
+        const date = new Date();
+        let userPreferredFormat = ""; //Default
+
+        try {
+            const allOptions = await server.get('options');
+            
+            if (allOptions && typeof allOptions.customDateTimeFormatString === 'string') {
+                userPreferredFormat = allOptions.customDateTimeFormatString;
+            }
+        } catch (e) {
+            console.error("Trilium: Failed to fetch options for custom date/time format. Using default.", e);
+        }
+        const dateString = utils.formatDateTime(date, userPreferredFormat);
         this.addTextToEditor(dateString);
     }
 
@@ -237,7 +257,7 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
 
         this.watchdog.editor.model.change(writer => {
             const insertPosition = this.watchdog.editor.model.document.selection.getFirstPosition();
-            writer.insertText(linkTitle, {linkHref: linkHref}, insertPosition);
+            writer.insertText(linkTitle, { linkHref: linkHref }, insertPosition);
         });
     }
 
@@ -250,7 +270,7 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
         });
     }
 
-    addTextToActiveEditorEvent({text}) {
+    addTextToActiveEditorEvent({ text }) {
         if (!this.isActive()) {
             return;
         }
@@ -283,7 +303,7 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
         return !selection.isCollapsed;
     }
 
-    async executeWithTextEditorEvent({callback, resolve, ntxId}) {
+    async executeWithTextEditorEvent({ callback, resolve, ntxId }) {
         if (!this.isNoteContext(ntxId)) {
             return;
         }
@@ -300,7 +320,7 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
     addLinkToTextCommand() {
         const selectedText = this.getSelectedText();
 
-        this.triggerCommand('showAddLinkDialog', {textTypeWidget: this, text: selectedText})
+        this.triggerCommand('showAddLinkDialog', { textTypeWidget: this, text: selectedText })
     }
 
     getSelectedText() {
@@ -347,29 +367,29 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
     }
 
     addIncludeNoteToTextCommand() {
-        this.triggerCommand("showIncludeNoteDialog", {textTypeWidget: this});
+        this.triggerCommand("showIncludeNoteDialog", { textTypeWidget: this });
     }
 
     addIncludeNote(noteId, boxSize) {
-        this.watchdog.editor.model.change( writer => {
+        this.watchdog.editor.model.change(writer => {
             // Insert <includeNote>*</includeNote> at the current selection position
             // in a way that will result in creating a valid model structure
             this.watchdog.editor.model.insertContent(writer.createElement('includeNote', {
                 noteId: noteId,
                 boxSize: boxSize
             }));
-        } );
+        });
     }
 
     async addImage(noteId) {
         const note = await froca.getNote(noteId);
 
-        this.watchdog.editor.model.change( writer => {
+        this.watchdog.editor.model.change(writer => {
             const encodedTitle = encodeURIComponent(note.title);
             const src = `api/images/${note.noteId}/${encodedTitle}`;
 
-            this.watchdog.editor.execute( 'insertImage', { source: src } );
-        } );
+            this.watchdog.editor.execute('insertImage', { source: src });
+        });
     }
 
     async createNoteForReferenceLink(title) {
@@ -385,7 +405,7 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
         return resp.note.getBestNotePathString();
     }
 
-    async refreshIncludedNoteEvent({noteId}) {
+    async refreshIncludedNoteEvent({ noteId }) {
         this.refreshIncludedNote(this.$editor, noteId);
     }
 }

@@ -8,6 +8,7 @@ import KeyboardShortcutsOptions from "./options/shortcuts.js";
 import HeadingStyleOptions from "./options/text_notes/heading_style.js";
 import TableOfContentsOptions from "./options/text_notes/table_of_contents.js";
 import HighlightsListOptions from "./options/text_notes/highlights_list.js";
+import DateTimeFormatOptions from "./options/text_notes/date_time_format.js";
 import TextAutoReadOnlySizeOptions from "./options/text_notes/text_auto_read_only_size.js";
 import VimKeyBindingsOptions from "./options/code_notes/vim_key_bindings.js";
 import WrapLinesOptions from "./options/code_notes/wrap_lines.js";
@@ -66,6 +67,7 @@ const CONTENT_WIDGETS = {
         HeadingStyleOptions,
         TableOfContentsOptions,
         HighlightsListOptions,
+        DateTimeFormatOptions,
         TextAutoReadOnlySizeOptions
     ],
     _optionsCodeNotes: [

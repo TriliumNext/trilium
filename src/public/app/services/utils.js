@@ -73,8 +73,34 @@ function formatDateISO(date) {
     return `${date.getFullYear()}-${padNum(date.getMonth() + 1)}-${padNum(date.getDate())}`;
 }
 
-function formatDateTime(date) {
-    return `${formatDate(date)} ${formatTime(date)}`;
+// old version
+// function formatDateTime(date) {
+//     return `${formatDate(date)} ${formatTime(date)}`;
+// }
+
+// In utils.js
+// import dayjs from 'dayjs'; // Assuming dayjs is available in this scope
+
+// new version
+function formatDateTime(date, userSuppliedFormat) {
+    let formatToUse;
+
+    if (userSuppliedFormat && typeof userSuppliedFormat === 'string' && userSuppliedFormat.trim() !== "") {
+        formatToUse = userSuppliedFormat.trim();
+    } else {
+        formatToUse = 'YYYY-MM-DD HH:mm'; // Trilium's default format
+    }
+
+    if (!date) {
+        date = new Date();
+    }
+
+    try {
+        return dayjs(date).format(formatToUse);
+    } catch (e) {
+        console.warn(`Day.js: Invalid format string "${formatToUse}". Falling back. Error:`, e.message);
+        return dayjs(date).format('YYYY-MM-DD HH:mm');
+    }
 }
 
 function localNowDateTime() {
