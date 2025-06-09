@@ -69,7 +69,7 @@ function info(message: string | Error) {
     log(message);
 }
 
-function error(message: string | Error) {
+function error(message: string | Error | unknown) {
     log(`ERROR: ${message}`);
 }
 

@@ -789,7 +789,7 @@ class FNote {
      */
     async getRelationTargets(name: string) {
         const relations = this.getRelations(name);
-        const targets = [];
+        const targets: (FNote | null)[] = [];
 
         for (const relation of relations) {
             targets.push(await this.froca.getNote(relation.value));

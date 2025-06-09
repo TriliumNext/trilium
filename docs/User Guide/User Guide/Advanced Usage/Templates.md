@@ -25,7 +25,13 @@ To create an instance note through the UI:
 
 For the template to appear in the menu, the template note must have the `#template` label. Do not confuse this with the `~template` relation, which links the instance note to the template note. If you use [workspaces](../Basic%20Concepts%20and%20Features/Navigation/Workspaces.md), you can also mark templates with `#workspaceTemplate` to display them only in the workspace.
 
-Templates can also be added or changed after note creation by creating a `~template` relation pointing to the desired template note.
+Templates can also be added or changed after note creation by creating a `~template` relation pointing to the desired template note. 
+
+To specify a template for child notes, you can use a `~child:template` relation pointing to the appropriate template note. There is no limit to the depth of the hierarchy — you can use `~child:child:template`, `~child:child:child:template`, and so on.
+
+> [!IMPORTANT]
+> Changing the template hierarchy after the parent note is created will not retroactively apply to newly created child notes.  
+> For example, if you initially use `~child:template` and later switch to `~child:child:template`, it will not automatically apply the new template to the grandchild notes. Only the structure present at the time of note creation is considered.
 
 ## Additional Notes
 

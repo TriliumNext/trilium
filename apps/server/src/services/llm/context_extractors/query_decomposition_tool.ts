@@ -439,7 +439,7 @@ export class QueryDecompositionTool {
 
         // If no pattern match, try to extract noun phrases
         const words = query.split(/\s+/);
-        const potentialEntities = [];
+        const potentialEntities: string[] = [];
         let currentPhrase = '';
 
         for (const word of words) {

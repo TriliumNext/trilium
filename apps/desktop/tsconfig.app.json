@@ -1,17 +1,20 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "target": "ES2020",
     "outDir": "dist",
     "types": [
       "node",
       "express"
     ],
     "rootDir": "src",
-    "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
-    "verbatimModuleSyntax": false
+    "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo"
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "../server/src/*.d.ts"
   ],
   "exclude": [
     "eslint.config.js",

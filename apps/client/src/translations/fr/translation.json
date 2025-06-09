@@ -1574,12 +1574,15 @@
     "auto-detect-language": "Détecté automatiquement"
   },
   "highlighting": {
-    "title": "Coloration syntaxique du code pour les notes texte",
+    "title": "",
     "description": "Contrôle la coloration syntaxique des blocs de code à l'intérieur des notes texte, les notes de code ne seront pas affectées.",
     "color-scheme": "Jeu de couleurs"
   },
   "code_block": {
-    "word_wrapping": "Saut à la ligne automatique suivant la largeur"
+    "word_wrapping": "Saut à la ligne automatique suivant la largeur",
+    "theme_none": "Pas de coloration syntaxique",
+    "theme_group_light": "Thèmes clairs",
+    "theme_group_dark": "Thèmes sombres"
   },
   "classic_editor_toolbar": {
     "title": "Mise en forme"

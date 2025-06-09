@@ -37,7 +37,7 @@ class BOption extends AbstractBeccaEntity<BOption> {
         this.utcDateModified = row.utcDateModified;
     }
 
-    beforeSaving() {
+    override beforeSaving() {
         super.beforeSaving();
 
         this.utcDateModified = dateUtils.utcNowDateTime();

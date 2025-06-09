@@ -1,7 +1,7 @@
 import sanitizeHtml from 'sanitize-html';
 import type { Message } from '../ai_interface.js';
 import { BaseMessageFormatter } from './base_formatter.js';
-import { PROVIDER_PROMPTS, FORMATTING_PROMPTS } from '../constants/llm_prompt_constants.js';
+import { PROVIDER_PROMPTS } from '../constants/llm_prompt_constants.js';
 import { LLM_CONSTANTS } from '../constants/provider_constants.js';
 import {
     HTML_ALLOWED_TAGS,
@@ -10,6 +10,7 @@ import {
     HTML_ENTITY_REPLACEMENTS,
     FORMATTER_LOGS
 } from '../constants/formatter_constants.js';
+import log from '../../log.js';
 
 /**
  * OpenAI-specific message formatter
@@ -24,8 +25,13 @@ export class OpenAIMessageFormatter extends BaseMessageFormatter {
 
     /**
      * Format messages for the OpenAI API
+     * @param messages The messages to format
+     * @param systemPrompt Optional system prompt to use
+     * @param context Optional context to include
+     * @param preserveSystemPrompt When true, preserves existing system messages
+     * @param useTools Flag indicating if tools will be used in this request
      */
-    formatMessages(messages: Message[], systemPrompt?: string, context?: string): Message[] {
+    formatMessages(messages: Message[], systemPrompt?: string, context?: string, preserveSystemPrompt?: boolean, useTools?: boolean): Message[] {
         const formattedMessages: Message[] = [];
 
         // Check if we already have a system message
@@ -47,9 +53,22 @@ export class OpenAIMessageFormatter extends BaseMessageFormatter {
         }
         // If we don't have explicit context but have a system prompt
         else if (!hasSystemMessage && systemPrompt) {
+            let baseSystemPrompt = systemPrompt || PROVIDER_PROMPTS.COMMON.DEFAULT_ASSISTANT_INTRO;
+            
+            // Check if this is a tool-using conversation
+            const hasPreviousToolCalls = messages.some(msg => msg.tool_calls && msg.tool_calls.length > 0);
+            const hasToolResults = messages.some(msg => msg.role === 'tool');
+            const isToolUsingConversation = useTools || hasPreviousToolCalls || hasToolResults;
+            
+            // Add tool instructions for OpenAI when tools are being used
+            if (isToolUsingConversation && PROVIDER_PROMPTS.OPENAI.TOOL_INSTRUCTIONS) {
+                log.info('Adding tool instructions to system prompt for OpenAI');
+                baseSystemPrompt = `${baseSystemPrompt}\n\n${PROVIDER_PROMPTS.OPENAI.TOOL_INSTRUCTIONS}`;
+            }
+            
             formattedMessages.push({
                 role: 'system',
-                content: systemPrompt
+                content: baseSystemPrompt
             });
         }
         // If neither context nor system prompt is provided, use default system prompt
@@ -87,7 +106,7 @@ export class OpenAIMessageFormatter extends BaseMessageFormatter {
      * Clean context content for OpenAI
      * OpenAI handles HTML better than Ollama but still benefits from some cleaning
      */
-    cleanContextContent(content: string): string {
+    override cleanContextContent(content: string): string {
         if (!content) return '';
 
         try {

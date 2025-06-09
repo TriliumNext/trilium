@@ -6,9 +6,14 @@ import type { Request } from "express";
 import ValidationError from "../../errors/validation_error.js";
 import { safeExtractMessageAndStackFromError } from "../../services/utils.js";
 
+interface Table {
+    name: string;
+    columns: unknown[];
+}
+
 function getSchema() {
-    const tableNames = sql.getColumn(/*sql*/`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name`);
-    const tables = [];
+    const tableNames = sql.getColumn<string>(/*sql*/`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name`);
+    const tables: Table[] = [];
 
     for (const tableName of tableNames) {
         tables.push({
@@ -31,7 +36,7 @@ function execute(req: Request) {
     const queries = content.split("\n---");
 
     try {
-        const results = [];
+        const results: unknown[] = [];
 
         for (let query of queries) {
             query = query.trim();

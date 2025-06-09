@@ -94,6 +94,11 @@ export default class AiChatTypeWidget extends TypeWidget {
                         this.llmChatPanel.clearNoteContextChatMessages();
                         this.llmChatPanel.setMessages([]);
 
+                        // Set the note ID for the chat panel
+                        if (note) {
+                            this.llmChatPanel.setNoteId(note.noteId);
+                        }
+
                         // This will load saved data via the getData callback
                         await this.llmChatPanel.refresh();
                         this.isInitialized = true;
@@ -130,7 +135,7 @@ export default class AiChatTypeWidget extends TypeWidget {
             // Reset the chat panel UI
             this.llmChatPanel.clearNoteContextChatMessages();
             this.llmChatPanel.setMessages([]);
-            this.llmChatPanel.setChatNoteId(null);
+            this.llmChatPanel.setNoteId(this.note.noteId);
         }
 
         // Call the parent method to refresh
@@ -152,6 +157,7 @@ export default class AiChatTypeWidget extends TypeWidget {
             // Make sure the chat panel has the current note ID
             if (this.note) {
                 this.llmChatPanel.setCurrentNoteId(this.note.noteId);
+                this.llmChatPanel.setNoteId(this.note.noteId);
             }
 
             this.initPromise = (async () => {
@@ -176,17 +182,30 @@ export default class AiChatTypeWidget extends TypeWidget {
 
     // Save chat data to the note
     async saveData(data: any) {
-        if (!this.note) {
+        // If we have a noteId in the data, that's the AI Chat note we should save to
+        // This happens when the chat panel is saving its conversation
+        const targetNoteId = data.noteId;
+        
+        // If no noteId in data, use the current note (for new chats)
+        const noteIdToUse = targetNoteId || this.note?.noteId;
+        
+        if (!noteIdToUse) {
+            console.warn("Cannot save AI Chat data: no note ID available");
             return;
         }
 
         try {
-            console.log(`AiChatTypeWidget: Saving data for note ${this.note.noteId}`);
+            console.log(`AiChatTypeWidget: Saving data for note ${noteIdToUse} (current note: ${this.note?.noteId}, data.noteId: ${data.noteId})`);
+
+            // Safety check: if we have both IDs and they don't match, warn about it
+            if (targetNoteId && this.note?.noteId && targetNoteId !== this.note.noteId) {
+                console.warn(`Note ID mismatch: saving to ${targetNoteId} but current note is ${this.note.noteId}`);
+            }
 
             // Format the data properly - this is the canonical format of the data
             const formattedData = {
                 messages: data.messages || [],
-                chatNoteId: data.chatNoteId || this.note.noteId,
+                noteId: noteIdToUse, // Always preserve the correct note ID
                 toolSteps: data.toolSteps || [],
                 sources: data.sources || [],
                 metadata: {
@@ -195,8 +214,8 @@ export default class AiChatTypeWidget extends TypeWidget {
                 }
             };
 
-            // Save the data to the note
-            await server.put(`notes/${this.note.noteId}/data`, {
+            // Save the data to the correct note
+            await server.put(`notes/${noteIdToUse}/data`, {
                 content: JSON.stringify(formattedData, null, 2)
             });
         } catch (e) {

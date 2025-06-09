@@ -2,16 +2,6 @@ import type { FindAndReplaceState, FindCommandResult } from "@triliumnext/ckedit
 import type { FindResult } from "./find.js";
 import type FindWidget from "./find.js";
 
-// TODO: Deduplicate.
-interface Match {
-    className: string;
-    clear(): void;
-    find(): {
-        from: number;
-        to: number;
-    };
-}
-
 export default class FindInText {
 
     private parent: FindWidget;
@@ -35,7 +25,7 @@ export default class FindInText {
         }
 
         const model = textEditor.model;
-        let findResult = null;
+        let findResult: FindCommandResult | null = null;
         let totalFound = 0;
         let currentFound = -1;
 

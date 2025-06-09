@@ -5,35 +5,33 @@
  * into the apps, so that it is properly displayed.
  */
 
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
-import fs from "fs";
+import { join } from "path";
+import { readFileSync, writeFileSync } from "fs";
 
 function patchPackageJson(packageJsonPath: string, version: string) {
     // Read the version from package.json and process it.
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
 
     // Write the adjusted version back in.
     packageJson.version = version;
     const formattedJson = JSON.stringify(packageJson, null, 2);
-    fs.writeFileSync(packageJsonPath, formattedJson);
+    writeFileSync(packageJsonPath, formattedJson);
 }
 
 function getVersion(packageJsonPath: string) {
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
     return packageJson.version;
 }
 
 function main() {
-    const scriptDir = dirname(fileURLToPath(import.meta.url));
-    const version = getVersion(join(scriptDir, "..", "package.json"));
+    const version = getVersion(join(__dirname, "..", "package.json"));
 
-    for (const appName of ["server", "client"]) {
-        patchPackageJson(join(scriptDir, "..", "apps", appName, "package.json"), version);
+    for (const appName of ["server", "client", "desktop"]) {
+        patchPackageJson(join(__dirname, "..", "apps", appName, "package.json"), version);
     }
 
     for (const packageName of ["commons"]) {
-        patchPackageJson(join(scriptDir, "..", "packages", packageName, "package.json"), version);
+        patchPackageJson(join(__dirname, "..", "packages", packageName, "package.json"), version);
     }
 }
 

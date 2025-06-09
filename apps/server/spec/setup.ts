@@ -1,6 +1,14 @@
 import { beforeAll } from "vitest";
 import i18next from "i18next";
 import { join } from "path";
+import dayjs from "dayjs";
+
+// Initialize environment variables.
+process.env.TRILIUM_DATA_DIR = join(__dirname, "db");
+process.env.TRILIUM_RESOURCE_DIR = join(__dirname, "../src");
+process.env.TRILIUM_INTEGRATION_TEST = "memory";
+process.env.TRILIUM_ENV = "dev";
+process.env.TRILIUM_PUBLIC_SERVER = "http://localhost:4200";
 
 beforeAll(async () => {
     // Initialize the translations manually to avoid any side effects.
@@ -15,4 +23,8 @@ beforeAll(async () => {
             loadPath: join(__dirname, "../src/assets/translations/{{lng}}/{{ns}}.json")
         }
     });
+
+    // Initialize dayjs
+    await import("dayjs/locale/en.js");
+    dayjs.locale("en");
 });

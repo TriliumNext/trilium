@@ -7,6 +7,7 @@ import AbstractCodeTypeWidget from "./abstract_code_type_widget.js";
 import appContext from "../../components/app_context.js";
 import type { TouchBarItem } from "../../components/touch_bar.js";
 import { hasTouchBar } from "../../services/utils.js";
+import type { EditorConfig } from "@triliumnext/codemirror";
 
 const TPL = /*html*/`
 <div class="note-detail-code note-detail-printable">
@@ -41,19 +42,13 @@ export default class EditableCodeTypeWidget extends AbstractCodeTypeWidget {
         super.doRender();
     }
 
-    getExtraOpts(): Partial<CodeMirrorOpts> {
+    getExtraOpts(): Partial<EditorConfig> {
         return {
-            keyMap: options.is("vimKeymapEnabled") ? "vim" : "default",
-            lint: true,
-            gutters: ["CodeMirror-lint-markers"],
-            tabindex: 300,
-            dragDrop: false, // with true the editor inlines dropped files which is not what we expect
-            placeholder: t("editable_code.placeholder")
-        };
-    }
-
-    onEditorInitialized() {
-        this.codeEditor.on("change", () => this.spacedUpdate.scheduleUpdate());
+            placeholder: t("editable_code.placeholder"),
+            vimKeybindings: options.is("vimKeymapEnabled"),
+            onContentChanged: () => this.spacedUpdate.scheduleUpdate(),
+            tabIndex: 300
+        }
     }
 
     async doRefresh(note: FNote) {
@@ -72,18 +67,8 @@ export default class EditableCodeTypeWidget extends AbstractCodeTypeWidget {
 
     getData() {
         return {
-            content: this.codeEditor.getValue()
+            content: this.codeEditor.getText()
         };
-    }
-
-    async executeWithCodeEditorEvent({ resolve, ntxId }: EventData<"executeWithCodeEditor">) {
-        if (!this.isNoteContext(ntxId)) {
-            return;
-        }
-
-        await this.initialized;
-
-        resolve(this.codeEditor);
     }
 
     buildTouchBarCommand({ TouchBar, buildIcon }: CommandListenerData<"buildTouchBar">) {

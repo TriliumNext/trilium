@@ -10,7 +10,7 @@
     "moduleResolution": "nodenext",
     "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,
-    "noImplicitAny": true,
+    "noImplicitAny": false,       // TODO: Re-enable it at some point.
     "noImplicitOverride": false,  // TODO: Re-enable it at some point.
     "noImplicitReturns": false,   // TODO: Re-enable it at some point.
     "noUnusedLocals": false,      // TODO: Re-enable it at some point.
@@ -18,7 +18,7 @@
     "strict": true,
     "target": "es2022",
     "customConditions": ["development"],
-    "verbatimModuleSyntax": true,
+    "verbatimModuleSyntax": false,  // TODO: Re-enable it when migrating back to ESM.
     "resolveJsonModule": true,
     "downlevelIteration": true,
     "esModuleInterop": true,

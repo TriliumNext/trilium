@@ -4,7 +4,7 @@ This is essentially Trilium sources + node modules + node.js runtime packaged in
 ## Steps
 
 *   SSH into your server
-*   use `wget` (or `curl`) to download latest `TriliumNextNotes-Server-[VERSION]-linux-x64.tar.xz` (notice `-Server` suffix) on your server.
+*   use `wget` (or `curl`) to download latest `TriliumNextNotes-Server-[VERSION]-linux-x64.tar.xz` (copy link from [release page](https://github.com/TriliumNext/Notes/releases), notice `-Server` suffix) on your server.
 *   unpack the archive, e.g. using `tar -xf -d TriliumNextNotes-Server-[VERSION]-linux-x64.tar.xz`
 *   `cd trilium-linux-x64-server`
 *   `./trilium.sh`
@@ -12,7 +12,7 @@ This is essentially Trilium sources + node modules + node.js runtime packaged in
 
 The problem with above steps is that once you close the SSH connection, the Trilium process is terminated. To avoid that, you have two options:
 
-*   Kill it (with e.g. <kbd>Ctrl</kbd> + <kbd>C</kbd>) and run again like this: `nohup ./trilium &`.
+*   Kill it (with e.g. <kbd>Ctrl</kbd> + <kbd>C</kbd>) and run again like this: `nohup ./trilium.sh &`. (nohup keeps the process running in the background, `&` runs it in the background)
 *   Configure systemd to automatically run Trilium in the background on every boot
 
 ## Configure Trilium to auto-run on boot with systemd

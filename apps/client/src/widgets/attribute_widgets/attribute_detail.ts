@@ -718,7 +718,7 @@ export default class AttributeDetailWidget extends NoteContextAwareWidget {
     }
 
     buildDefinitionValue() {
-        const props = [];
+        const props: string[] = [];
 
         if (this.$inputPromoted.is(":checked")) {
             props.push("promoted");
@@ -728,10 +728,10 @@ export default class AttributeDetailWidget extends NoteContextAwareWidget {
             }
         }
 
-        props.push(this.$inputMultiplicity.val());
+        props.push(this.$inputMultiplicity.val() as string);
 
         if (this.attrType === "label-definition") {
-            props.push(this.$inputLabelType.val());
+            props.push(this.$inputLabelType.val() as string);
 
             if (this.$inputLabelType.val() === "number" && this.$inputNumberPrecision.val() !== "") {
                 props.push(`precision=${this.$inputNumberPrecision.val()}`);

@@ -7,7 +7,7 @@
     <title><%= t("setup.title") %></title>
 
     <% // TriliumNextTODO: move the css file to ${assetPath}/stylesheets/  %>
-    <link rel="stylesheet" href="<%= appPath %>/setup.css">
+    <link rel="stylesheet" href="<%= appPath %>/bootstrap.css">
 
     <style>
         .lds-ring {
@@ -167,9 +167,6 @@
 
 <!-- Required for correct loading of scripts in Electron -->
 <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
-
-<script src="<%= assetPath %>/node_modules/jquery/dist/jquery.min.js"></script>
-<script src="<%= assetPath %>/node_modules/jquery-hotkeys/jquery-hotkeys.js"></script>
 
 <script src="<%= appPath %>/runtime.js" crossorigin type="module"></script>
 <script src="<%= appPath %>/setup.js" crossorigin type="module"></script>

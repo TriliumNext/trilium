@@ -1,6 +1,6 @@
 import type FNote from "../entities/fnote.js";
 import { getCurrentLanguage } from "./i18n.js";
-import { applySyntaxHighlight } from "./syntax_highlight.js";
+import { formatCodeBlocks } from "./syntax_highlight.js";
 
 export default function renderDoc(note: FNote) {
     return new Promise<JQuery<HTMLElement>>((resolve) => {
@@ -41,12 +41,13 @@ function processContent(url: string, $content: JQuery<HTMLElement>) {
         $img.attr("src", dir + "/" + $img.attr("src"));
     });
 
-    applySyntaxHighlight($content);
+    formatCodeBlocks($content);
 }
 
 function getUrl(docNameValue: string, language: string) {
     // Cannot have spaces in the URL due to how JQuery.load works.
     docNameValue = docNameValue.replaceAll(" ", "%20");
 
-    return `${window.glob.appPath}/doc_notes/${language}/${docNameValue}.html`;
+    const basePath = window.glob.isDev ? new URL(window.glob.assetPath).pathname : window.glob.assetPath;
+    return `${basePath}/doc_notes/${language}/${docNameValue}.html`;
 }

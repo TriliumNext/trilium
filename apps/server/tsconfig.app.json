@@ -13,7 +13,8 @@
     "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo"
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "package.json"
   ],
   "exclude": [
     "eslint.config.js",

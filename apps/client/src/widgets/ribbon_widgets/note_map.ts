@@ -13,7 +13,7 @@ const TPL = /*html*/`
             height: 300px;
         }
 
-        .open-full-button, .collapse-button {
+        .note-map-ribbon-widget .open-full-button, .note-map-ribbon-widget .collapse-button {
             position: absolute;
             right: 5px;
             bottom: 5px;

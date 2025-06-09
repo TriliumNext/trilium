@@ -1,16 +1,16 @@
-import { ButtonView, createLabeledInputText, FocusCycler, LabelView, LabeledFieldView, submitHandler, SwitchButtonView, View, ViewCollection, type InputTextView, type FocusableView, Locale, FocusTracker, KeystrokeHandler } from 'ckeditor5';
+import { ButtonView, createLabeledTextarea, FocusCycler, LabelView, LabeledFieldView, submitHandler, SwitchButtonView, View, ViewCollection, type TextareaView, type FocusableView, Locale, FocusTracker, KeystrokeHandler } from 'ckeditor5';
 import { IconCheck, IconCancel } from "@ckeditor/ckeditor5-icons";
 import { extractDelimiters, hasDelimiters } from '../utils.js';
 import MathView from './mathview.js';
 import '../../theme/mathform.css';
 import type { KatexOptions } from '../typings-external.js';
 
-class MathInputView extends LabeledFieldView<InputTextView> {
+class MathInputView extends LabeledFieldView<TextareaView> {
 	public value: null | string = null;
 	public isReadOnly = false;
 
 	constructor( locale: Locale ) {
-		super( locale, createLabeledInputText );
+		super( locale, createLabeledTextarea );
 	}
 }
 

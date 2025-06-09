@@ -5,6 +5,12 @@
  * Color scheme
  */
 :root {
+
+    /* 
+     * ⚠️ NOTICE: This theme is currently in the beta stage of development.
+     * The names and purposes of these CSS variables are subject to frequent changes.
+     */
+
     --theme-style: dark;
     --native-titlebar-background: #00000000;
 
@@ -89,6 +95,7 @@
     --menu-item-arrow-color: #ffffffa3;
     --menu-item-delimiter-color: #ffffff1c;
     --menu-item-group-header-color: #ffffff91;
+    --menu-section-background-color: #fefefe08;
 
     --modal-backdrop-color: #000;
     --modal-shadow-color: rgba(0, 0, 0, .5);
@@ -195,6 +202,8 @@
     --scrollbar-background-color: transparent;
     --scrollbar-border-color: unset; /* Deprecated */
 
+    --selection-background-color: #3399FF70;
+    
     --link-color: lightskyblue;
 
     --mermaid-theme: dark;
@@ -234,6 +243,11 @@
     --help-code-background: #565656;
 
     --ck-editor-popup-border-color: var(--modal-border-color);
+
+    --ck-editor-toolbar-button-on-background: #ffffff3b;
+    --ck-editor-toolbar-button-on-color: white;
+    --ck-editor-toolbar-button-on-shadow: 1px 1px 2px rgba(0, 0, 0, .75);
+    --ck-editor-toolbar-dropdown-button-open-background: #ffffff14;
 }
 
 /*
@@ -242,10 +256,6 @@
 
 body ::-webkit-calendar-picker-indicator {
     filter: invert(1);
-}
-
-body .CodeMirror {
-    filter: invert(90%) hue-rotate(180deg);
 }
 
 .excalidraw.theme--dark {

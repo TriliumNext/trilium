@@ -1,4 +1,0 @@
-PUT {{triliumHost}}/etapi/backup/etapi_test
-Authorization: {{authToken}}
-
-> {% client.assert(response.status === 201); %}

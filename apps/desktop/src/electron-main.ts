@@ -7,8 +7,11 @@ import tray from "@triliumnext/server/src/services/tray.js";
 import options from "@triliumnext/server/src/services/options.js";
 import electronDebug from "electron-debug";
 import electronDl from "electron-dl";
+import { deferred } from "@triliumnext/server/src/services/utils.js";
 
 async function main() {
+    const serverInitializedPromise = deferred<void>();
+
     // Prevent Trilium starting twice on first install and on uninstall for the Windows installer.
     if ((require("electron-squirrel-startup")).default) {
         process.exit(0);
@@ -22,6 +25,12 @@ async function main() {
     electron.app.commandLine.appendSwitch("enable-experimental-web-platform-features");
     electron.app.commandLine.appendSwitch("lang", options.getOptionOrNull("formattingLocale") ?? "en");
 
+    // Electron 36 crashes with "Using GTK 2/3 and GTK 4 in the same process is not supported" on some distributions.
+    // See https://github.com/electron/electron/issues/46538 for more info.
+    if (process.platform === "linux") {
+        electron.app.commandLine.appendSwitch("gtk-version", "3");
+    }
+
     // Quit when all windows are closed, except on macOS. There, it's common
     // for applications and their menu bar to stay active until the user quits
     // explicitly with Cmd + Q.
@@ -31,7 +40,11 @@ async function main() {
         }
     });
 
-    electron.app.on("ready", onReady);
+    electron.app.on("ready", async () => {
+        await serverInitializedPromise;
+        console.log("Starting Electron...");
+        await onReady();
+    });
 
     electron.app.on("will-quit", () => {
         electron.globalShortcut.unregisterAll();
@@ -41,10 +54,13 @@ async function main() {
     process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
 
     await initializeTranslations();
-    await import("@triliumnext/server/src/main.js");
+    const startTriliumServer = (await import("@triliumnext/server/src/www.js")).default;
+    await startTriliumServer();
+    console.log("Server loaded");
+    serverInitializedPromise.resolve();
 }
 
-export async function onReady() {
+async function onReady() {
     //    electron.app.setAppUserModelId('com.github.zadam.trilium');
 
     // if db is not initialized -> setup process

@@ -1,13 +1,19 @@
 "use strict";
 
 import { parse, Renderer, type Tokens } from "marked";
+import htmlSanitizer from "../html_sanitizer.js";
+import importUtils from "./utils.js";
+import { getMimeTypeFromMarkdownName, MIME_TYPE_AUTO } from "@triliumnext/commons";
+import { ADMONITION_TYPE_MAPPINGS } from "../export/markdown.js";
+import utils from "../utils.js";
+import { normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
 
 /**
  * Keep renderer code up to date with https://github.com/markedjs/marked/blob/master/src/Renderer.ts.
  */
 class CustomMarkdownRenderer extends Renderer {
 
-    heading(data: Tokens.Heading): string {
+    override heading(data: Tokens.Heading): string {
         // Treat h1 as raw text.
         if (data.depth === 1) {
             return `<h1>${data.text}</h1>`;
@@ -16,23 +22,11 @@ class CustomMarkdownRenderer extends Renderer {
         return super.heading(data).trimEnd();
     }
 
-    paragraph(data: Tokens.Paragraph): string {
-        let text = super.paragraph(data).trimEnd();
-
-        if (text.includes("$")) {
-            // Display math
-            text = text.replaceAll(/(?<!\\)\$\$(.+)\$\$/g,
-                `<span class="math-tex">\\\[$1\\\]</span>`);
-
-            // Inline math
-            text = text.replaceAll(/(?<!\\)\$(.+)\$/g,
-                `<span class="math-tex">\\\($1\\\)</span>`);
-        }
-
-        return text;
+    override paragraph(data: Tokens.Paragraph): string {
+        return super.paragraph(data).trimEnd();
     }
 
-    code({ text, lang }: Tokens.Code): string {
+    override code({ text, lang }: Tokens.Code): string {
         if (!text) {
             return "";
         }
@@ -47,7 +41,7 @@ class CustomMarkdownRenderer extends Renderer {
         return `<pre><code class="language-${ckEditorLanguage}">${text}</code></pre>`;
     }
 
-    list(token: Tokens.List): string {
+    override list(token: Tokens.List): string {
         let result = super.list(token)
             .replace("\n", "")  // we replace the first one only.
             .trimEnd();
@@ -60,13 +54,13 @@ class CustomMarkdownRenderer extends Renderer {
         return result;
     }
 
-    checkbox({ checked }: Tokens.Checkbox): string {
+    override checkbox({ checked }: Tokens.Checkbox): string {
         return '<input type="checkbox"'
             + (checked ? 'checked="checked" ' : '')
             + 'disabled="disabled">';
     }
 
-    listitem(item: Tokens.ListItem): string {
+    override listitem(item: Tokens.ListItem): string {
         // Handle todo-list in the CKEditor format.
         if (item.task) {
             let itemBody = '';
@@ -97,12 +91,12 @@ class CustomMarkdownRenderer extends Renderer {
         return super.listitem(item).trimEnd();
     }
 
-    image(token: Tokens.Image): string {
+    override image(token: Tokens.Image): string {
         return super.image(token)
             .replace(` alt=""`, "");
     }
 
-    blockquote({ tokens }: Tokens.Blockquote): string {
+    override blockquote({ tokens }: Tokens.Blockquote): string {
         const body = renderer.parser.parse(tokens);
 
         const admonitionMatch = /^<p>\[\!([A-Z]+)\]/.exec(body);
@@ -123,22 +117,20 @@ class CustomMarkdownRenderer extends Renderer {
 
 }
 
-const renderer = new CustomMarkdownRenderer({ async: false });
-
-import htmlSanitizer from "../html_sanitizer.js";
-import importUtils from "./utils.js";
-import { getMimeTypeFromHighlightJs, MIME_TYPE_AUTO, normalizeMimeTypeForCKEditor } from "./mime_type_definitions.js";
-import { ADMONITION_TYPE_MAPPINGS } from "../export/markdown.js";
-import utils from "../utils.js";
-
 function renderToHtml(content: string, title: string) {
     // Double-escape slashes in math expression because they are otherwise consumed by the parser somewhere.
     content = content.replaceAll("\\$", "\\\\$");
 
-    let html = parse(content, {
+    // Extract formulas and replace them with placeholders to prevent interference from Markdown rendering
+    const { processedText, placeholderMap: formulaMap } = extractFormulas(content);
+
+    let html = parse(processedText, {
         async: false,
         renderer: renderer
     }) as string;
+
+    // After rendering, replace placeholders back with the formula HTML
+    html = restoreFromMap(html, formulaMap);
 
     // h1 handling needs to come before sanitization
     html = importUtils.handleH1(html, title);
@@ -158,14 +150,69 @@ function renderToHtml(content: string, title: string) {
 
 function getNormalizedMimeFromMarkdownLanguage(language: string | undefined) {
     if (language) {
-        const highlightJsName = getMimeTypeFromHighlightJs(language);
-        if (highlightJsName) {
-            return normalizeMimeTypeForCKEditor(highlightJsName.mime);
+        const mimeDefinition = getMimeTypeFromMarkdownName(language);
+        if (mimeDefinition) {
+            return normalizeMimeTypeForCKEditor(mimeDefinition.mime);
         }
     }
 
     return MIME_TYPE_AUTO;
 }
+
+function extractCodeBlocks(text: string): { processedText: string, placeholderMap: Map<string, string> } {
+    const codeMap = new Map<string, string>();
+    let id = 0;
+    const timestamp = Date.now();
+
+    // Multi-line code block and Inline code
+    text = text.replace(/```[\s\S]*?```/g, (m) => {
+        const key = `<!--CODE_BLOCK_${timestamp}_${id++}-->`;
+        codeMap.set(key, m);
+        return key;
+    }).replace(/`[^`\n]+`/g, (m) => {
+        const key = `<!--INLINE_CODE_${timestamp}_${id++}-->`;
+        codeMap.set(key, m);
+        return key;
+    });
+
+    return { processedText: text, placeholderMap: codeMap };
+}
+
+function extractFormulas(text: string): { processedText: string, placeholderMap: Map<string, string> } {
+    // Protect the $ signs inside code blocks from being recognized as formulas.
+    const { processedText: noCodeText, placeholderMap: codeMap } = extractCodeBlocks(text);
+
+    const formulaMap = new Map<string, string>();
+    let id = 0;
+    const timestamp = Date.now();
+
+    // Display math and Inline math
+    let processedText = noCodeText.replace(/(?<!\\)\$\$((?:(?!\n{2,})[\s\S])+?)\$\$/g, (_, formula) => {
+        const key = `<!--FORMULA_BLOCK_${timestamp}_${id++}-->`;
+        const rendered = `<span class="math-tex">\\[${formula}\\]</span>`;
+        formulaMap.set(key, rendered);
+        return key;
+    }).replace(/(?<!\\)\$(.+?)\$/g, (_, formula) => {
+        const key = `<!--FORMULA_INLINE_${timestamp}_${id++}-->`;
+        const rendered = `<span class="math-tex">\\(${formula}\\)</span>`;
+        formulaMap.set(key, rendered);
+        return key;
+    });
+
+    processedText = restoreFromMap(processedText, codeMap);
+
+    return { processedText, placeholderMap: formulaMap };
+}
+
+function restoreFromMap(text: string, map: Map<string, string>): string {
+    if (map.size === 0) return text;
+    const pattern = [...map.keys()]
+        .map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+        .join('|');
+    return text.replace(new RegExp(pattern, 'g'), match => map.get(match) ?? match);
+}
+
+const renderer = new CustomMarkdownRenderer({ async: false });
 
 export default {
     renderToHtml

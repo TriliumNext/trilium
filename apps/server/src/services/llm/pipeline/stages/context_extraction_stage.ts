@@ -43,7 +43,7 @@ export class ContextExtractionStage {
 
             // Get enhanced context from the context service
             const contextService = aiServiceManager.getContextService();
-            const llmService = aiServiceManager.getService();
+            const llmService = await aiServiceManager.getService();
 
             if (contextService) {
                 // Use unified context service to get smart context

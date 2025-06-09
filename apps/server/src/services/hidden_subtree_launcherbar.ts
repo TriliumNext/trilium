@@ -72,7 +72,7 @@ export default function buildLaunchBarConfig() {
             id: "_lbLlmChat",
             title: t("hidden-subtree.llm-chat-title"),
             type: "launcher",
-            command: "createAiChat",
+            builtinWidget: "aiChatLauncher",
             icon: "bx bx-bot",
             attributes: [
                 { type: "label", name: "desktopOnly" }

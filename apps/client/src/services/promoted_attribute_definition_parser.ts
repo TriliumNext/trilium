@@ -1,7 +1,7 @@
 type LabelType = "text" | "number" | "boolean" | "date" | "datetime" | "time" | "url";
 type Multiplicity = "single" | "multi";
 
-interface DefinitionObject {
+export interface DefinitionObject {
     isPromoted?: boolean;
     labelType?: LabelType;
     multiplicity?: Multiplicity;

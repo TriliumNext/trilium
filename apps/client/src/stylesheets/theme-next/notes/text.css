@@ -10,7 +10,8 @@
  * Toolbar
  */
 
-.ck.ck-toolbar {
+.ck.ck-toolbar,
+.ck.ck-block-toolbar-button {
     --ck-color-toolbar-background: transparent;
 
     --ck-color-button-default-background: transparent;
@@ -19,17 +20,60 @@
 
     --ck-color-button-on-background: transparent;
     --ck-color-button-on-hover-background: var(--hover-item-background-color);
+    --ck-color-button-default-active-background: var(--hover-item-background-color);
     
-    --ck-focus-ring: 1px solid var(--input-focus-outline-color);
+    --ck-color-split-button-hover-background: var(--ck-editor-toolbar-dropdown-button-open-background);
+
+    --ck-focus-ring: 1px solid transparent;
     --ck-color-focus-border: var(--input-focus-outline-color);
     --ck-focus-outer-shadow: none;
+    --ck-focus-disabled-outer-shadow: none;
 
     --ck-border-radius: 6px;
+}
+
+/* Toolbar button in on state */
+.ck.ck-toolbar .ck-button.ck-on:not(.ck-dropdown__button):not(.ck-list-item-button):not(.ck-button_with-text) {
+    --ck-color-button-on-background: var(--ck-editor-toolbar-button-on-background);
+    --ck-color-button-on-color: var(--ck-editor-toolbar-button-on-color);
+    box-shadow: var(--ck-editor-toolbar-button-on-shadow);
+}
+
+/* Toolbar button with its dropdown open */
+.ck.ck-toolbar .ck-button.ck-dropdown__button {
+    --ck-color-button-on-background: var(--ck-editor-toolbar-dropdown-button-open-background);
+    --ck-color-button-on-color: currentColor;
+}
+
+/* The toolbar show / hide button for the current text block */
+.ck.ck-block-toolbar-button {
+    --ck-color-button-on-background: transparent;
+    --ck-color-button-on-color: currentColor;
+}
+
+:root .ck.ck-toolbar .ck-button:not(.ck-disabled):active,
+.ck.ck-block-toolbar-button:active {
+    background-color: var(--hover-item-background-color);
+}
+
+.ck.ck-toolbar .ck-button:active:not(.ck-list-item-button):not(.ck-button_with-text):not(.ck-disabled) svg:not(.ck-dropdown__arrow),
+.ck.ck-block-toolbar-button:active svg {
+    transform: scale(.8);
 }
 
 /* Disabled button */
 :root .classic-toolbar-widget .ck.ck-button.ck-disabled {
     opacity: .75;
+}
+
+/* Focus visible */
+.ck.ck-toolbar .ck-button:focus-visible {
+    --ck-focus-ring: 1px solid var(--input-focus-outline-color);
+}
+
+/* Remove the border from hovered split arrow button */
+.ck.ck-splitbutton:hover > .ck-splitbutton__arrow:not(.ck-disabled)::after {
+    visibility: collapse;
 }
 
 /* 
@@ -49,14 +93,59 @@
     border: 1px solid var(--ck-editor-popup-border-color) !important;
     border-radius: var(--dropdown-border-radius) !important;
     background: var(--menu-background-color) !important;
-    backdrop-filter: var(--dropdown-backdrop-filter);
     padding: var(--ck-editor-popup-padding);
+}
+
+/*
+ * Backdrop blur pseudo-element
+ *
+ * Since .ck-balloon-panel already uses the :after and :before pseudo-elements, there is no other
+ * option than using a :before on the children element to apply the backdrop blur.
+ * This pseudoelement will overflow and cover the entire surface of .ck-balloon-panel.
+*/
+
+:root .ck-balloon-panel > .ck-toolbar,
+:root .ck-balloon-panel > .ck-balloon-rotator {
+    position: relative;
+}
+
+:root .ck-balloon-panel > .ck-toolbar::before,
+:root .ck-balloon-panel > .ck-balloon-rotator::before  {
+    --negative-padding: calc(0px - var(--ck-editor-popup-padding)); /* Compensate the parent's padding */
+
+    content: "";
+    position: absolute;
+    top: var(--negative-padding);
+    right: var(--negative-padding);
+    bottom: var(--negative-padding);
+    left: var(--negative-padding);
+    border-radius: var(--dropdown-border-radius);
+    backdrop-filter: var(--dropdown-backdrop-filter);
+    z-index: -1;
+}
+
+:root .ck.ck-dropdown__panel {
+    --ck-editor-popup-padding: var(--menu-padding-size);
+}
+
+/* Dropdown panel containing a toolbar */
+:root .ck.ck-dropdown__panel:has(>.ck-toolbar) {
+    --ck-editor-popup-padding: calc(var(--menu-padding-size) - var(--ck-spacing-small));
+}
+
+/* Bulleted / number list toolbar */
+.ck-list-styles-list {
+    --ck-spacing-large: var(--ck-spacing-small);
 }
 
 :root ul.ck.ck-list,
 :root div.ck.ck-balloon-panel:not(.ck-tooltip) {
     border: none;
     background: transparent;
+}
+
+:root .ck.ck-list {
+    padding: 0;
 }
 
 /* Tooltip */
@@ -73,22 +162,43 @@
 }
 
 /* Dropdown list item */
-:root ul.ck.ck-list button.ck-button {
+:root ul.ck.ck-list button.ck-button,
+:root .ck.ck-collapsible > button.ck-button {
     padding: 2px 16px;
     background: transparent;
     border-radius: 6px !important;
     box-shadow: unset;
 }
 
-/* Checked list item */
-:root ul.ck.ck-list button.ck-button.ck-on:not(:hover) {
-    background: transparent !important;
+:root .ck.ck-list__item {
+    min-width: 10em;
 }
 
+/* Item with icon */
+:root .ck.ck-button_with-text svg:first-child {
+    color: var(--menu-item-icon-color);
+}
+
+/* Checked list item */
+
 :root ul.ck.ck-list button.ck-button:hover,
-:root ul.ck.ck-list button.ck-button.ck-on:hover {
+:root ul.ck.ck-list button.ck-button.ck-on:hover,
+:root .ck.ck-collapsible > button.ck-button:not(.ck-disabled):hover,
+:root .ck.ck-collapsible > button.ck-button:not(.ck-disabled):not(:focus):hover {
     background: var(--hover-item-background-color);
     color: var(--hover-item-color);
+}
+
+/* List item checkmark container */
+
+:root .ck.ck-list-item-button .ck-list-item-button__check-holder {
+    margin-inline-start: var(--ck-spacing-small);
+    margin-inline-end: var(--menu-padding-size);
+}
+
+:root .ck.ck-list-item-button .ck-list-item-button__check-holder svg {
+    transform: scale(1.2);
+    color: var(--menu-item-icon-color);
 }
 
 /* Separator */
@@ -99,7 +209,81 @@
     background: var(--menu-item-delimiter-color);
 }
 
+/* Collapsible section */
+
+.ck.ck-collapsible {
+    position: relative;
+    border: unset !important;
+    padding-top: var(--ck-editor-popup-padding);
+}
+
+.ck.ck-collapsible::before {
+    /* Adds a background shade which overlaps the dropdown's padding */
+
+    --negative-padding: calc(0px - var(--ck-editor-popup-padding));
+
+    display: block;
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: var(--negative-padding);
+    left: var(--negative-padding);
+    right: var(--negative-padding);
+    border-top: 1px solid var(--ck-editor-popup-border-color);
+    background: var(--menu-section-background-color);
+}
+
+.ck.ck-collapsible:last-child::before {
+    border-radius: 0 0 var(--dropdown-border-radius) var(--dropdown-border-radius);
+}
+
+.ck.ck-collapsible.ck-collapsible_collapsed > button.ck-button {
+    font-weight: normal !important;
+}
+
+.ck.ck-collapsible .ck-collapsible__children {
+    padding-top: 1em;
+}
+
+/* Toolbar separators */
+
+:root .ck.ck-toolbar .ck.ck-toolbar__separator {
+    background: transparent;
+    border-left: 1px solid var(--ck-color-toolbar-border);
+}
+
+/* The last separator of the toolbar */
+:root .classic-toolbar-widget .ck.ck-toolbar__separator:last-of-type {
+    flex-grow: 1;
+}
+
+/* Heading dropdown */
+
+:root .ck.ck-dropdown.ck-heading-dropdown .ck-dropdown__panel .ck-list__item {
+    min-width: 170px;
+}
+
+/* Font size dropdown */
+
+.ck-fontsize-option {
+    min-height: 2rem !important;
+}
+
+.ck-fontsize-option.text-tiny   {--size: .75em;}
+.ck-fontsize-option.text-small  {--size: .85em;}
+.ck-fontsize-option.text-big    {--size: 1.4em;}
+.ck-fontsize-option.text-huge   {--size: 1.8em;}
+
+:root .ck-fontsize-option .ck-button__label {
+    font-size: var(--size);
+}
+
 /* Color picker dropdown */
+
+/* Color palette */
+:root .ck.ck-color-selector .ck-color-grid {
+    --ck-editor-toolbar-button-on-shadow: none; /* Remove the shadow of the selected color button */
+}
 
 /* Color picker button */
 :root .ck.ck-color-selector .ck-color-grids-fragment .ck-button.ck-color-selector__color-picker {
@@ -109,13 +293,69 @@
     border-bottom-right-radius: var(--ck-border-radius);
 }
 
+/* Current color checkmark */
+:root .ck.ck-color-selector .ck-color-grid .ck-icon {
+    color: white;
+}
+
+:root .ck.ck-color-selector .ck-color-grid .ck-icon__fill {
+    fill: black !important;
+}
+
+/* Numbered list */
+
+:root .ck.ck-list-properties_with-numbered-properties .ck.ck-list-styles-list {
+    min-width: 200px;
+    grid-template-columns: repeat(3, auto);
+    justify-content: space-between;
+    padding-bottom: calc(var(--ck-spacing-medium) + var(--menu-padding-size));
+}
+
 /* Table dropdown */
 
+/* Table rows / columns button grid container */
 .ck-insert-table-dropdown__grid {
+    --ck-insert-table-dropdown-box-width: 16px;
+    --ck-insert-table-dropdown-box-height: 16px;
+    --ck-insert-table-dropdown-box-margin: 2px;
     --ck-color-base-border: var(--ck-color-panel-border); /* Cell box color */
     --ck-color-focus-border: var(--hover-item-text-color); /* Selected cell box border color */
     --ck-color-focus-outer-shadow: var(--hover-item-background-color); /* Selected cell box background color */
     --ck-border-radius: 0;
+    --ck-editor-toolbar-button-on-shadow: 1px 1px 1px rgba(0, 0, 0, .35);
+}
+
+/* Selected rows / column counter */
+.ck.ck-insert-table-dropdown__label {
+    margin-top: var(--ck-spacing-medium);
+}
+
+/* Admonitions dropdown */
+
+.ck-tn-admonition-note {        --icon: "\eb21";    --accent: var(--admonition-note-accent-color);}
+.ck-tn-admonition-tip {         --icon: "\ea0d";    --accent: var(--admonition-tip-accent-color);}
+.ck-tn-admonition-important {   --icon: "\ea7c";    --accent: var(--admonition-important-accent-color);}
+.ck-tn-admonition-caution {     --icon: "\eac7";    --accent: var(--admonition-caution-accent-color);}
+.ck-tn-admonition-warning {     --icon: "\eac5";    --accent: var(--admonition-warning-accent-color);}
+
+:root .ck.ck-tn-admonition-option .ck-button__label {
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+    margin: 4px;
+    padding-right: 2em;
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+}
+
+:root .ck.ck-tn-admonition-option .ck-button__label::before {
+    display: inline-block;
+    content: var(--icon);
+    width: 2em;
+    text-align: center;
+    font-size: 1.4em;
+    font-family: boxicons;
+    color: var(--accent);
 }
 
 /* Action buttons */
@@ -133,6 +373,20 @@
     background: var(--hover-item-background-color);
 }
 
+/* Mention list (the autocompletion list for emojis, labels and relations)  */
+
+:root .ck-mentions {
+    --ck-color-list-button-on-background: var(--hover-item-background-color);
+    --ck-color-list-button-on-text: var(--hover-item-text-color);
+    --ck-color-list-button-hover-background: var(--ck-editor-toolbar-dropdown-button-open-background);
+    --ck-focus-ring: 1px solid transparent;
+}
+
+/* "Keep on typing to see the emoji" placeholder */
+#mention-list-item-id\:__EMOJI_HINT {
+    background: transparent;
+}
+
 /*
  * EDITOR'S CONTENT
  */
@@ -142,17 +396,37 @@
  */
 
 .attachment-content-wrapper pre,
-.ck-content pre,
+:root .ck-content pre,
 .ck-mermaid__editing-view {
     border: 0;
     border-radius: 6px;
     box-shadow: var(--code-block-box-shadow);
-    padding: 0 !important;
+    padding: 0;
     margin-top: 2px !important;
 }
 
-.ck-content pre {
+:root .ck-content pre {
+    --icon-button-size: 1.8em;
+    --copy-button-width: var(--icon-button-size);
+
+    /* The margin of the copy button is computed so the button will appear vertically centered
+     * for single-line code blocks */
+
+    --copy-button-margin-size: calc((1em    * 1.5   + var(--padding-size) * 2 - var(--icon-button-size)) / 2);
+    
+    /* Where:                        │        └ Line height
+     *                               └───────── Font size
+     */
+
     overflow: unset;
+}
+
+pre button.copy-button.icon-action {
+    font-size: 1em; /* Workaround: --icon-button-size does not work properly with em units */
+}
+
+:root pre:has(> button.copy-button) {
+    padding-right: calc(var(--icon-button-size) + (var(--copy-button-margin-size) * 2));
 }
 
 html .note-detail-editable-text :not(figure, .include-note, hr):first-child {
@@ -170,10 +444,10 @@ html .note-detail-editable-text :not(figure, .include-note, hr):first-child {
 }
 
 .attachment-content-wrapper pre code,
-.ck-content pre code,
+:root .ck-content pre code,
 .ck-mermaid__editing-view {
     display: block;
-    padding: 1em !important;
+    padding: var(--padding-size, 1em);
     overflow: auto;
 }
 
@@ -245,7 +519,6 @@ html .note-detail-editable-text :not(figure, .include-note, hr):first-child {
 
 .note-detail-printable:not(.word-wrap) pre code {
     white-space: pre;
-    margin-right: 1em;
 }
 
 .code-sample-wrapper .hljs {

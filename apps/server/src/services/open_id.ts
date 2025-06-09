@@ -8,7 +8,7 @@ import config from "./config.js";
 
 
 function checkOpenIDConfig() {
-    let missingVars: string[] = []
+    const missingVars: string[] = []
     if (config.MultiFactorAuthentication.oauthBaseUrl === "") {
         missingVars.push("oauthBaseUrl");
     }
@@ -89,6 +89,14 @@ function isTokenValid(req: Request, res: Response, next: NextFunction) {
     }
 }
 
+function getSSOIssuerName() {
+    return config.MultiFactorAuthentication.oauthIssuerName;
+}
+
+function getSSOIssuerIcon() {
+    return config.MultiFactorAuthentication.oauthIssuerIcon;
+}
+
 function generateOAuthConfig() {
     const authRoutes = {
         callback: "/callback",
@@ -105,7 +113,7 @@ function generateOAuthConfig() {
         auth0Logout: false,
         baseURL: config.MultiFactorAuthentication.oauthBaseUrl,
         clientID: config.MultiFactorAuthentication.oauthClientId,
-        issuerBaseURL: "https://accounts.google.com",
+        issuerBaseURL: config.MultiFactorAuthentication.oauthIssuerBaseUrl,
         secret: config.MultiFactorAuthentication.oauthClientSecret,
         clientSecret: config.MultiFactorAuthentication.oauthClientSecret,
         authorizationParams: {
@@ -147,6 +155,8 @@ function generateOAuthConfig() {
 export default {
     generateOAuthConfig,
     getOAuthStatus,
+    getSSOIssuerName,
+    getSSOIssuerIcon,
     isOpenIDEnabled,
     clearSavedUser,
     isTokenValid,

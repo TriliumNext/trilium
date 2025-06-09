@@ -6,7 +6,7 @@ import etapiTokenService from "../services/etapi_tokens.js";
 import config from "../services/config.js";
 import type { NextFunction, Request, RequestHandler, Response, Router } from "express";
 import type { ValidatorMap } from "./etapi-interface.js";
-import type { ApiRequestHandler } from "../routes/routes.js";
+import type { ApiRequestHandler, SyncRouteRequestHandler } from "../routes/route_api.js";
 const GENERIC_CODE = "GENERIC";
 
 type HttpMethod = "all" | "get" | "post" | "put" | "delete" | "patch" | "options" | "head";
@@ -73,11 +73,11 @@ function processRequest(req: Request, res: Response, routeHandler: ApiRequestHan
     }
 }
 
-function route(router: Router, method: HttpMethod, path: string, routeHandler: ApiRequestHandler) {
+function route(router: Router, method: HttpMethod, path: string, routeHandler: SyncRouteRequestHandler) {
     router[method](path, checkEtapiAuth, (req: Request, res: Response, next: NextFunction) => processRequest(req, res, routeHandler, next, method, path));
 }
 
-function NOT_AUTHENTICATED_ROUTE(router: Router, method: HttpMethod, path: string, middleware: RequestHandler[], routeHandler: RequestHandler) {
+function NOT_AUTHENTICATED_ROUTE(router: Router, method: HttpMethod, path: string, middleware: RequestHandler[], routeHandler: SyncRouteRequestHandler) {
     router[method](path, ...middleware, (req: Request, res: Response, next: NextFunction) => processRequest(req, res, routeHandler, next, method, path));
 }
 

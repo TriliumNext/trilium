@@ -28,10 +28,6 @@ function eraseNotes(noteIdsToErase: string[]) {
 
     eraseRevisions(revisionIdsToErase);
 
-    // Erase embeddings related to the deleted notes
-    const embeddingIdsToErase = sql.getManyRows<{ embedId: string }>(`SELECT embedId FROM note_embeddings WHERE noteId IN (???)`, noteIdsToErase).map((row) => row.embedId);
-
-    eraseEmbeddings(embeddingIdsToErase);
 
     log.info(`Erased notes: ${JSON.stringify(noteIdsToErase)}`);
 }
@@ -156,12 +152,6 @@ function eraseNotesWithDeleteId(deleteId: string) {
     const attachmentIdsToErase = sql.getColumn<string>("SELECT attachmentId FROM attachments WHERE isDeleted = 1 AND deleteId = ?", [deleteId]);
     eraseAttachments(attachmentIdsToErase);
 
-    // Find and erase embeddings for deleted notes
-    const deletedNoteIds = sql.getColumn<string>("SELECT noteId FROM notes WHERE isDeleted = 1 AND deleteId = ?", [deleteId]);
-    if (deletedNoteIds.length > 0) {
-        const embeddingIdsToErase = sql.getColumn<string>("SELECT embedId FROM note_embeddings WHERE noteId IN (???)", deletedNoteIds);
-        eraseEmbeddings(embeddingIdsToErase);
-    }
 
     eraseUnusedBlobs();
 }
@@ -185,16 +175,6 @@ function eraseScheduledAttachments(eraseUnusedAttachmentsAfterSeconds: number | 
     eraseAttachments(attachmentIdsToErase);
 }
 
-function eraseEmbeddings(embedIdsToErase: string[]) {
-    if (embedIdsToErase.length === 0) {
-        return;
-    }
-
-    sql.executeMany(`DELETE FROM note_embeddings WHERE embedId IN (???)`, embedIdsToErase);
-    setEntityChangesAsErased(sql.getManyRows(`SELECT * FROM entity_changes WHERE entityName = 'note_embeddings' AND entityId IN (???)`, embedIdsToErase));
-
-    log.info(`Erased embeddings: ${JSON.stringify(embedIdsToErase)}`);
-}
 
 export function startScheduledCleanup() {
     sqlInit.dbReady.then(() => {

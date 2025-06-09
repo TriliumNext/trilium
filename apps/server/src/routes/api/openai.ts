@@ -40,17 +40,6 @@ import OpenAI from "openai";
  *                         type: string
  *                       type:
  *                         type: string
- *                 embeddingModels:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: string
- *                       name:
- *                         type: string
- *                       type:
- *                         type: string
  *       '500':
  *         description: Error listing models
  *     security:
@@ -66,12 +55,13 @@ async function listModels(req: Request, res: Response) {
         const apiKey = await options.getOption('openaiApiKey');
 
         if (!apiKey) {
-            throw new Error('OpenAI API key is not configured');
+            // Log warning but don't throw - some OpenAI-compatible endpoints don't require API keys
+            log.info('OpenAI API key is not configured when listing models. This may cause issues with official OpenAI endpoints.');
         }
 
-        // Initialize OpenAI client with the API key and base URL
+        // Initialize OpenAI client with the API key (or empty string) and base URL
         const openai = new OpenAI({
-            apiKey,
+            apiKey: apiKey || '', // Default to empty string if no API key
             baseURL: openaiBaseUrl
         });
 
@@ -81,13 +71,12 @@ async function listModels(req: Request, res: Response) {
         // Filter and categorize models
         const allModels = response.data || [];
 
-        // Separate models into chat models and embedding models
+        // Include all models as chat models, excluding embedding models
         const chatModels = allModels
             .filter((model) =>
-                // Include GPT models for chat
-                model.id.includes('gpt') ||
-                // Include Claude models via Azure OpenAI
-                model.id.includes('claude')
+                // Exclude models that are explicitly for embeddings
+                !model.id.includes('embedding') &&
+                !model.id.includes('embed')
             )
             .map((model) => ({
                 id: model.id,
@@ -95,23 +84,10 @@ async function listModels(req: Request, res: Response) {
                 type: 'chat'
             }));
 
-        const embeddingModels = allModels
-            .filter((model) =>
-                // Only include embedding-specific models
-                model.id.includes('embedding') ||
-                model.id.includes('embed')
-            )
-            .map((model) => ({
-                id: model.id,
-                name: model.id,
-                type: 'embedding'
-            }));
-
         // Return the models list
         return {
             success: true,
-            chatModels,
-            embeddingModels
+            chatModels
         };
     } catch (error: any) {
         log.error(`Error listing OpenAI models: ${error.message || 'Unknown error'}`);

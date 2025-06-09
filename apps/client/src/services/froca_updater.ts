@@ -36,7 +36,7 @@ async function processEntityChanges(entityChanges: EntityChange[]) {
             } else if (ec.entityName === "attachments") {
                 processAttachment(loadResults, ec);
             } else if (ec.entityName === "blobs" || ec.entityName === "etapi_tokens") {
-                // NOOP
+                // NOOP - these entities are handled at the backend level and don't require frontend processing
             } else {
                 throw new Error(`Unknown entityName '${ec.entityName}'`);
             }
@@ -50,7 +50,7 @@ async function processEntityChanges(entityChanges: EntityChange[]) {
     // To this we count: standard parent-child relationships and template/inherit relations (attribute inheritance follows them).
     // Here we watch for changes which might violate this principle - e.g., an introduction of a new "inherit" relation might
     // mean we need to load the target of the relation (and then perhaps transitively the whole note path of this target).
-    const missingNoteIds = [];
+    const missingNoteIds: string[] = [];
 
     for (const { entityName, entity } of entityChanges) {
         if (!entity) {

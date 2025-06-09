@@ -198,7 +198,7 @@ export async function semanticChunking(
 
     // Try to split on headers first
     const headerPattern = /#{1,6}\s+.+|<h[1-6][^>]*>.*?<\/h[1-6]>/g;
-    const sections = [];
+    const sections: string[] = [];
 
     let lastIndex = 0;
     let match;

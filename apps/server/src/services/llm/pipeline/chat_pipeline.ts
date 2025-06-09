@@ -8,7 +8,7 @@ import { ModelSelectionStage } from './stages/model_selection_stage.js';
 import { LLMCompletionStage } from './stages/llm_completion_stage.js';
 import { ResponseProcessingStage } from './stages/response_processing_stage.js';
 import { ToolCallingStage } from './stages/tool_calling_stage.js';
-import { VectorSearchStage } from './stages/vector_search_stage.js';
+// Traditional search is used instead of vector search
 import toolRegistry from '../tools/tool_registry.js';
 import toolInitializer from '../tools/tool_initializer.js';
 import log from '../../log.js';
@@ -29,7 +29,7 @@ export class ChatPipeline {
         llmCompletion: LLMCompletionStage;
         responseProcessing: ResponseProcessingStage;
         toolCalling: ToolCallingStage;
-        vectorSearch: VectorSearchStage;
+        // traditional search is used instead of vector search
     };
 
     config: ChatPipelineConfig;
@@ -50,7 +50,7 @@ export class ChatPipeline {
             llmCompletion: new LLMCompletionStage(),
             responseProcessing: new ResponseProcessingStage(),
             toolCalling: new ToolCallingStage(),
-            vectorSearch: new VectorSearchStage()
+            // traditional search is used instead of vector search
         };
 
         // Set default configuration values
@@ -198,27 +198,20 @@ export class ChatPipeline {
                 log.info('No LLM service available for query decomposition, using original query');
             }
 
-            // STAGE 3: Execute vector similarity search with decomposed queries
+            // STAGE 3: Vector search has been removed - skip semantic search
             const vectorSearchStartTime = Date.now();
-            log.info(`========== STAGE 3: VECTOR SEARCH ==========`);
-            log.info('Using VectorSearchStage pipeline component to find relevant notes');
-            log.info(`Searching with ${searchQueries.length} queries from decomposition`);
+            log.info(`========== STAGE 3: VECTOR SEARCH (DISABLED) ==========`);
+            log.info('Vector search has been removed - LLM will rely on tool calls for context');
 
-            // Use the vectorSearchStage with multiple queries
-            const vectorSearchResult = await this.stages.vectorSearch.execute({
-                query: userQuery, // Original query as fallback
-                queries: searchQueries, // All decomposed queries
-                noteId: input.noteId || 'global',
-                options: {
-                    maxResults: SEARCH_CONSTANTS.CONTEXT.MAX_SIMILAR_NOTES,
-                    useEnhancedQueries: false, // We're already using enhanced queries from decomposition
-                    threshold: SEARCH_CONSTANTS.VECTOR_SEARCH.DEFAULT_THRESHOLD,
-                    llmService: llmService || undefined
-                }
-            });
+            // Create empty vector search result since vector search is disabled
+            const vectorSearchResult = {
+                searchResults: [],
+                totalResults: 0,
+                executionTime: Date.now() - vectorSearchStartTime
+            };
 
-            this.updateStageMetrics('vectorSearch', vectorSearchStartTime);
-            log.info(`Vector search found ${vectorSearchResult.searchResults.length} relevant notes across ${searchQueries.length} queries`);
+            // Skip metrics update for disabled vector search functionality
+            log.info(`Vector search disabled - using tool-based context extraction instead`);
 
             // Extract context from search results
             log.info(`========== SEMANTIC CONTEXT EXTRACTION ==========`);
@@ -298,6 +291,9 @@ export class ChatPipeline {
             this.updateStageMetrics('llmCompletion', llmStartTime);
             log.info(`Received LLM response from model: ${completion.response.model}, provider: ${completion.response.provider}`);
 
+            // Track whether content has been streamed to prevent duplication
+            let hasStreamedContent = false;
+
             // Handle streaming if enabled and available
             // Use shouldEnableStream variable which contains our streaming decision
             if (shouldEnableStream && completion.response.stream && streamCallback) {
@@ -311,6 +307,9 @@ export class ChatPipeline {
 
                     // Forward to callback with original chunk data in case it contains additional information
                     streamCallback(processedChunk.text, processedChunk.done, chunk);
+
+                    // Mark that we have streamed content to prevent duplication
+                    hasStreamedContent = true;
                 });
             }
 
@@ -767,11 +766,15 @@ export class ChatPipeline {
                     const responseText = currentResponse.text || "";
                     log.info(`Resuming streaming with final response: ${responseText.length} chars`);
 
-                    if (responseText.length > 0) {
-                        // Resume streaming with the final response text
+                    if (responseText.length > 0 && !hasStreamedContent) {
+                        // Resume streaming with the final response text only if we haven't already streamed content
                         // This is where we send the definitive done:true signal with the complete content
                         streamCallback(responseText, true);
                         log.info(`Sent final response with done=true signal and text content`);
+                    } else if (hasStreamedContent) {
+                        log.info(`Content already streamed, sending done=true signal only after tool execution`);
+                        // Just send the done signal without duplicating content
+                        streamCallback('', true);
                     } else {
                         // For Anthropic, sometimes text is empty but response is in stream
                         if ((currentResponse.provider === 'Anthropic' || currentResponse.provider === 'OpenAI') && currentResponse.stream) {
@@ -803,13 +806,17 @@ export class ChatPipeline {
                 log.info(`LLM response did not contain any tool calls, skipping tool execution`);
 
                 // Handle streaming for responses without tool calls
-                if (shouldEnableStream && streamCallback) {
+                if (shouldEnableStream && streamCallback && !hasStreamedContent) {
                     log.info(`Sending final streaming response without tool calls: ${currentResponse.text.length} chars`);
 
                     // Send the final response with done=true to complete the streaming
                     streamCallback(currentResponse.text, true);
 
                     log.info(`Sent final non-tool response with done=true signal`);
+                } else if (shouldEnableStream && streamCallback && hasStreamedContent) {
+                    log.info(`Content already streamed, sending done=true signal only`);
+                    // Just send the done signal without duplicating content
+                    streamCallback('', true);
                 }
             }
 
@@ -891,6 +898,12 @@ export class ChatPipeline {
 
         const executionTime = Date.now() - startTime;
         const metrics = this.metrics.stageMetrics[stageName];
+
+        // Guard against undefined metrics (e.g., for removed stages)
+        if (!metrics) {
+            log.info(`WARNING: Attempted to update metrics for unknown stage: ${stageName}`);
+            return;
+        }
 
         metrics.totalExecutions++;
         metrics.averageExecutionTime =

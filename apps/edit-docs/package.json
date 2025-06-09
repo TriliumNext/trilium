@@ -3,12 +3,16 @@
   "version": "0.0.1",
   "private": true,
   "description": "Desktop version of Trilium which imports the demo database (presented to new users at start-up) or the user guide and other documentation and saves the modifications for committing.",
+  "dependencies": {
+    "archiver": "7.0.1",
+    "better-sqlite3": "^11.9.1"
+  },
   "devDependencies": {
     "@triliumnext/client": "workspace:*",
     "@triliumnext/desktop": "workspace:*",
     "@types/fs-extra": "11.0.4",
     "copy-webpack-plugin": "13.0.0",
-    "electron": "36.2.0",
+    "electron": "36.4.0",
     "fs-extra": "11.3.0"
   },
   "nx": {
@@ -17,6 +21,62 @@
       "server"
     ],
     "targets": {
+      "build": {
+        "executor": "@nx/esbuild:esbuild",
+        "outputs": [
+          "{options.outputPath}"
+        ],
+        "options": {
+          "main": "apps/edit-docs/src/edit-docs.ts",
+          "outputPath": "apps/edit-docs/dist",
+          "tsConfig": "apps/edit-docs/tsconfig.app.json",
+          "platform": "node",
+          "additionalEntryPoints": [
+            "apps/edit-docs/src/edit-demo.ts"
+          ],
+          "external": [
+            "electron",
+            "@electron/remote",
+            "better-sqlite3",
+            "./xhr-sync-worker.js"
+          ],
+          "format": [
+            "cjs"
+          ],
+          "minify": false,
+          "thirdParty": true,
+          "declaration": false,
+          "esbuildOptions": {
+            "splitting": false,
+            "loader": {
+              ".css": "text"
+            }
+          },
+          "assets": [
+            {
+              "glob": "**/*",
+              "input": "apps/server/dist/node_modules",
+              "output": "node_modules"
+            },
+            {
+              "glob": "**/*",
+              "input": "apps/server/dist/assets",
+              "output": "assets"
+            },
+            {
+              "glob": "**/*",
+              "input": "apps/server/dist/public",
+              "output": "public"
+            },
+            {
+              "glob": "xhr-sync-worker.js",
+              "input": "apps/server/node_modules/jsdom/lib/jsdom/living/xhr",
+              "output": ""
+            }
+          ],
+          "declarationRootDir": "apps/edit-docs/src"
+        }
+      },
       "rebuild-deps": {
         "executor": "nx:run-commands",
         "dependsOn": [
@@ -29,11 +89,11 @@
             "command": "cross-env DEBUG=* tsx scripts/electron-rebuild.mts {projectRoot}/dist"
           },
           "nixos": {
-            "command": "cross-env DEBUG=* tsx scripts/electron-rebuild.mts {projectRoot}/dist $(nix-shell -p electron_33 --run \"electron --version\")"
+            "command": "cross-env DEBUG=* tsx scripts/electron-rebuild.mts {projectRoot}/dist $(nix-shell -p electron_35 --run \"electron --version\")"
           }
         }
       },
-      "serve": {
+      "edit-docs": {
         "executor": "nx:run-commands",
         "dependsOn": [
           "rebuild-deps"
@@ -41,19 +101,34 @@
         "defaultConfiguration": "default",
         "configurations": {
           "default": {
-            "command": "electron .",
-            "cwd": "./apps/edit-docs/dist"
+            "command": "electron edit-docs.cjs",
+            "cwd": "{projectRoot}/dist"
           },
           "nixos": {
-            "command": "nix-shell -p electron_35 --run \"electron .\"",
-            "forwardAllArgs": false,
-            "cwd": "./apps/edit-docs/dist"
+            "command": "nix-shell -p electron_35 --run \"electron {projectRoot}/dist/edit-docs.cjs\"",
+            "cwd": ".",
+            "forwardAllArgs": false
+          }
+        }
+      },
+      "edit-demo": {
+        "executor": "nx:run-commands",
+        "dependsOn": [
+          "rebuild-deps"
+        ],
+        "defaultConfiguration": "default",
+        "configurations": {
+          "default": {
+            "command": "electron edit-demo.cjs",
+            "cwd": "{projectRoot}/dist"
+          },
+          "nixos": {
+            "command": "nix-shell -p electron_35 --run \"electron {projectRoot}/dist/edit-demo.cjs\"",
+            "cwd": ".",
+            "forwardAllArgs": false
           }
         }
       }
     }
-  },
-  "dependencies": {
-    "archiver": "7.0.1"
-  }
+  }  
 }

@@ -1,5 +1,4 @@
 import { t } from "../../services/i18n.js";
-import libraryLoader from "../../services/library_loader.js";
 import noteAutocompleteService, { type Suggestion } from "../../services/note_autocomplete.js";
 import mimeTypesService from "../../services/mime_types.js";
 import utils, { hasTouchBar } from "../../services/utils.js";
@@ -12,13 +11,13 @@ import appContext, { type CommandListenerData, type EventData } from "../../comp
 import dialogService from "../../services/dialog.js";
 import options from "../../services/options.js";
 import toast from "../../services/toast.js";
-import { normalizeMimeTypeForCKEditor } from "../../services/mime_type_definitions.js";
 import { buildSelectedBackgroundColor } from "../../components/touch_bar.js";
 import { buildConfig, buildToolbarConfig } from "./ckeditor/config.js";
 import type FNote from "../../entities/fnote.js";
 import { getMermaidConfig } from "../../services/mermaid.js";
 import { PopupEditor, ClassicEditor, EditorWatchdog, type CKTextEditor, type MentionFeed, type WatchdogConfig } from "@triliumnext/ckeditor5";
 import "@triliumnext/ckeditor5/index.css";
+import { normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
 
 const ENABLE_INSPECTOR = false;
 
@@ -167,7 +166,7 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
             // is shorter than minimumNonErrorTimePeriod, the watchdog changes
             // its state to crashedPermanently, and it stops restarting the editor.
             // This prevents an infinite restart loop.
-            crashNumberLimit: 3,
+            crashNumberLimit: 10,
             // A minimum number of milliseconds between saving the editor data internally (defaults to 5000).
             // Note that for large documents, this might impact the editor performance.
             saveInterval: 5000
@@ -182,8 +181,7 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
                 return;
             }
 
-            logInfo(`CKEditor crash logs: ${JSON.stringify(this.watchdog.crashes)}`);
-            this.watchdog.crashes.forEach((crashInfo) => console.log(crashInfo));
+            logError(`CKEditor crash logs: ${JSON.stringify(this.watchdog.crashes, null, 4)}`);
 
             if (currentState === "crashedPermanently") {
                 dialogService.info(`Editing component keeps crashing. Please try restarting Trilium. If problem persists, consider creating a bug report.`);
@@ -192,7 +190,7 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
             }
         });
 
-        this.watchdog.setCreator(async (elementOrData, editorConfig) => {
+        this.watchdog.setCreator(async (_, editorConfig) => {
             logInfo("Creating new CKEditor");
 
             const finalConfig = {
@@ -222,7 +220,7 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
             }
 
             //@ts-ignore
-            const editor = await editorClass.create(elementOrData, finalConfig);
+            const editor = await editorClass.create(this.$editor[0], finalConfig);
 
             const notificationsPlugin = editor.plugins.get("Notification");
             notificationsPlugin.on("show:warning", (evt, data) => {
@@ -267,7 +265,7 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
                         }
 
                         item.on("change:isOpen", () => {
-                            if (!("isOpen" in item) || !item.isOpen ) {
+                            if (!("isOpen" in item) || !item.isOpen) {
                                 return;
                             }
 
@@ -301,15 +299,18 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
     async createEditor() {
         await this.watchdog.create(this.$editor[0], {
             placeholder: t("editable_text.placeholder"),
-            //@ts-ignore TODO: FIX TYPES
-            mention: mentionSetup,
+            mention: {
+                feeds: mentionSetup,
+            },
             codeBlock: {
                 languages: buildListOfLanguages()
             },
             math: {
                 engine: "katex",
                 outputType: "span", // or script
-                lazyLoad: async () => await libraryLoader.requireLibrary(libraryLoader.KATEX),
+                lazyLoad: async () => {
+                    (window as any).katex = (await import("../../services/math.js")).default
+                },
                 forceOutputType: false, // forces output to use outputType
                 enablePreview: true // Enable preview view
             },
@@ -335,6 +336,11 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
     }
 
     getData() {
+        if (!this.watchdog.editor) {
+            // There is nothing to save, most likely a result of the editor crashing and reinitializing.
+            return;
+        }
+
         const content = this.watchdog.editor?.getData() ?? "";
 
         // if content is only tags/whitespace (typically <p>&nbsp;</p>), then just make it empty,
@@ -375,7 +381,8 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
 
     insertDateTimeToTextCommand() {
         const date = new Date();
-        const dateString = utils.formatDateTime(date);
+        const customDateTimeFormat = options.get("customDateTimeFormat");
+        const dateString = utils.formatDateTime(date, customDateTimeFormat);
 
         this.addTextToEditor(dateString);
     }
@@ -587,7 +594,7 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
             backgroundColor: buildSelectedBackgroundColor(editor.commands.get(command)?.value as boolean)
         });
 
-        let headingSelectedIndex = undefined;
+        let headingSelectedIndex: number | undefined = undefined;
         const headingCommand = editor.commands.get("heading");
         const paragraphCommand = editor.commands.get("paragraph");
         if (paragraphCommand?.value) {

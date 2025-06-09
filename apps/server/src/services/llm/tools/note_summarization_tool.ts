@@ -102,12 +102,7 @@ export class NoteSummarizationTool implements ToolHandler {
             const cleanContent = this.cleanHtml(content);
 
             // Generate the summary using the AI service
-            const aiService = aiServiceManager.getService();
-
-            if (!aiService) {
-                log.error('No AI service available for summarization');
-                return `Error: No AI service is available for summarization`;
-            }
+            const aiService = await aiServiceManager.getService();
 
             log.info(`Using ${aiService.getName()} to generate summary`);
 
@@ -135,8 +130,8 @@ export class NoteSummarizationTool implements ToolHandler {
                 { role: 'system', content: 'You are a skilled summarizer. Create concise, accurate summaries while preserving the key information.' },
                 { role: 'user', content: prompt }
             ], {
-                temperature: SEARCH_CONSTANTS.TEMPERATURE.VECTOR_SEARCH, // Lower temperature for more focused summaries
-                maxTokens: SEARCH_CONSTANTS.LIMITS.VECTOR_SEARCH_MAX_TOKENS // Enough tokens for the summary
+                temperature: SEARCH_CONSTANTS.TEMPERATURE.QUERY_PROCESSOR, // Lower temperature for more focused summaries
+                maxTokens: SEARCH_CONSTANTS.LIMITS.DEFAULT_MAX_TOKENS // Enough tokens for the summary
             });
 
             const summaryDuration = Date.now() - summaryStartTime;

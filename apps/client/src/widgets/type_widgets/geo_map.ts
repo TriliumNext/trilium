@@ -224,11 +224,26 @@ export default class GeoMapTypeWidget extends TypeWidget {
             this.gpxLoaded = true;
         }
 
-        // TODO: This is not very efficient as it's probably a string response that is parsed and then converted back to string and parsed again.
-        const xmlResponse = await server.get<XMLDocument>(`notes/${note.noteId}/open`);
-        const stringResponse = new XMLSerializer().serializeToString(xmlResponse);
+        const xmlResponse = await server.get<string | Uint8Array>(`notes/${note.noteId}/open`, undefined, true);
+        let stringResponse: string;
+        if (xmlResponse instanceof Uint8Array) {
+            stringResponse = new TextDecoder().decode(xmlResponse);
+        } else {
+            stringResponse = xmlResponse;
+        }
 
-        const track = new this.L.GPX(stringResponse, {});
+        const track = new this.L.GPX(stringResponse, {
+            markers: {
+                startIcon: this.#buildIcon(note.getIcon(), note.getColorClass(), note.title),
+                endIcon: this.#buildIcon("bxs-flag-checkered"),
+                wptIcons: {
+                    "": this.#buildIcon("bx bx-pin")
+                }
+            },
+            polyline_options: {
+                color: note.getLabelValue("color") ?? "blue"
+            }
+        });
         track.addTo(this.geoMapWidget.map);
         this.currentTrackData[note.noteId] = track;
     }
@@ -276,13 +291,13 @@ export default class GeoMapTypeWidget extends TypeWidget {
         this.currentMarkerData[note.noteId] = marker;
     }
 
-    #buildIcon(bxIconClass: string, colorClass: string, title: string) {
+    #buildIcon(bxIconClass: string, colorClass?: string, title?: string) {
         return this.L.divIcon({
             html: /*html*/`\
                 <img class="icon" src="${markerIcon}" />
                 <img class="icon-shadow" src="${markerIconShadow}" />
-                <span class="bx ${bxIconClass} ${colorClass}"></span>
-                <span class="title-label">${title}</span>`,
+                <span class="bx ${bxIconClass} ${colorClass ?? ""}"></span>
+                <span class="title-label">${title ?? ""}</span>`,
             iconSize: [25, 41],
             iconAnchor: [12, 41]
         });

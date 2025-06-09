@@ -11,8 +11,8 @@ import RightPanelWidget from "./right_panel_widget.js";
 import options from "../services/options.js";
 import OnClickButtonWidget from "./buttons/onclick_button.js";
 import appContext, { type EventData } from "../components/app_context.js";
-import libraryLoader from "../services/library_loader.js";
 import type FNote from "../entities/fnote.js";
+import katex from "../services/math.js";
 
 const TPL = /*html*/`<div class="highlights-list-widget">
     <style>
@@ -175,7 +175,6 @@ export default class HighlightsListWidget extends RightPanelWidget {
                 } catch (e) {
                     if (e instanceof ReferenceError && e.message.includes("katex is not defined")) {
                         // Load KaTeX if it is not already loaded
-                        await libraryLoader.requireLibrary(libraryLoader.KATEX);
                         try {
                             rendered = katex.renderToString(latexCode, {
                                 throwOnError: false
@@ -244,7 +243,7 @@ export default class HighlightsListWidget extends RightPanelWidget {
         // Used to determine if a string is only a formula
         const onlyMathRegex = /^<span class="math-tex">\\\([^\)]*?\)<\/span>(?:<span class="math-tex">\\\([^\)]*?\)<\/span>)*$/;
 
-        for (let match = null, hltIndex = 0; (match = combinedRegex.exec(content)) !== null; hltIndex++) {
+        for (let match: RegExpMatchArray | null = null, hltIndex = 0; (match = combinedRegex.exec(content)) !== null; hltIndex++) {
             const subHtml = match[0];
             const startIndex = match.index;
             const endIndex = combinedRegex.lastIndex;
@@ -325,8 +324,9 @@ export default class HighlightsListWidget extends RightPanelWidget {
                 });
         } else {
             const textEditor = await this.noteContext.getTextEditor();
-            if (textEditor) {
-                targetElement = $(textEditor.editing.view.domRoots.values().next().value)
+            const el = textEditor?.editing.view.domRoots.values().next().value;
+            if (el) {
+                targetElement = $(el)
                     .find(findSubStr)
                     .filter(function () {
                         // When finding span[style*="color"] but not looking for span[style*="background-color"],

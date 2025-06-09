@@ -251,7 +251,7 @@ export default class Becca {
     getAllNoteSet() {
         // caching this since it takes 10s of milliseconds to fill this initial NoteSet for many notes
         if (!this.allNoteSetCache) {
-            const allNotes = [];
+            const allNotes: BNote[] = [];
 
             for (const noteId in this.notes) {
                 const note = this.notes[noteId];

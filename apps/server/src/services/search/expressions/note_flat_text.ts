@@ -52,7 +52,7 @@ class NoteFlatTextExp extends Expression {
                 return;
             }
 
-            const foundAttrTokens = [];
+            const foundAttrTokens: string[] = [];
 
             for (const token of remainingTokens) {
                 if (note.type.includes(token) || note.mime.includes(token)) {
@@ -73,7 +73,7 @@ class NoteFlatTextExp extends Expression {
 
             for (const parentNote of note.parents) {
                 const title = normalize(beccaService.getNoteTitle(note.noteId, parentNote.noteId));
-                const foundTokens = foundAttrTokens.slice();
+                const foundTokens: string[] = foundAttrTokens.slice();
 
                 for (const token of remainingTokens) {
                     if (title.includes(token)) {
@@ -100,7 +100,7 @@ class NoteFlatTextExp extends Expression {
                 continue;
             }
 
-            const foundAttrTokens = [];
+            const foundAttrTokens: string[] = [];
 
             for (const token of this.tokens) {
                 if (note.type.includes(token) || note.mime.includes(token)) {
@@ -153,7 +153,7 @@ class NoteFlatTextExp extends Expression {
      * Returns noteIds which have at least one matching tokens
      */
     getCandidateNotes(noteSet: NoteSet): BNote[] {
-        const candidateNotes = [];
+        const candidateNotes: BNote[] = [];
 
         for (const note of noteSet.notes) {
             for (const token of this.tokens) {

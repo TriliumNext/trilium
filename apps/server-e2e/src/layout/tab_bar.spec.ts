@@ -115,7 +115,7 @@ test("Search works when dismissing a tab", async ({ page, context }) => {
 
     await app.getTab(0).click();
     await app.openAndClickNoteActionMenu("Search in note");
-    await expect(app.findAndReplaceWidget).toBeVisible();
+    await expect(app.findAndReplaceWidget.first()).toBeVisible();
 });
 
 test("New tab displays workspaces", async ({ page, context }) => {

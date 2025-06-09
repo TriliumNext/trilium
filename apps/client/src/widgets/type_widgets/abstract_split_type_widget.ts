@@ -8,6 +8,7 @@ import options from "../../services/options.js";
 import type SwitchSplitOrientationButton from "../floating_buttons/switch_layout_button.js";
 import type { EventData } from "../../components/app_context.js";
 import type OnClickButtonWidget from "../buttons/onclick_button.js";
+import type { EditorConfig } from "@triliumnext/codemirror";
 
 const TPL = /*html*/`\
 <div class="note-detail-split note-detail-printable">
@@ -130,8 +131,16 @@ export default abstract class AbstractSplitTypeWidget extends TypeWidget {
     constructor() {
         super();
         this.editorTypeWidget = new EditableCodeTypeWidget();
+        this.editorTypeWidget.updateBackgroundColor = () => {};
         this.editorTypeWidget.isEnabled = () => true;
-        this.editorTypeWidget.getExtraOpts = this.buildEditorExtraOptions;
+
+        const defaultOptions = this.editorTypeWidget.getExtraOpts();
+        this.editorTypeWidget.getExtraOpts = () => {
+            return {
+                ...defaultOptions,
+                ...this.buildEditorExtraOptions()
+            };
+        };
     }
 
     doRender(): void {
@@ -166,6 +175,7 @@ export default abstract class AbstractSplitTypeWidget extends TypeWidget {
 
     cleanup(): void {
         this.#destroyResizer();
+        this.editorTypeWidget.cleanup();
     }
 
     async doRefresh(note: FNote) {
@@ -242,7 +252,7 @@ export default abstract class AbstractSplitTypeWidget extends TypeWidget {
     /**
      * Called upon when the code editor is being initialized. Can be used to add additional options to the editor.
      */
-    buildEditorExtraOptions(): Partial<CodeMirrorOpts> {
+    buildEditorExtraOptions(): Partial<EditorConfig> {
         return {
             lineWrapping: false
         };

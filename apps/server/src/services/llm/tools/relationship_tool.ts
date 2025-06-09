@@ -10,6 +10,31 @@ import becca from '../../../becca/becca.js';
 import attributes from '../../attributes.js';
 import aiServiceManager from '../ai_service_manager.js';
 import { SEARCH_CONSTANTS } from '../constants/search_constants.js';
+import searchService from '../../search/services/search.js';
+// Define types locally for relationship tool
+interface Backlink {
+    noteId: string;
+    title: string;
+    relationName: string;
+    sourceNoteId: string;
+    sourceTitle: string;
+}
+
+interface RelatedNote {
+    noteId: string;
+    title: string;
+    similarity: number;
+    relationName: string;
+    targetNoteId: string;
+    targetTitle: string;
+}
+
+interface Suggestion {
+    targetNoteId: string;
+    targetTitle: string;
+    similarity: number;
+    suggestedRelation: string;
+}
 
 /**
  * Definition of the relationship tool
@@ -180,13 +205,16 @@ export class RelationshipTool implements ToolHandler {
                 .filter((attr: any) => attr.type === 'relation')
                 .slice(0, limit);
 
-            const outgoingRelations = [];
+            const outgoingRelations: RelatedNote[] = [];
 
             for (const attr of outgoingAttributes) {
                 const targetNote = becca.notes[attr.value];
 
                 if (targetNote) {
                     outgoingRelations.push({
+                        noteId: targetNote.noteId,
+                        title: targetNote.title,
+                        similarity: 1.0,
                         relationName: attr.name,
                         targetNoteId: targetNote.noteId,
                         targetTitle: targetNote.title
@@ -196,7 +224,7 @@ export class RelationshipTool implements ToolHandler {
 
             // Get incoming relationships (where this note is the target)
             // Since becca.findNotesWithRelation doesn't exist, use attributes to find notes with relation
-            const incomingRelations = [];
+            const incomingRelations: Backlink[] = [];
 
             // Find all attributes of type relation that point to this note
             const relationAttributes = sourceNote.getTargetRelations();
@@ -207,6 +235,8 @@ export class RelationshipTool implements ToolHandler {
 
                     if (sourceOfRelation && !sourceOfRelation.isDeleted) {
                         incomingRelations.push({
+                            noteId: sourceOfRelation.noteId,
+                            title: sourceOfRelation.title,
                             relationName: attr.name,
                             sourceNoteId: sourceOfRelation.noteId,
                             sourceTitle: sourceOfRelation.title
@@ -236,56 +266,141 @@ export class RelationshipTool implements ToolHandler {
     }
 
     /**
-     * Find related notes using vector similarity
+     * Find related notes using TriliumNext's search service
      */
     private async findRelatedNotes(sourceNote: any, limit: number): Promise<object> {
         try {
-            // Get the vector search tool from the AI service manager
-            const vectorSearchTool = aiServiceManager.getVectorSearchTool();
+            log.info(`Using TriliumNext search to find notes related to "${sourceNote.title}"`);
 
-            if (!vectorSearchTool) {
-                log.error('Vector search tool not available');
-                return {
-                    success: false,
-                    message: 'Vector search capability not available'
-                };
-            }
-
-            log.info(`Using vector search to find notes related to "${sourceNote.title}"`);
-
-            // Get note content for semantic search
-            const content = await sourceNote.getContent();
+            // Get note content for search
+            const content = sourceNote.getContent();
             const title = sourceNote.title;
 
-            // Use both title and content for search
-            const searchQuery = title + (content && typeof content === 'string' ? ': ' + content.substring(0, 500) : '');
+            // Create search queries from the note title and content
+            const searchQueries = [title];
 
-            // Execute the search
+            // Extract key terms from content if available
+            if (content && typeof content === 'string') {
+                // Extract meaningful words from content (filter out common words)
+                const contentWords = content
+                    .toLowerCase()
+                    .split(/\s+/)
+                    .filter(word => word.length > 3)
+                    .filter(word => !/^(the|and|but|for|are|from|they|been|have|this|that|with|will|when|where|what|how)$/.test(word))
+                    .slice(0, 10); // Take first 10 meaningful words
+
+                if (contentWords.length > 0) {
+                    searchQueries.push(contentWords.join(' '));
+                }
+            }
+
+            // Execute searches and combine results
             const searchStartTime = Date.now();
-            const results = await vectorSearchTool.searchNotes(searchQuery, {
-                maxResults: limit + 1 // Add 1 to account for the source note itself
-            });
-            const searchDuration = Date.now() - searchStartTime;
+            const allResults = new Map<string, any>();
+            let searchDuration = 0;
 
-            // Filter out the source note from results
-            const filteredResults = results.filter(note => note.noteId !== sourceNote.noteId);
-            log.info(`Found ${filteredResults.length} related notes in ${searchDuration}ms`);
+            for (const query of searchQueries) {
+                try {
+                    const results = searchService.searchNotes(query, {
+                        includeArchivedNotes: false,
+                        fastSearch: false // Use full search for better results
+                    });
+
+                    // Add results to our map (avoiding duplicates)
+                    for (const note of results.slice(0, limit * 2)) { // Get more to account for duplicates
+                        if (note.noteId !== sourceNote.noteId && !note.isDeleted) {
+                            allResults.set(note.noteId, {
+                                noteId: note.noteId,
+                                title: note.title,
+                                similarity: 0.8 // Base similarity for search results
+                            });
+                        }
+                    }
+                } catch (error) {
+                    log.error(`Search query failed: ${query} - ${error}`);
+                }
+            }
+
+            searchDuration = Date.now() - searchStartTime;
+
+            // Also add notes that are directly related via attributes
+            const directlyRelatedNotes = this.getDirectlyRelatedNotes(sourceNote);
+            for (const note of directlyRelatedNotes) {
+                if (!allResults.has(note.noteId)) {
+                    allResults.set(note.noteId, {
+                        noteId: note.noteId,
+                        title: note.title,
+                        similarity: 1.0 // Higher similarity for directly related notes
+                    });
+                }
+            }
+
+            const relatedNotes = Array.from(allResults.values())
+                .sort((a, b) => b.similarity - a.similarity) // Sort by similarity
+                .slice(0, limit);
+
+            log.info(`Found ${relatedNotes.length} related notes in ${searchDuration}ms`);
 
             return {
                 success: true,
                 noteId: sourceNote.noteId,
                 title: sourceNote.title,
-                relatedNotes: filteredResults.slice(0, limit).map(note => ({
-                    noteId: note.noteId,
-                    title: note.title,
-                    similarity: Math.round(note.similarity * 100) / 100
-                })),
-                message: `Found ${filteredResults.length} notes semantically related to "${sourceNote.title}"`
+                relatedNotes: relatedNotes,
+                message: `Found ${relatedNotes.length} notes related to "${sourceNote.title}" using search and relationship analysis`
             };
         } catch (error: any) {
             log.error(`Error finding related notes: ${error.message || String(error)}`);
             throw error;
         }
+    }
+
+    /**
+     * Get notes that are directly related through attributes/relations
+     */
+    private getDirectlyRelatedNotes(sourceNote: any): any[] {
+        const relatedNotes: any[] = [];
+
+        try {
+            // Get outgoing relations
+            const outgoingAttributes = sourceNote.getAttributes().filter((attr: any) => attr.type === 'relation');
+            for (const attr of outgoingAttributes) {
+                const targetNote = becca.notes[attr.value];
+                if (targetNote && !targetNote.isDeleted) {
+                    relatedNotes.push(targetNote);
+                }
+            }
+
+            // Get incoming relations
+            const incomingRelations = sourceNote.getTargetRelations();
+            for (const attr of incomingRelations) {
+                if (attr.type === 'relation') {
+                    const sourceOfRelation = attr.getNote();
+                    if (sourceOfRelation && !sourceOfRelation.isDeleted) {
+                        relatedNotes.push(sourceOfRelation);
+                    }
+                }
+            }
+
+            // Get parent and child notes
+            const parentNotes = sourceNote.getParentNotes();
+            for (const parent of parentNotes) {
+                if (!parent.isDeleted) {
+                    relatedNotes.push(parent);
+                }
+            }
+
+            const childNotes = sourceNote.getChildNotes();
+            for (const child of childNotes) {
+                if (!child.isDeleted) {
+                    relatedNotes.push(child);
+                }
+            }
+
+        } catch (error) {
+            log.error(`Error getting directly related notes: ${error}`);
+        }
+
+        return relatedNotes;
     }
 
     /**
@@ -304,16 +419,7 @@ export class RelationshipTool implements ToolHandler {
             }
 
             // Get the AI service for relationship suggestion
-            const aiService = aiServiceManager.getService();
-
-            if (!aiService) {
-                log.error('No AI service available for relationship suggestions');
-                return {
-                    success: false,
-                    message: 'AI service not available for relationship suggestions',
-                    relatedNotes: relatedResult.relatedNotes
-                };
-            }
+            const aiService = await aiServiceManager.getService();
 
             log.info(`Using ${aiService.getName()} to suggest relationships for ${relatedResult.relatedNotes.length} related notes`);
 
@@ -321,7 +427,7 @@ export class RelationshipTool implements ToolHandler {
             const sourceContent = await sourceNote.getContent();
 
             // Prepare suggestions
-            const suggestions = [];
+            const suggestions: Suggestion[] = [];
 
             for (const relatedNote of relatedResult.relatedNotes) {
                 try {

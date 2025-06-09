@@ -17,17 +17,17 @@ export const searchNotesToolDefinition: Tool = {
     type: 'function',
     function: {
         name: 'search_notes',
-        description: 'Search for notes in the database using semantic search. Returns notes most semantically related to the query.',
+        description: 'Search for notes in the database using semantic search. Returns notes most semantically related to the query. Use specific, descriptive queries for best results.',
         parameters: {
             type: 'object',
             properties: {
                 query: {
                     type: 'string',
-                    description: 'The search query to find semantically related notes'
+                    description: 'The search query to find semantically related notes. Be specific and descriptive for best results.'
                 },
                 parentNoteId: {
                     type: 'string',
-                    description: 'Optional system ID of the parent note to restrict search to a specific branch (not the title). This is a unique identifier like "abc123def456".'
+                    description: 'Optional system ID of the parent note to restrict search to a specific branch (not the title). This is a unique identifier like "abc123def456". Do not use note titles here.'
                 },
                 maxResults: {
                     type: 'number',
@@ -63,11 +63,9 @@ async function getOrCreateVectorSearchTool(): Promise<any> {
         // Get agent tools manager and initialize it
         const agentTools = aiServiceManager.getAgentTools();
         if (agentTools && typeof agentTools.initialize === 'function') {
-            log.info('Initializing agent tools to create vectorSearchTool');
             try {
                 // Force initialization to ensure it runs even if previously marked as initialized
                 await agentTools.initialize(true);
-                log.info('Agent tools initialized successfully');
             } catch (initError: any) {
                 log.error(`Failed to initialize agent tools: ${initError.message}`);
                 return null;
@@ -124,10 +122,10 @@ export class SearchNotesTool implements ToolHandler {
             // If summarization is requested
             if (summarize) {
                 // Try to get an LLM service for summarization
-                const llmService = aiServiceManager.getService();
-                if (llmService) {
-                    try {
-                        const messages = [
+                try {
+                    const llmService = await aiServiceManager.getService();
+                    
+                    const messages = [
                             {
                                 role: "system" as const,
                                 content: "Summarize the following note content concisely while preserving key information. Keep your summary to about 3-4 sentences."
@@ -142,47 +140,49 @@ export class SearchNotesTool implements ToolHandler {
                         const result = await llmService.generateChatCompletion(messages, {
                             temperature: 0.3,
                             maxTokens: 200,
-                            // Use any to bypass the type checking for special parameters
+                            // Type assertion to bypass type checking for special internal parameters
                             ...(({
                                 bypassFormatter: true,
                                 bypassContextProcessing: true
-                            } as any))
+                            } as Record<string, boolean>))
                         });
 
-                        if (result && result.text) {
-                            return result.text;
+                    if (result && result.text) {
+                        return result.text;
+                    }
+                } catch (error) {
+                    log.error(`Error summarizing content: ${error}`);
+                    // Fall through to smart truncation if summarization fails
+                }
+            }
+
+            try {
+                // Fall back to smart truncation if summarization fails or isn't requested
+                const previewLength = Math.min(formattedContent.length, 600);
+                let preview = formattedContent.substring(0, previewLength);
+
+                // Only add ellipsis if we've truncated the content
+                if (previewLength < formattedContent.length) {
+                    // Try to find a natural break point
+                    const breakPoints = ['. ', '.\n', '\n\n', '\n', '. '];
+
+                    for (const breakPoint of breakPoints) {
+                        const lastBreak = preview.lastIndexOf(breakPoint);
+                        if (lastBreak > previewLength * 0.6) { // At least 60% of the way through
+                            preview = preview.substring(0, lastBreak + breakPoint.length);
+                            break;
                         }
-                    } catch (error) {
-                        log.error(`Error summarizing content: ${error}`);
-                        // Fall through to smart truncation if summarization fails
                     }
-                }
-            }
 
-            // Fall back to smart truncation if summarization fails or isn't requested
-            const previewLength = Math.min(formattedContent.length, 600);
-            let preview = formattedContent.substring(0, previewLength);
-
-            // Only add ellipsis if we've truncated the content
-            if (previewLength < formattedContent.length) {
-                // Try to find a natural break point
-                const breakPoints = ['. ', '.\n', '\n\n', '\n', '. '];
-                let breakFound = false;
-
-                for (const breakPoint of breakPoints) {
-                    const lastBreak = preview.lastIndexOf(breakPoint);
-                    if (lastBreak > previewLength * 0.6) { // At least 60% of the way through
-                        preview = preview.substring(0, lastBreak + breakPoint.length);
-                        breakFound = true;
-                        break;
-                    }
+                    // Add ellipsis if truncated
+                    preview += '...';
                 }
 
-                // Add ellipsis if truncated
-                preview += '...';
+                return preview;
+            } catch (error) {
+                log.error(`Error getting rich content preview: ${error}`);
+                return 'Error retrieving content preview';
             }
-
-            return preview;
         } catch (error) {
             log.error(`Error getting rich content preview: ${error}`);
             return 'Error retrieving content preview';
@@ -226,11 +226,8 @@ export class SearchNotesTool implements ToolHandler {
             // Execute the search
             log.info(`Performing semantic search for: "${query}"`);
             const searchStartTime = Date.now();
-            const results = await vectorSearchTool.searchNotes(query, {
-                parentNoteId,
-                maxResults
-                // Don't pass summarize - we'll handle it ourselves
-            });
+            const response = await vectorSearchTool.searchNotes(query, parentNoteId, maxResults);
+            const results: Array<Record<string, unknown>> = response?.matches ?? [];
             const searchDuration = Date.now() - searchStartTime;
 
             log.info(`Search completed in ${searchDuration}ms, found ${results.length} matching notes`);
@@ -247,12 +244,16 @@ export class SearchNotesTool implements ToolHandler {
             // Get enhanced previews for each result
             const enhancedResults = await Promise.all(
                 results.map(async (result: any) => {
-                    const preview = await this.getRichContentPreview(result.noteId, summarize);
+                    const noteId = result.noteId;
+                    const preview = await this.getRichContentPreview(noteId, summarize);
 
                     return {
-                        noteId: result.noteId,
-                        title: result.title,
+                        noteId: noteId,
+                        title: result?.title as string || '[Unknown title]',
                         preview: preview,
+                        score: result?.score as number,
+                        dateCreated: result?.dateCreated as string,
+                        dateModified: result?.dateModified as string,
                         similarity: Math.round(result.similarity * 100) / 100,
                         parentId: result.parentId
                     };
@@ -260,14 +261,24 @@ export class SearchNotesTool implements ToolHandler {
             );
 
             // Format the results
-            return {
-                count: enhancedResults.length,
-                results: enhancedResults,
-                message: "Note: Use the noteId (not the title) when performing operations on specific notes with other tools."
-            };
-        } catch (error: any) {
-            log.error(`Error executing search_notes tool: ${error.message || String(error)}`);
-            return `Error: ${error.message || String(error)}`;
+            if (results.length === 0) {
+                return {
+                    count: 0,
+                    results: [],
+                    query: query,
+                    message: 'No notes found matching your query. Try using more general terms or try the keyword_search_notes tool with a different query. Note: Use the noteId (not the title) when performing operations on specific notes with other tools.'
+                };
+            } else {
+                return {
+                    count: enhancedResults.length,
+                    results: enhancedResults,
+                    message: "Note: Use the noteId (not the title) when performing operations on specific notes with other tools."
+                };
+            }
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            log.error(`Error executing search_notes tool: ${errorMessage}`);
+            return `Error: ${errorMessage}`;
         }
     }
 }

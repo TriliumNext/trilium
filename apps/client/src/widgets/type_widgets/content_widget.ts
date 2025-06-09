@@ -8,6 +8,7 @@ import HeadingStyleOptions from "./options/text_notes/heading_style.js";
 import TableOfContentsOptions from "./options/text_notes/table_of_contents.js";
 import HighlightsListOptions from "./options/text_notes/highlights_list.js";
 import TextAutoReadOnlySizeOptions from "./options/text_notes/text_auto_read_only_size.js";
+import DateTimeFormatOptions from "./options/text_notes/date_time_format.js";
 import CodeEditorOptions from "./options/code_notes/code_editor.js";
 import CodeAutoReadOnlySizeOptions from "./options/code_notes/code_auto_read_only_size.js";
 import CodeMimeTypesOptions from "./options/code_notes/code_mime_types.js";
@@ -34,16 +35,17 @@ import AttachmentErasureTimeoutOptions from "./options/other/attachment_erasure_
 import RibbonOptions from "./options/appearance/ribbon.js";
 import MultiFactorAuthenticationOptions from './options/multi_factor_authentication.js';
 import LocalizationOptions from "./options/i18n/i18n.js";
-import CodeBlockOptions from "./options/appearance/code_block.js";
+import CodeBlockOptions from "./options/text_notes/code_block.js";
 import EditorOptions from "./options/text_notes/editor.js";
 import ShareSettingsOptions from "./options/other/share_settings.js";
 import AiSettingsOptions from "./options/ai_settings.js";
 import type FNote from "../../entities/fnote.js";
 import type NoteContextAwareWidget from "../note_context_aware_widget.js";
-import { t } from "i18next";
+import { t } from "../../services/i18n.js";
 import LanguageOptions from "./options/i18n/language.js";
-import type { EventData, EventNames } from "../../components/app_context.js";
 import type BasicWidget from "../basic_widget.js";
+import CodeTheme from "./options/code_notes/code_theme.js";
+import RelatedSettings from "./options/related_settings.js";
 
 const TPL = /*html*/`<div class="note-detail-content-widget note-detail-printable">
     <style>
@@ -68,11 +70,12 @@ const TPL = /*html*/`<div class="note-detail-content-widget note-detail-printabl
     <div class="note-detail-content-widget-content"></div>
 </div>`;
 
-const CONTENT_WIDGETS: Record<string, (typeof NoteContextAwareWidget)[]> = {
+export type OptionPages = "_optionsAppearance" | "_optionsShortcuts" | "_optionsTextNotes" | "_optionsCodeNotes" | "_optionsImages" | "_optionsSpellcheck" | "_optionsPassword" | "_optionsMFA" | "_optionsEtapi" | "_optionsBackup" | "_optionsSync" | "_optionsAi" | "_optionsOther" | "_optionsLocalization" | "_optionsAdvanced";
+
+const CONTENT_WIDGETS: Record<OptionPages | "_backendLog", (typeof NoteContextAwareWidget)[]> = {
     _optionsAppearance: [
         ThemeOptions,
         FontsOptions,
-        CodeBlockOptions,
         ElectronIntegrationOptions,
         MaxContentWidthOptions,
         RibbonOptions
@@ -83,12 +86,15 @@ const CONTENT_WIDGETS: Record<string, (typeof NoteContextAwareWidget)[]> = {
     _optionsTextNotes: [
         EditorOptions,
         HeadingStyleOptions,
+        CodeBlockOptions,
         TableOfContentsOptions,
         HighlightsListOptions,
-        TextAutoReadOnlySizeOptions
+        TextAutoReadOnlySizeOptions,
+        DateTimeFormatOptions
     ],
     _optionsCodeNotes: [
         CodeEditorOptions,
+        CodeTheme,
         CodeMimeTypesOptions,
         CodeAutoReadOnlySizeOptions
     ],
@@ -164,7 +170,10 @@ export default class ContentWidgetTypeWidget extends TypeWidget {
         this.$content.empty();
         this.children = [];
 
-        const contentWidgets = CONTENT_WIDGETS[note.noteId];
+        const contentWidgets = [
+            ...((CONTENT_WIDGETS as Record<string, typeof NoteContextAwareWidget[]>)[note.noteId]),
+            RelatedSettings
+        ];
         this.$content.toggleClass("options", note.noteId.startsWith("_options"));
 
         if (contentWidgets) {

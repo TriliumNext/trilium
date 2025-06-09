@@ -103,7 +103,7 @@
     "password": "密码",
     "remember-me": "记住我",
     "button": "登录",
-    "sign_in_with_google": "使用 Google 登录"
+    "sign_in_with_sso": "使用 {{ ssoIssuerName }} 登录"
   },
   "set_password": {
     "title": "设置密码",
@@ -192,11 +192,6 @@
   "quarterNumber": "第 {quarterNumber} 季度",
   "special_notes": {
     "search_prefix": "搜索:"
-  },
-  "code_block": {
-    "theme_none": "无语法高亮",
-    "theme_group_light": "浅色主题",
-    "theme_group_dark": "深色主题"
   },
   "test_sync": {
     "not-configured": "同步服务器主机未配置。请先配置同步。",

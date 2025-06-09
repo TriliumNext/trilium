@@ -7,6 +7,21 @@ import { getAnthropicOptions } from './providers.js';
 import log from '../../log.js';
 import Anthropic from '@anthropic-ai/sdk';
 import { SEARCH_CONSTANTS } from '../constants/search_constants.js';
+import type { ToolCall } from '../tools/tool_interfaces.js';
+
+interface AnthropicMessage extends Omit<Message, "content"> {
+    content: MessageContent[] | string;
+}
+
+interface MessageContent {
+    type: "text" | "tool_use" | "tool_result";
+    text?: string;
+    id?: string;
+    name?: string;
+    content?: string;
+    tool_use_id?: string;
+    input?: string | Record<string, unknown>;
+}
 
 export class AnthropicService extends BaseAIService {
     private client: any = null;
@@ -15,7 +30,7 @@ export class AnthropicService extends BaseAIService {
         super('Anthropic');
     }
 
-    isAvailable(): boolean {
+    override isAvailable(): boolean {
         return super.isAvailable() && !!options.getOption('anthropicApiKey');
     }
 
@@ -130,7 +145,7 @@ export class AnthropicService extends BaseAIService {
                     .join('');
 
                 // Process tool calls if any are present in the response
-                let toolCalls = null;
+                let toolCalls: ToolCall[] | null = null;
                 if (response.content) {
                     const toolBlocks = response.content.filter((block: any) =>
                         block.type === 'tool_use' ||
@@ -157,7 +172,7 @@ export class AnthropicService extends BaseAIService {
                             return null;
                         }).filter(Boolean);
 
-                        log.info(`Extracted ${toolCalls.length} tool calls from Anthropic response`);
+                        log.info(`Extracted ${toolCalls?.length} tool calls from Anthropic response`);
                     }
                 }
 
@@ -406,8 +421,8 @@ export class AnthropicService extends BaseAIService {
     /**
      * Format messages for the Anthropic API
      */
-    private formatMessages(messages: Message[]): any[] {
-        const anthropicMessages: any[] = [];
+    private formatMessages(messages: Message[]): AnthropicMessage[] {
+        const anthropicMessages: AnthropicMessage[] = [];
 
         // Process each message
         for (const msg of messages) {
@@ -424,7 +439,7 @@ export class AnthropicService extends BaseAIService {
                 // Assistant messages need special handling for tool_calls
                 if (msg.tool_calls && msg.tool_calls.length > 0) {
                     // Create content blocks array for tool calls
-                    const content = [];
+                    const content: MessageContent[] = [];
 
                     // Add text content if present
                     if (msg.content) {
@@ -590,5 +605,13 @@ export class AnthropicService extends BaseAIService {
         }).filter(Boolean); // Filter out any null values
 
         return convertedTools;
+    }
+
+    /**
+     * Clear cached Anthropic client to force recreation with new settings
+     */
+    clearCache(): void {
+        this.client = null;
+        log.info('Anthropic client cache cleared');
     }
 }

@@ -9,8 +9,6 @@ import escape from "escape-html";
 import sanitize from "sanitize-filename";
 import mimeTypes from "mime-types";
 import path from "path";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
 import type NoteMeta from "./meta/note_meta.js";
 import log from "./log.js";
 import { t } from "i18next";
@@ -226,7 +224,7 @@ export function timeLimit<T>(promise: Promise<T>, limitMs: number, errorMessage?
     });
 }
 
-interface DeferredPromise<T> extends Promise<T> {
+export interface DeferredPromise<T> extends Promise<T> {
     resolve: (value: T | PromiseLike<T>) => void;
     reject: (reason?: any) => void;
 }
@@ -299,7 +297,7 @@ export function getResourceDir() {
         return path.dirname(process.argv[1]);
     }
 
-    return join(dirname(fileURLToPath(import.meta.url)), "..");
+    return path.join(__dirname, "..");
 }
 
 // TODO: Deduplicate with src/public/app/services/utils.ts

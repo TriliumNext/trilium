@@ -186,11 +186,6 @@
   "special_notes": {
     "search_prefix": "Pesquisar:"
   },
-  "code_block": {
-    "theme_none": "Sem destaque de sintaxe",
-    "theme_group_light": "Temas claros",
-    "theme_group_dark": "Temas escuros"
-  },
   "test_sync": {
     "not-configured": "O host do servidor de sincronização não está configurado. Por favor, configure a sincronização primeiro.",
     "successful": "A comunicação com o servidor de sincronização foi bem-sucedida, a sincronização foi iniciada."

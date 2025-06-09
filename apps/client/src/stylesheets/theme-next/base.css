@@ -110,7 +110,8 @@ body.mobile .dropdown-menu .dropdown-menu {
     border-radius: unset !important;
 }
 
-body.desktop .dropdown-menu::before {
+body.desktop .dropdown-menu::before,
+:root .ck.ck-dropdown__panel::before {
     content: "";
     backdrop-filter: var(--dropdown-backdrop-filter);
     border-radius: var(--dropdown-border-radius);

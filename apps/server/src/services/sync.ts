@@ -364,14 +364,6 @@ function getEntityChangeRow(entityChange: EntityChange) {
             }
         }
 
-        // Special handling for note_embeddings embedding field
-        if (entityName === "note_embeddings") {
-            // Cast to any to access the embedding property
-            const row = entityRow as any;
-            if (row.embedding && Buffer.isBuffer(row.embedding)) {
-                row.embedding = row.embedding.toString("base64");
-            }
-        }
 
         return entityRow;
     }

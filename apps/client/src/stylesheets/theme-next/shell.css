@@ -127,10 +127,12 @@ body.layout-horizontal > .horizontal {
     --launcher-pane-button-gap: var(--launcher-pane-vert-button-gap);
 
     width: var(--launcher-pane-size) !important;
+    min-width: var(--launcher-pane-size) !important;
     padding-bottom: var(--launcher-pane-button-gap);
 }
 
 #launcher-pane.vertical #launcher-container {
+    width: var(--launcher-pane-size);
     height: 100%;
     overflow-x: hidden;
     overflow-y: auto;
@@ -1400,6 +1402,7 @@ div.floating-buttons .show-floating-buttons-button:active {
 div.floating-buttons-children .close-floating-buttons-button::before,
 div.floating-buttons .show-floating-buttons-button::before {
     display: block;
+    line-height: 1;
 }
 
 /* "Show buttons" button */
@@ -1636,7 +1639,9 @@ div.find-replace-widget div.find-widget-found-wrapper > span {
 
 #right-pane .toc li,
 #right-pane .highlights-list li {
-    padding: 2px 8px;
+    padding-top: 2px;
+    padding-right: 8px;
+    padding-bottom: 2px;
     border-radius: 4px;
     text-align: unset;
     transition:

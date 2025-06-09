@@ -43,7 +43,7 @@ export default class Shaca {
     }
 
     getNotes(noteIds: string[], ignoreMissing = false) {
-        const filteredNotes = [];
+        const filteredNotes: SNote[] = [];
 
         for (const noteId of noteIds) {
             const note = this.notes[noteId];

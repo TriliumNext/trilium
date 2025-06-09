@@ -63,6 +63,7 @@ function load() {
         for (const row of sql.getRows<EtapiTokenRow>(/*sql*/`SELECT etapiTokenId, name, tokenHash, utcDateCreated, utcDateModified FROM etapi_tokens WHERE isDeleted = 0`)) {
             new BEtapiToken(row);
         }
+
     });
 
     for (const noteId in becca.notes) {
@@ -277,6 +278,7 @@ function noteReorderingUpdated(branchIdList: number[]) {
 function etapiTokenDeleted(etapiTokenId: string) {
     delete becca.etapiTokens[etapiTokenId];
 }
+
 
 eventService.subscribeBeccaLoader(eventService.ENTER_PROTECTED_SESSION, () => {
     try {

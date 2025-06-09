@@ -19,10 +19,10 @@ export default class LeftPaneToggleWidget extends CommandButtonWidget {
                 return "bx-sidebar";
             }
 
-            return options.is("leftPaneVisible") ? "bx-chevrons-left" : "bx-chevrons-right";
+            return this.currentLeftPaneVisible ? "bx-chevrons-left" : "bx-chevrons-right";
         };
 
-        this.settings.title = () => (options.is("leftPaneVisible") ? t("left_pane_toggle.hide_panel") : t("left_pane_toggle.show_panel"));
+        this.settings.title = () => (this.currentLeftPaneVisible ? t("left_pane_toggle.hide_panel") : t("left_pane_toggle.show_panel"));
 
         this.settings.command = () => (this.currentLeftPaneVisible ? "hideLeftPane" : "showLeftPane");
 
@@ -32,16 +32,12 @@ export default class LeftPaneToggleWidget extends CommandButtonWidget {
     }
 
     refreshIcon() {
-        if (document.hasFocus() || this.currentLeftPaneVisible === true) {
-            super.refreshIcon();
-            splitService.setupLeftPaneResizer(this.currentLeftPaneVisible);
-        }
+        super.refreshIcon();
+        splitService.setupLeftPaneResizer(this.currentLeftPaneVisible);
     }
-
-    entitiesReloadedEvent({ loadResults }: EventData<"entitiesReloaded">) {
-        if (loadResults.isOptionReloaded("leftPaneVisible") && document.hasFocus()) {
-            this.currentLeftPaneVisible = options.is("leftPaneVisible");
-            this.refreshIcon();
-        }
+    
+    setLeftPaneVisibilityEvent({ leftPaneVisible }: EventData<"setLeftPaneVisibility">) {
+        this.currentLeftPaneVisible = leftPaneVisible ?? !this.currentLeftPaneVisible;
+        this.refreshIcon();
     }
 }

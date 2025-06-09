@@ -115,6 +115,7 @@ function updateDisplayedShortcuts($container: JQuery<HTMLElement>) {
 export default {
     updateDisplayedShortcuts,
     setupActionsForElement,
+    getAction,
     getActions,
     getActionsForScope
 };

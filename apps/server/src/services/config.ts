@@ -21,6 +21,7 @@ export interface TriliumConfig {
         noAuthentication: boolean;
         noBackup: boolean;
         noDesktopIcon: boolean;
+        readOnly: boolean;
     };
     Network: {
         host: string;
@@ -45,6 +46,9 @@ export interface TriliumConfig {
         oauthBaseUrl: string;
         oauthClientId: string;
         oauthClientSecret: string;
+        oauthIssuerBaseUrl: string;
+        oauthIssuerName: string;
+        oauthIssuerIcon: string;
     };
 }
 
@@ -62,7 +66,10 @@ const config: TriliumConfig = {
             envToBoolean(process.env.TRILIUM_GENERAL_NOBACKUP) || iniConfig.General.noBackup || false,
 
         noDesktopIcon:
-            envToBoolean(process.env.TRILIUM_GENERAL_NODESKTOPICON) || iniConfig.General.noDesktopIcon || false
+            envToBoolean(process.env.TRILIUM_GENERAL_NODESKTOPICON) || iniConfig.General.noDesktopIcon || false,
+
+        readOnly:
+            envToBoolean(process.env.TRILIUM_GENERAL_READONLY) || iniConfig.General.readOnly || false
     },
 
     Network: {
@@ -119,7 +126,16 @@ const config: TriliumConfig = {
             process.env.TRILIUM_OAUTH_CLIENT_ID || iniConfig?.MultiFactorAuthentication?.oauthClientId || "",
 
         oauthClientSecret:
-            process.env.TRILIUM_OAUTH_CLIENT_SECRET || iniConfig?.MultiFactorAuthentication?.oauthClientSecret || ""
+            process.env.TRILIUM_OAUTH_CLIENT_SECRET || iniConfig?.MultiFactorAuthentication?.oauthClientSecret || "",
+
+        oauthIssuerBaseUrl:
+            process.env.TRILIUM_OAUTH_ISSUER_BASE_URL || iniConfig?.MultiFactorAuthentication?.oauthIssuerBaseUrl || "https://accounts.google.com",
+
+        oauthIssuerName:
+            process.env.TRILIUM_OAUTH_ISSUER_NAME || iniConfig?.MultiFactorAuthentication?.oauthIssuerName || "Google",
+
+        oauthIssuerIcon:
+            process.env.TRILIUM_OAUTH_ISSUER_ICON || iniConfig?.MultiFactorAuthentication?.oauthIssuerIcon || ""
     }
 };
 

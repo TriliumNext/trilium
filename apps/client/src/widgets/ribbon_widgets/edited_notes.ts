@@ -19,7 +19,7 @@ const TPL = /*html*/`
 
     <div class="no-edited-notes-found">${t("edited_notes.no_edited_notes_found")}</div>
 
-    <div class="edited-notes-list"></div>
+    <div class="edited-notes-list use-tn-links"></div>
 </div>
 `;
 

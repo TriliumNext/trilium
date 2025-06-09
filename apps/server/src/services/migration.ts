@@ -1,25 +1,19 @@
 import backupService from "./backup.js";
 import sql from "./sql.js";
-import fs from "fs-extra";
 import log from "./log.js";
 import { crash } from "./utils.js";
-import resourceDir from "./resource_dir.js";
 import appInfo from "./app_info.js";
 import cls from "./cls.js";
 import { t } from "i18next";
-import { join } from "path";
+import MIGRATIONS from "../migrations/migrations.js";
 
 interface MigrationInfo {
     dbVersion: number;
-    name: string;
-    file: string;
-    type: "sql" | "js" | "ts" | string;
     /**
-     * Contains the JavaScript/TypeScript migration as a callback method that must be called to trigger the migration.
-     * The method cannot be async since it runs in an SQL transaction.
-     * For SQL migrations, this value is falsy.
+     * If string, then the migration is an SQL script that will be executed.
+     * If a function, then the migration is a JavaScript/TypeScript module that will be executed.
      */
-    module?: () => void;
+    migration: string | (() => void);
 }
 
 async function migrate() {
@@ -31,13 +25,14 @@ async function migrate() {
     }
 
     // backup before attempting migration
-    await backupService.backupNow(
-        // creating a special backup for version 0.60.4, the changes in 0.61 are major.
-        currentDbVersion === 214 ? `before-migration-v060` : "before-migration"
-    );
+    if (!process.env.TRILIUM_INTEGRATION_TEST) {
+        await backupService.backupNow(
+            // creating a special backup for version 0.60.4, the changes in 0.61 are major.
+            currentDbVersion === 214 ? `before-migration-v060` : "before-migration"
+        );
+    }
 
     const migrations = await prepareMigrations(currentDbVersion);
-    migrations.sort((a, b) => a.dbVersion - b.dbVersion);
 
     // all migrations are executed in one transaction - upgrade either succeeds, or the user can stay at the old version
     // otherwise if half of the migrations succeed, user can't use any version - DB is too "new" for the old app,
@@ -76,53 +71,37 @@ async function migrate() {
 }
 
 async function prepareMigrations(currentDbVersion: number): Promise<MigrationInfo[]> {
-    const migrationFiles = fs.readdirSync(resourceDir.MIGRATIONS_DIR) ?? [];
+    MIGRATIONS.sort((a, b) => a.version - b.version);
     const migrations: MigrationInfo[] = [];
-    for (const file of migrationFiles) {
-        const match = file.match(/^([0-9]{4})__([a-zA-Z0-9_ ]+)\.(sql|js|ts)$/);
-        if (!match) {
-            continue;
-        }
-
-        const dbVersion = parseInt(match[1]);
+    for (const migration of MIGRATIONS) {
+        const dbVersion = migration.version;
         if (dbVersion > currentDbVersion) {
-            const name = match[2];
-            const type = match[3];
-
-            const migration: MigrationInfo = {
-                dbVersion: dbVersion,
-                name: name,
-                file: file,
-                type: type
-            };
-
-            if (type === "js" || type === "ts") {
+            if ("sql" in migration) {
+                migrations.push({
+                    dbVersion,
+                    migration: migration.sql
+                });
+            } else {
                 // Due to ESM imports, the migration file needs to be imported asynchronously and thus cannot be loaded at migration time (since migration is not asynchronous).
                 // As such we have to preload the ESM.
-                // Going back to the original approach but making it webpack-compatible
-                const importPath = join(resourceDir.MIGRATIONS_DIR, file);
-                migration.module = (await import(importPath)).default;
+                migrations.push({
+                    dbVersion,
+                    migration: (await migration.module()).default
+                });
             }
-
-            migrations.push(migration);
         }
     }
     return migrations;
 }
 
-function executeMigration(mig: MigrationInfo) {
-    if (mig.module) {
-        console.log("Migration with JS module");
-        mig.module();
-    } else if (mig.type === "sql") {
-        const migrationSql = fs.readFileSync(`${resourceDir.MIGRATIONS_DIR}/${mig.file}`).toString("utf8");
-
-        console.log(`Migration with SQL script: ${migrationSql}`);
-
-        sql.executeScript(migrationSql);
+function executeMigration({ migration }: MigrationInfo) {
+    if (typeof migration === "string") {
+        console.log(`Migration with SQL script: ${migration}`);
+        sql.executeScript(migration);
     } else {
-        throw new Error(`Unknown migration type '${mig.type}'`);
-    }
+        console.log("Migration with JS module");
+        migration();
+    };
 }
 
 function getDbVersion() {

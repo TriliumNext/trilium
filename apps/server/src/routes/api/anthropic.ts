@@ -48,17 +48,6 @@ interface AnthropicModel {
  *                         type: string
  *                       type:
  *                         type: string
- *                 embeddingModels:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: string
- *                       name:
- *                         type: string
- *                       type:
- *                         type: string
  *       '500':
  *         description: Error listing models
  *     security:
@@ -90,14 +79,10 @@ async function listModels(req: Request, res: Response) {
             type: 'chat'
         }));
 
-        // Anthropic doesn't currently have embedding models
-        const embeddingModels: AnthropicModel[] = [];
-
         // Return the models list
         return {
             success: true,
-            chatModels,
-            embeddingModels
+            chatModels
         };
     } catch (error: any) {
         log.error(`Error listing Anthropic models: ${error.message || 'Unknown error'}`);

@@ -6,7 +6,7 @@ import type { ICacheManager, CachedNoteData, CachedQueryResults } from '../../in
  * Provides a centralized caching system to avoid redundant operations
  */
 export class CacheManager implements ICacheManager {
-    // Cache for recently used context to avoid repeated embedding lookups
+    // Cache for recently used context to avoid repeated lookups
     private noteDataCache = new Map<string, CachedNoteData<unknown>>();
 
     // Cache for recently used queries

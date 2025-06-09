@@ -36,7 +36,7 @@ function searchFromNote(note: BNote): SearchNoteResult {
 
     const searchScript = note.getRelationValue("searchScript");
     const searchString = note.getLabelValue("searchString") || "";
-    let error = null;
+    let error: string | null = null;
 
     if (searchScript) {
         searchResultNoteIds = searchFromRelation(note, "searchScript");

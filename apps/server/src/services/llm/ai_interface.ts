@@ -9,7 +9,7 @@ export interface Message {
     content: string;
     name?: string;
     tool_call_id?: string;
-    tool_calls?: ToolCall[];
+    tool_calls?: ToolCall[] | null;
     sessionId?: string; // Optional session ID for WebSocket communication
 }
 
@@ -210,7 +210,7 @@ export interface ChatResponse {
     stream?: (callback: (chunk: StreamChunk) => Promise<void> | void) => Promise<string>;
 
     /** Tool calls from the LLM (if tools were used and the model supports them) */
-    tool_calls?: ToolCall[];
+    tool_calls?: ToolCall[] | null;
 }
 
 export interface AIService {

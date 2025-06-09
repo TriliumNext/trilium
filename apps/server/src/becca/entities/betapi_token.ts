@@ -41,7 +41,7 @@ class BEtapiToken extends AbstractBeccaEntity<BEtapiToken> {
         this.init();
     }
 
-    get isDeleted() {
+    override get isDeleted() {
         return !!this._isDeleted;
     }
 
@@ -58,7 +58,7 @@ class BEtapiToken extends AbstractBeccaEntity<BEtapiToken> {
         }
     }
 
-    init() {
+    override init() {
         if (this.etapiTokenId) {
             this.becca.etapiTokens[this.etapiTokenId] = this;
         }
@@ -75,7 +75,7 @@ class BEtapiToken extends AbstractBeccaEntity<BEtapiToken> {
         };
     }
 
-    beforeSaving() {
+    override beforeSaving() {
         this.utcDateModified = dateUtils.utcNowDateTime();
 
         super.beforeSaving();

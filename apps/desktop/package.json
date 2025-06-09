@@ -1,9 +1,9 @@
 {
   "name": "@triliumnext/desktop",
-  "version": "0.0.1",
+  "version": "0.94.1",
   "description": "Build your personal knowledge base with TriliumNext Notes",
   "private": true,
-  "main": "main.js",
+  "main": "main.cjs",
   "dependencies": {
     "@electron/remote": "2.1.2",
     "better-sqlite3": "^11.9.1",
@@ -11,14 +11,13 @@
     "electron-dl": "4.0.0",
     "electron-squirrel-startup": "1.0.1",
     "jquery.fancytree": "2.38.5",
-    "jquery-hotkeys": "0.2.2",
-    "@highlightjs/cdn-assets": "11.11.1"
+    "jquery-hotkeys": "0.2.2"
   },
   "devDependencies": {
     "@types/electron-squirrel-startup": "1.0.2",
     "@triliumnext/server": "workspace:*",
     "copy-webpack-plugin": "13.0.0",
-    "electron": "36.2.0",    
+    "electron": "36.4.0",
     "@electron-forge/cli": "7.8.1",
     "@electron-forge/maker-deb": "7.8.1",
     "@electron-forge/maker-dmg": "7.8.1",
@@ -30,9 +29,8 @@
     "prebuild-install": "^7.1.1"
   },
   "config": {
-    "forge": "../electron-forge/forge.config.cjs"
+    "forge": "./electron-forge/forge.config.cjs"
   },
-  "packageManager": "pnpm@10.10.0+sha512.d615db246fe70f25dcfea6d8d73dee782ce23e2245e3c4f6f888249fb568149318637dca73c2c5c8ef2a4ca0d5657fb9567188bfab47f566d1ee6ce987815c39",
   "scripts": {
     "start-prod": "nx build desktop && cross-env TRILIUM_DATA_DIR=data TRILIUM_RESOURCE_DIR=dist TRILIUM_PORT=37841 electron dist/main.js"
   },
@@ -45,6 +43,71 @@
   "nx": {
     "name": "desktop",
     "targets": {
+      "build": {
+        "executor": "@nx/esbuild:esbuild",
+        "outputs": [
+          "{options.outputPath}"
+        ],
+        "options": {
+          "main": "apps/desktop/src/electron-main.ts",
+          "outputPath": "apps/desktop/dist",
+          "outputFileName": "main.js",
+          "tsConfig": "apps/desktop/tsconfig.app.json",
+          "platform": "node",
+          "external": [
+            "electron",
+            "@electron/remote",
+            "better-sqlite3",
+            "./xhr-sync-worker.js"
+          ],
+          "format": [
+            "cjs"
+          ],
+          "minify": true,
+          "thirdParty": true,
+          "declaration": false,
+          "sourcemap": true,
+          "esbuildOptions": {
+            "splitting": false,
+            "loader": {
+              ".css": "text"
+            }
+          },
+          "assets": [
+            {
+              "glob": "**/*",
+              "input": "apps/server/dist/node_modules",
+              "output": "node_modules"
+            },
+            {
+              "glob": "**/*",
+              "input": "apps/desktop/node_modules/@electron/remote",
+              "output": "node_modules/@electron/remote"
+            },
+            {
+              "glob": "**/*",
+              "input": "apps/server/dist/assets",
+              "output": "assets"
+            },
+            {
+              "glob": "**/*",
+              "input": "apps/desktop/src/assets",
+              "output": "assets"
+            },
+            {
+              "glob": "**/*",
+              "input": "apps/server/dist/public",
+              "output": "public"
+            },
+            {
+              "glob": "xhr-sync-worker.js",
+              "input": "apps/server/node_modules/jsdom/lib/jsdom/living/xhr",
+              "output": ""
+            }
+          ],
+          "declarationRootDir": "apps/desktop/src"
+        }
+      },
       "rebuild-deps": {
         "executor": "nx:run-commands",
         "dependsOn": [
@@ -57,7 +120,7 @@
             "command": "cross-env DEBUG=* tsx scripts/electron-rebuild.mts {projectRoot}/dist"
           },
           "nixos": {
-            "command": "cross-env DEBUG=* tsx scripts/electron-rebuild.mts {projectRoot}/dist $(nix-shell -p electron_33 --run \"electron --version\")"
+            "command": "cross-env DEBUG=* tsx scripts/electron-rebuild.mts {projectRoot}/dist $(nix-shell -p electron_35 --run \"electron --version\")"
           }
         }
       },
@@ -69,11 +132,11 @@
         "defaultConfiguration": "default",
         "configurations": {
           "default": {
-            "command": "electron .",
+            "command": "electron main.cjs",
             "cwd": "{projectRoot}/dist"
           },
           "nixos": {
-            "command": "nix-shell -p electron_33 --run \"electron {projectRoot}/dist/main.js\"",
+            "command": "nix-shell -p electron_35 --run \"electron {projectRoot}/dist/main.cjs\"",
             "cwd": ".",
             "forwardAllArgs": false
           }
@@ -87,11 +150,11 @@
         "defaultConfiguration": "default",
         "configurations": {
           "default": {
-            "command": "electron .",
+            "command": "electron main.cjs",
             "cwd": "{projectRoot}/dist"
           },
           "nixos": {
-            "command": "nix-shell -p electron_33 --run \"electron {projectRoot}/dist/main.js\"",
+            "command": "nix-shell -p electron_35 --run \"electron {projectRoot}/dist/main.cjs\"",
             "cwd": ".",
             "forwardAllArgs": false
           }
@@ -99,15 +162,24 @@
       },
       "electron-forge:make": {
         "dependsOn": [
-          "build"
+          "build",
+          "rebuild-deps"
         ],
         "command": "pnpm -C apps/desktop exec cross-env NODE_INSTALLER=npm electron-forge make dist"
       },
       "electron-forge:package": {
         "dependsOn": [
-          "build"
+          "build",
+          "rebuild-deps"
         ],
         "command": "pnpm -C apps/desktop exec cross-env NODE_INSTALLER=npm electron-forge package dist"
+      },
+      "electron-forge:start": {
+        "dependsOn": [
+          "build",
+          "rebuild-deps"
+        ],
+        "command": "pnpm -C apps/desktop exec cross-env NODE_INSTALLER=npm TRILIUM_DATA_DIR=./data electron-forge start dist"
       }
     }
   }

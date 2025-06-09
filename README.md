@@ -1,18 +1,54 @@
 # TriliumNext Notes
 
-![GitHub Sponsors](https://img.shields.io/github/sponsors/eliandoran) ![Docker Pulls](https://img.shields.io/docker/pulls/triliumnext/notes) ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/triliumnext/notes/total)
+![GitHub Sponsors](https://img.shields.io/github/sponsors/eliandoran?style=flat-square)
+![Docker Pulls](https://img.shields.io/docker/pulls/triliumnext/notes?style=flat-square)
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/triliumnext/notes/total?style=flat-square)
+[![RelativeCI](https://badges.relative-ci.com/badges/Di5q7dz9daNDZ9UXi0Bp?branch=develop&style=flat-square)](https://app.relative-ci.com/projects/Di5q7dz9daNDZ9UXi0Bp)
 
 [English](./README.md) | [Chinese](./docs/README-ZH_CN.md) | [Russian](./docs/README.ru.md) | [Japanese](./docs/README.ja.md) | [Italian](./docs/README.it.md) | [Spanish](./docs/README.es.md)
 
-TriliumNext Notes is an open-source, cross-platform hierarchical note taking application with focus on building large personal knowledge bases.
+TriliumNext Notes is a free and open-source, cross-platform hierarchical note taking application with focus on building large personal knowledge bases.
 
 See [screenshots](https://triliumnext.github.io/Docs/Wiki/screenshot-tour) for quick overview:
 
 <a href="https://triliumnext.github.io/Docs/Wiki/screenshot-tour"><img src="./docs/app.png" alt="Trilium Screenshot" width="1000"></a>
 
+## 🎁 Features
+
+* Notes can be arranged into arbitrarily deep tree. Single note can be placed into multiple places in the tree (see [cloning](https://triliumnext.github.io/Docs/Wiki/cloning-notes))
+* Rich WYSIWYG note editor including e.g. tables, images and [math](https://triliumnext.github.io/Docs/Wiki/text-notes) with markdown [autoformat](https://triliumnext.github.io/Docs/Wiki/text-notes#autoformat)
+* Support for editing [notes with source code](https://triliumnext.github.io/Docs/Wiki/code-notes), including syntax highlighting
+* Fast and easy [navigation between notes](https://triliumnext.github.io/Docs/Wiki/note-navigation), full text search and [note hoisting](https://triliumnext.github.io/Docs/Wiki/note-hoisting)
+* Seamless [note versioning](https://triliumnext.github.io/Docs/Wiki/note-revisions)
+* Note [attributes](https://triliumnext.github.io/Docs/Wiki/attributes) can be used for note organization, querying and advanced [scripting](https://triliumnext.github.io/Docs/Wiki/scripts)
+* UI available in English, German, Spanish, French, Romanian, and Chinese (simplified and traditional)
+* Direct [OpenID and TOTP integration](.docs/User%20Guide/User%20Guide/Installation%20%26%20Setup/Server%20Installation/Multi-Factor%20Authentication.md") for more secure login
+* [Synchronization](https://triliumnext.github.io/Docs/Wiki/synchronization) with self-hosted sync server
+  * there's a [3rd party service for hosting synchronisation server](https://trilium.cc/paid-hosting)
+* [Sharing](https://triliumnext.github.io/Docs/Wiki/sharing) (publishing) notes to public internet
+* Strong [note encryption](https://triliumnext.github.io/Docs/Wiki/protected-notes) with per-note granularity
+* Sketching diagrams, based on [Excalidraw](https://excalidraw.com/) (note type "canvas")
+* [Relation maps](https://triliumnext.github.io/Docs/Wiki/relation-map) and [link maps](https://triliumnext.github.io/Docs/Wiki/link-map) for visualizing notes and their relations
+* Mind maps, based on [Mind Elixir](https://docs.mind-elixir.com/)
+* [Geo maps](./docs/User%20Guide/User%20Guide/Note%20Types/Geo%20Map.md) with location pins and GPX tracks
+* [Scripting](https://triliumnext.github.io/Docs/Wiki/scripts) - see [Advanced showcases](https://triliumnext.github.io/Docs/Wiki/advanced-showcases)
+* [REST API](https://triliumnext.github.io/Docs/Wiki/etapi) for automation
+* Scales well in both usability and performance upwards of 100 000 notes
+* Touch optimized [mobile frontend](https://triliumnext.github.io/Docs/Wiki/mobile-frontend) for smartphones and tablets
+* Built-in [dark theme](https://triliumnext.github.io/Docs/Wiki/themes), support for user themes
+* [Evernote](https://triliumnext.github.io/Docs/Wiki/evernote-import) and [Markdown import & export](https://triliumnext.github.io/Docs/Wiki/markdown)
+* [Web Clipper](https://triliumnext.github.io/Docs/Wiki/web-clipper) for easy saving of web content
+* Customizable UI (sidebar buttons, user-defined widgets, ...)
+* [Metrics](./docs/User%20Guide/User%20Guide/Advanced%20Usage/Metrics.md), along with a [Grafana Dashboard](./docs/User%20Guide/User%20Guide/Advanced%20Usage/Metrics/grafana-dashboard.json)
+
+✨ Check out the following third-party resources/communities for more TriliumNext related goodies:
+
+- [awesome-trilium](https://github.com/Nriver/awesome-trilium) for 3rd party themes, scripts, plugins and more.
+- [TriliumRocks!](https://trilium.rocks/) for tutorials, guides, and much more.
+
 ## ⚠️ Why TriliumNext?
 
-[The original Trilium project is in maintenance mode](https://github.com/zadam/trilium/issues/4620)
+[The original Trilium project is in maintenance mode](https://github.com/zadam/trilium/issues/4620).
 
 ### Migrating from Trilium?
 
@@ -20,53 +56,49 @@ There are no special migration steps to migrate from a zadam/Trilium instance to
 
 Versions up to and including [v0.90.4](https://github.com/TriliumNext/Notes/releases/tag/v0.90.4) are compatible with the latest zadam/trilium version of [v0.63.7](https://github.com/zadam/trilium/releases/tag/v0.63.7). Any later versions of TriliumNext have their sync versions incremented.
 
+## 📖 Documentation
+
+We're currently in the progress of moving the documentation to in-app (hit the `F1` key within Trilium). As a result, there may be some missing parts until we've completed the migration. If you'd prefer to navigate through the documentation within GitHub, you can navigate the [User Guide](./docs/User%20Guide/User%20Guide/) documentation. 
+
+Below are some quick links for your convenience to navigate the documentation:
+- [Server installation](./docs/User%20Guide/User%20Guide/Installation%20&%20Setup/Server%20Installation.md)
+  - [Docker installation](./docs/User%20Guide/User%20Guide/Installation%20&%20Setup/Server%20Installation/1.%20Installing%20the%20server/Using%20Docker.md)
+- [Upgrading TriliumNext](./docs/User%20Guide/User%20Guide/Installation%20%26%20Setup/Upgrading%20TriliumNext.md)
+- [Concepts and Features - Note](./docs/User%20Guide/User%20Guide/Basic%20Concepts%20and%20Features/Notes.md)
+- [Patterns of personal knowledge base](https://triliumnext.github.io/Docs/Wiki/patterns-of-personal-knowledge)
+
+Until we finish reorganizing the documentation, you may also want to [browse the old documentation](https://triliumnext.github.io/Docs).
+
 ## 💬 Discuss with us
 
 Feel free to join our official conversations. We would love to hear what features, suggestions, or issues you may have!
 
-- [Matrix](https://matrix.to/#/#triliumnext:matrix.org) (For synchronous discussions)
+- [Matrix](https://matrix.to/#/#triliumnext:matrix.org) (For synchronous discussions.)
   - The `General` Matrix room is also bridged to [XMPP](xmpp:discuss@trilium.thisgreat.party?join)
-- [Github Discussions](https://github.com/TriliumNext/Notes/discussions) (For Asynchronous discussions)
-- [Wiki](https://triliumnext.github.io/Docs/) (For common how-to questions and user guides)
-
-## 🎁 Features
-
-* Notes can be arranged into arbitrarily deep tree. Single note can be placed into multiple places in the tree (see [cloning](https://triliumnext.github.io/Docs/Wiki/cloning-notes))
-* Rich WYSIWYG note editing including e.g. tables, images and [math](https://triliumnext.github.io/Docs/Wiki/text-notes) with markdown [autoformat](https://triliumnext.github.io/Docs/Wiki/text-notes#autoformat)
-* Support for editing [notes with source code](https://triliumnext.github.io/Docs/Wiki/code-notes), including syntax highlighting
-* Fast and easy [navigation between notes](https://triliumnext.github.io/Docs/Wiki/note-navigation), full text search and [note hoisting](https://triliumnext.github.io/Docs/Wiki/note-hoisting)
-* Seamless [note versioning](https://triliumnext.github.io/Docs/Wiki/note-revisions)
-* Note [attributes](https://triliumnext.github.io/Docs/Wiki/attributes) can be used for note organization, querying and advanced [scripting](https://triliumnext.github.io/Docs/Wiki/scripts)
-* Direct OpenID and TOTP integration for more secure login
-* [Synchronization](https://triliumnext.github.io/Docs/Wiki/synchronization) with self-hosted sync server
-  * there's a [3rd party service for hosting synchronisation server](https://trilium.cc/paid-hosting)
-* [Sharing](https://triliumnext.github.io/Docs/Wiki/sharing) (publishing) notes to public internet
-* Strong [note encryption](https://triliumnext.github.io/Docs/Wiki/protected-notes) with per-note granularity
-* Sketching diagrams with built-in Excalidraw (note type "canvas")
-* [Relation maps](https://triliumnext.github.io/Docs/Wiki/relation-map) and [link maps](https://triliumnext.github.io/Docs/Wiki/link-map) for visualizing notes and their relations
-* [Scripting](https://triliumnext.github.io/Docs/Wiki/scripts) - see [Advanced showcases](https://triliumnext.github.io/Docs/Wiki/advanced-showcases)
-* [REST API](https://triliumnext.github.io/Docs/Wiki/etapi) for automation
-* Scales well in both usability and performance upwards of 100 000 notes
-* Touch optimized [mobile frontend](https://triliumnext.github.io/Docs/Wiki/mobile-frontend) for smartphones and tablets
-* [Night theme](https://triliumnext.github.io/Docs/Wiki/themes)
-* [Evernote](https://triliumnext.github.io/Docs/Wiki/evernote-import) and [Markdown import & export](https://triliumnext.github.io/Docs/Wiki/markdown)
-* [Web Clipper](https://triliumnext.github.io/Docs/Wiki/web-clipper) for easy saving of web content
-
-✨ Check out the following third-party resources/communities for more TriliumNext related goodies:
-
-- [awesome-trilium](https://github.com/Nriver/awesome-trilium) for 3rd party themes, scripts, plugins and more.
-- [TriliumRocks!](https://trilium.rocks/) for tutorials, guides, and much more.
+- [Github Discussions](https://github.com/TriliumNext/Notes/discussions) (For asynchronous discussions.)
+- [Github Issues](https://github.com/TriliumNext/Notes/issues) (For bug reports and feature requests.)
 
 ## 🏗 Installation
 
-### Desktop
+### Windows / MacOS
 
-To use TriliumNext on your desktop machine (Linux, MacOS, and Windows) you have a few options:
+Download the binary release for your platform from the [latest release page](https://github.com/TriliumNext/Notes/releases/latest), unzip the package and run the `trilium` executable.
 
-* Download the binary release for your platform from the [latest release page](https://github.com/TriliumNext/Notes/releases/latest), unzip the package and run the ```trilium``` executable.
-* Access TriliumNext via the web interface of a server installation (see below)
-    * Currently only the latest versions of Chrome & Firefox are supported (and tested).
-* TriliumNext is also provided as a Flatpak, but not yet published on FlatHub.
+### Linux
+
+If your distribution is listed in the table below, use your distribution's package.
+
+[![Packaging status](https://repology.org/badge/vertical-allrepos/triliumnext.svg)](https://repology.org/project/triliumnext/versions)
+
+You may also download the binary release for your platform from the [latest release page](https://github.com/TriliumNext/Notes/releases/latest), unzip the package and run the `trilium` executable.
+
+TriliumNext is also provided as a Flatpak, but not yet published on FlatHub.
+
+### Browser (any OS)
+
+If you use a server installation (see below), you can directly access the web interface (which is almost identical to the desktop app).
+
+Currently only the latest versions of Chrome & Firefox are supported (and tested).
 
 ### Mobile
 
@@ -80,28 +112,43 @@ See issue https://github.com/TriliumNext/Notes/issues/72 for more information on
 
 To install TriliumNext on your own server (including via Docker from [Dockerhub](https://hub.docker.com/r/triliumnext/notes)) follow [the server installation docs](https://triliumnext.github.io/Docs/Wiki/server-installation).
 
-## 📝 Documentation
-
-[See wiki for complete list of documentation pages.](https://triliumnext.github.io/Docs)
-
-You can also read [Patterns of personal knowledge base](https://triliumnext.github.io/Docs/Wiki/patterns-of-personal-knowledge) to get some inspiration on how you might use TriliumNext.
 
 ## 💻 Contribute
 
 ### Code
 
+Download the repository, install dependencies using `pnpm` and then run the server (available at http://localhost:8080):
 ```shell
 git clone https://github.com/TriliumNext/Notes.git
 cd Notes
-npm install
-npm run server:start
+pnpm install
+pnpm run server:start
+```
+
+### Documentation
+
+Download the repository, install dependencies using `pnpm` and then run the environment required to edit the documentation:
+```shell
+git clone https://github.com/TriliumNext/Notes.git
+cd Notes
+pnpm install
+pnpm nx run edit-docs:edit-docs
+```
+
+### Building the Executable
+Download the repository, install dependencies using `pnpm` and then build the desktop app for Windows:
+```shell
+git clone https://github.com/TriliumNext/Notes.git
+cd Notes
+pnpm install
+pnpm nx --project=desktop electron-forge:make -- --arch=x64 --platform=win32
 ```
 
 For more details, see the [development docs](https://github.com/TriliumNext/Notes/blob/develop/docs/Developer%20Guide/Developer%20Guide/Building%20and%20deployment/Running%20a%20development%20build.md).
 
-### Documentation
+### Developer Documentation
 
-See the [documentation guide](https://github.com/TriliumNext/Notes/blob/develop/docs/Developer%20Guide/Developer%20Guide/Documentation.md) for details.
+Please view the [documentation guide](./docs/Developer%20Guide/Developer%20Guide/Environment%20Setup.md) for details. If you have more questions, feel free to reach out via the links described in the "Discuss with us" section above.
 
 ## 👏 Shoutouts
 
@@ -118,5 +165,7 @@ Support for the TriliumNext organization will be possible in the near future. Fo
 
 
 ## 🔑 License
+
+Copyright 2017-2025 zadam, Elian Doran, and other contributors
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.

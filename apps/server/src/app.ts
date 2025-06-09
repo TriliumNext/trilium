@@ -4,9 +4,8 @@ import favicon from "serve-favicon";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import compression from "compression";
-import sessionParser from "./routes/session_parser.js";
 import config from "./services/config.js";
-import utils, { getResourceDir } from "./services/utils.js";
+import utils, { getResourceDir, isDev } from "./services/utils.js";
 import assets from "./routes/assets.js";
 import routes from "./routes/routes.js";
 import custom from "./routes/custom.js";
@@ -31,17 +30,8 @@ export default async function buildApp() {
     // Listen for database initialization event
     eventService.subscribe(eventService.DB_INITIALIZED, async () => {
         try {
-            log.info("Database initialized, setting up LLM features");
-
-            // Initialize embedding providers
-            const { initializeEmbeddings } = await import("./services/llm/embeddings/init.js");
-            await initializeEmbeddings();
-
-            // Initialize the index service for LLM functionality
-            const { default: indexService } = await import("./services/llm/index_service.js");
-            await indexService.initialize().catch(e => console.error("Failed to initialize index service:", e));
-
-            log.info("LLM features initialized successfully");
+            log.info("Database initialized, LLM features available");
+            log.info("LLM features ready");
         } catch (error) {
             console.error("Error initializing LLM features:", error);
         }
@@ -50,13 +40,7 @@ export default async function buildApp() {
     // Initialize LLM features only if database is already initialized
     if (sql_init.isDbInitialized()) {
         try {
-            // Initialize embedding providers
-            const { initializeEmbeddings } = await import("./services/llm/embeddings/init.js");
-            await initializeEmbeddings();
-
-            // Initialize the index service for LLM functionality
-            const { default: indexService } = await import("./services/llm/index_service.js");
-            await indexService.initialize().catch(e => console.error("Failed to initialize index service:", e));
+            log.info("LLM features ready");
         } catch (error) {
             console.error("Error initializing LLM features:", error);
         }
@@ -64,7 +48,7 @@ export default async function buildApp() {
         console.log("Database not initialized yet. LLM features will be initialized after setup.");
     }
 
-    const publicDir = path.join(getResourceDir(), "public");
+    const publicDir = isDev ? path.join(getResourceDir(), "../dist/public") : path.join(getResourceDir(), "public");
     const publicAssetsDir = path.join(publicDir, "assets");
     const assetsDir = RESOURCE_DIR;
 
@@ -111,6 +95,8 @@ export default async function buildApp() {
     app.use(`/manifest.webmanifest`, express.static(path.join(publicAssetsDir, "manifest.webmanifest")));
     app.use(`/robots.txt`, express.static(path.join(publicAssetsDir, "robots.txt")));
     app.use(`/icon.png`, express.static(path.join(publicAssetsDir, "icon.png")));
+
+    const sessionParser = (await import("./routes/session_parser.js")).default;
     app.use(sessionParser);
     app.use(favicon(path.join(assetsDir, "icon.ico")));
 
@@ -136,7 +122,7 @@ export default async function buildApp() {
     startScheduledCleanup();
 
     if (utils.isElectron) {
-        (await import("@electron/remote/main")).initialize();
+        (await import("@electron/remote/main/index.js")).initialize();
     }
 
     return app;

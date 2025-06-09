@@ -19,18 +19,18 @@ export const attributeSearchToolDefinition: Tool = {
     type: 'function',
     function: {
         name: 'attribute_search',
-        description: 'Search for notes with specific attributes (labels or relations). Use this when you need to find notes based on their metadata rather than content.',
+        description: 'Search for notes with specific attributes (labels or relations). Use this when you need to find notes based on their metadata rather than content. IMPORTANT: attributeType must be exactly "label" or "relation" (lowercase).',
         parameters: {
             type: 'object',
             properties: {
                 attributeType: {
                     type: 'string',
-                    description: 'Type of attribute to search for: "label" or "relation"',
+                    description: 'MUST be exactly "label" or "relation" (lowercase, no other values are valid)',
                     enum: ['label', 'relation']
                 },
                 attributeName: {
                     type: 'string',
-                    description: 'Name of the attribute to search for'
+                    description: 'Name of the attribute to search for (e.g., "important", "todo", "related-to")'
                 },
                 attributeValue: {
                     type: 'string',
@@ -63,7 +63,7 @@ export class AttributeSearchTool implements ToolHandler {
 
             // Validate attribute type
             if (attributeType !== 'label' && attributeType !== 'relation') {
-                return `Error: Invalid attribute type. Must be either "label" or "relation".`;
+                return `Error: Invalid attribute type. Must be exactly "label" or "relation" (lowercase). You provided: "${attributeType}".`;
             }
 
             // Execute the search
@@ -133,7 +133,7 @@ export class AttributeSearchTool implements ToolHandler {
                         } else {
                             contentPreview = String(content).substring(0, 150) + (String(content).length > 150 ? '...' : '');
                         }
-                    } catch (e) {
+                    } catch (_) {
                         contentPreview = '[Content not available]';
                     }
 
@@ -148,9 +148,10 @@ export class AttributeSearchTool implements ToolHandler {
                     };
                 })
             };
-        } catch (error: any) {
-            log.error(`Error executing attribute_search tool: ${error.message || String(error)}`);
-            return `Error: ${error.message || String(error)}`;
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            log.error(`Error executing attribute_search tool: ${errorMessage}`);
+            return `Error: ${errorMessage}`;
         }
     }
 }

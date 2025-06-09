@@ -122,7 +122,7 @@ export default class PromotedAttributesWidget extends NoteContextAwareWidget {
             return;
         }
 
-        const $cells = [];
+        const $cells: JQuery<HTMLElement>[] = [];
 
         for (const definitionAttr of promotedDefAttrs) {
             const valueType = definitionAttr.name.startsWith("label:") ? "label" : "relation";

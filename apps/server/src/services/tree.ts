@@ -7,7 +7,7 @@ import entityChangesService from "./entity_changes.js";
 import becca from "../becca/becca.js";
 import type BNote from "../becca/entities/bnote.js";
 
-interface ValidationResponse {
+export interface ValidationResponse {
     branch: BBranch | null;
     success: boolean;
     message?: string;

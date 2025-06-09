@@ -50,6 +50,12 @@
     },
     {
       "path": "./packages/ckeditor5-math"
+    },
+    {
+      "path": "./packages/codemirror"
+    },
+    {
+      "path": "./packages/highlightjs"
     }
   ]
 }

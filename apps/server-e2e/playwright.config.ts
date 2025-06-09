@@ -22,12 +22,13 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   /* Run your local dev server before starting the tests */
-  webServer: {
+  webServer: !process.env.TRILIUM_DOCKER ? {
     command: 'pnpm server:start-prod',
     url: baseURL,
     reuseExistingServer: !process.env.CI,
-    cwd: workspaceRoot
-  },
+    cwd: workspaceRoot,
+    timeout: 5 * 60 * 1000
+  } : undefined,
   projects: [
     {
       name: "chromium",

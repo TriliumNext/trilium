@@ -56,9 +56,6 @@
       }
     }
   },
-  "dependencies": {
-    "@swc/helpers": "~0.5.11"
-  },
   "devDependencies": {
     "turndown": "7.2.0",
     "turndown-attendant": "0.0.3"

@@ -63,7 +63,7 @@ class BBranch extends AbstractBeccaEntity<BBranch> {
         return this;
     }
 
-    init() {
+    override init() {
         if (this.branchId) {
             this.becca.branches[this.branchId] = this;
         }
@@ -115,7 +115,7 @@ class BBranch extends AbstractBeccaEntity<BBranch> {
         return this.becca.notes[this.parentNoteId];
     }
 
-    get isDeleted() {
+    override get isDeleted() {
         return this.branchId == undefined || !(this.branchId in this.becca.branches);
     }
 
@@ -204,7 +204,7 @@ class BBranch extends AbstractBeccaEntity<BBranch> {
         }
     }
 
-    beforeSaving() {
+    override beforeSaving() {
         if (!this.noteId || !this.parentNoteId) {
             throw new Error(`noteId and parentNoteId are mandatory properties for Branch`);
         }

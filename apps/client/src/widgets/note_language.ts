@@ -1,7 +1,6 @@
 import { Dropdown } from "bootstrap";
 import NoteContextAwareWidget from "./note_context_aware_widget.js";
-import { getAvailableLocales, getLocaleById } from "../services/i18n.js";
-import { t } from "i18next";
+import { getAvailableLocales, getLocaleById, t } from "../services/i18n.js";
 import type { EventData } from "../components/app_context.js";
 import type FNote from "../entities/fnote.js";
 import attributes from "../services/attributes.js";

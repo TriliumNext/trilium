@@ -13,7 +13,7 @@ import log from '../../log.js';
 export class ToolRegistry {
     private static instance: ToolRegistry;
     private tools: Map<string, ToolHandler> = new Map();
-    private initializationAttempted: boolean = false;
+    private initializationAttempted = false;
 
     private constructor() {}
 
@@ -106,7 +106,6 @@ export class ToolRegistry {
         }
 
         this.tools.set(name, handler);
-        log.info(`Registered tool: ${name}`);
     }
 
     /**

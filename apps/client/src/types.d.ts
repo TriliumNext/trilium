@@ -22,7 +22,6 @@ interface CustomGlobals {
     getReferenceLinkTitle: (href: string) => Promise<string>;
     getReferenceLinkTitleSync: (href: string) => string;
     getActiveContextNote: () => FNote | null;
-    requireLibrary: typeof library_loader.requireLibrary;
     ESLINT: Library;
     appContext: AppContext;
     froca: Froca;
@@ -94,16 +93,6 @@ declare global {
         getSelectedExternalLink(): string | undefined;
         setSelectedExternalLink(externalLink: string | null | undefined);
         setNote(noteId: string);
-        markRegExp(regex: RegExp, opts: {
-            element: string;
-            className: string;
-            separateWordSearch: boolean;
-            caseSensitive: boolean;
-            done?: () => void;
-        });
-        unmark(opts?: {
-            done: () => void;
-        });
     }
 
     interface JQueryStatic {
@@ -122,92 +111,6 @@ declare global {
     //@ts-ignore
     var require: RequireMethod;
     var __non_webpack_require__: RequireMethod | undefined;
-
-    // Libraries
-    // TODO: Replace once library loader is replaced with webpack.
-    var hljs: {
-        highlightAuto(text: string);
-        highlight(text: string, {
-            language: string
-        });
-    };
-    var renderMathInElement: (element: HTMLElement, options: {
-        trust: boolean;
-    }) => void;
-
-    interface CodeMirrorOpts {
-        value: string;
-        viewportMargin: number;
-        indentUnit: number;
-        matchBrackets: boolean;
-        matchTags: { bothTags: boolean };
-        highlightSelectionMatches: {
-            showToken: boolean;
-            annotateScrollbar: boolean;
-        };
-        lineNumbers: boolean;
-        lineWrapping: boolean;
-        keyMap?: "vim" | "default";
-        lint?: boolean;
-        gutters?: string[];
-        tabindex?: number;
-        dragDrop?: boolean;
-        placeholder?: string;
-        readOnly?: boolean;
-    }
-
-    var CodeMirror: {
-        (el: HTMLElement, opts: CodeMirrorOpts): CodeMirrorInstance;
-        keyMap: {
-            default: Record<string, string>;
-        };
-        modeURL: string;
-        modeInfo: ModeInfo[];
-        findModeByMIME(mime: string): ModeInfo;
-        autoLoadMode(instance: CodeMirrorInstance, mode: string)
-        registerHelper(type: string, filter: string | null, callback: (text: string, options: object) => unknown);
-        Pos(line: number, col: number);
-    }
-
-    interface ModeInfo {
-        name: string;
-        mode: string;
-        mime: string;
-        mimes: string[];
-    }
-
-    interface CodeMirrorInstance {
-        getValue(): string;
-        setValue(val: string);
-        clearHistory();
-        setOption(name: string, value: string);
-        refresh();
-        focus();
-        getCursor(): { line: number, col: number, ch: number };
-        setCursor(line: number, col: number);
-        getSelection(): string;
-        lineCount(): number;
-        on(event: string, callback: () => void);
-        operation(callback: () => void);
-        scrollIntoView(pos: number);
-        doc: {
-            getValue(): string;
-            markText(
-                from: { line: number, ch: number } | number,
-                to: { line: number, ch: number } | number,
-                opts: {
-                    className: string
-                });
-            setSelection(from: number, to: number);
-            replaceRange(text: string, from: number, to: number);
-        }
-    }
-
-    var katex: {
-        renderToString(text: string, opts: {
-            throwOnError: boolean
-        });
-    }
 
     /*
      * Panzoom

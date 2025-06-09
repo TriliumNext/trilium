@@ -118,7 +118,7 @@ function createNote(req: Request) {
         throw new ValidationError("Missing or incorrect type for target branch ID.");
     }
 
-    const { note, branch } = noteService.createNewNoteWithTarget(target, targetBranchId, params);
+    const { note, branch } = noteService.createNewNoteWithTarget(target, String(targetBranchId), params);
 
     return {
         note,

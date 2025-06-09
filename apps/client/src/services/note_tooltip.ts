@@ -8,6 +8,10 @@ import appContext from "../components/app_context.js";
 import type FNote from "../entities/fnote.js";
 import { t } from "./i18n.js";
 
+// Track all elements that open tooltips
+let openTooltipElements: JQuery<HTMLElement>[] = [];
+let dismissTimer: ReturnType<typeof setTimeout>;
+
 function setupGlobalTooltip() {
     $(document).on("mouseenter", "a", mouseEnterHandler);
 
@@ -23,7 +27,12 @@ function setupGlobalTooltip() {
 }
 
 function dismissAllTooltips() {
-    $(".note-tooltip").remove();
+    clearTimeout(dismissTimer);
+    openTooltipElements.forEach($el => {
+        $el.tooltip("dispose");
+        $el.removeAttr("aria-describedby");
+    });
+    openTooltipElements = [];
 }
 
 function setupElementTooltip($el: JQuery<HTMLElement>) {
@@ -64,8 +73,8 @@ async function mouseEnterHandler(this: HTMLElement) {
     }
 
     let renderPromise;
-    if (url?.startsWith("#fn")) {
-        renderPromise = renderFootnote($link, url);
+    if (url && url.startsWith("#") && !url.startsWith("#root/")) {
+        renderPromise = renderFootnoteOrAnchor($link, url);
     } else {
         renderPromise = renderTooltip(await froca.getNote(noteId));
     }
@@ -86,8 +95,8 @@ async function mouseEnterHandler(this: HTMLElement) {
     // we need to check if we're still hovering over the element
     // since the operation to get tooltip content was async, it is possible that
     // we now create tooltip which won't close because it won't receive mouseleave event
-    if ($(this).filter(":hover").length > 0) {
-        $(this).tooltip({
+    if ($link.filter(":hover").length > 0) {
+        $link.tooltip({
             container: "body",
             // https://github.com/zadam/trilium/issues/2794 https://github.com/zadam/trilium/issues/2988
             // with bottom this flickering happens a bit less
@@ -103,7 +112,9 @@ async function mouseEnterHandler(this: HTMLElement) {
         });
 
         dismissAllTooltips();
-        $(this).tooltip("show");
+        $link.tooltip("show");
+
+        openTooltipElements.push($link);
 
         // Dismiss the tooltip immediately if a link was clicked inside the tooltip.
         $(`.${tooltipClass} a`).on("click", (e) => {
@@ -115,15 +126,16 @@ async function mouseEnterHandler(this: HTMLElement) {
         //   click on links within tooltip etc. without tooltip disappearing
         // - once the user moves the cursor away from both link and the tooltip, hide the tooltip
         const checkTooltip = () => {
-            if (!$(this).filter(":hover").length && !$(`.${linkId}:hover`).length) {
+
+            if (!$link.filter(":hover").length && !$(`.${linkId}:hover`).length) {
                 // cursor is neither over the link nor over the tooltip, user likely is not interested
                 dismissAllTooltips();
             } else {
-                setTimeout(checkTooltip, 1000);
+                dismissTimer = setTimeout(checkTooltip, 1000);
             }
         };
 
-        setTimeout(checkTooltip, 1000);
+        dismissTimer = setTimeout(checkTooltip, 1000);
     }
 }
 
@@ -166,17 +178,49 @@ async function renderTooltip(note: FNote | null) {
     return content;
 }
 
-function renderFootnote($link: JQuery<HTMLElement>, url: string) {
+function renderFootnoteOrAnchor($link: JQuery<HTMLElement>, url: string) {
     // A footnote text reference
     const footnoteRef = url.substring(3);
-    const $footnoteContent = $link
-        .closest(".ck-content") // find the parent CK content
-        .find("> .footnote-section") // find the footnote section
-        .find(`a[href="#fnref${footnoteRef}"]`) // find the footnote link
-        .closest(".footnote-item") // find the parent container of the footnote
-        .find(".footnote-content"); // find the actual text content of the footnote
+    let $targetContent: JQuery<HTMLElement>;
 
-    return $footnoteContent.html() || "";
+    if (url.startsWith("#fn")) {
+        $targetContent = $link
+            .closest(".ck-content") // find the parent CK content
+            .find("> .footnote-section") // find the footnote section
+            .find(`a[href="#fnref${footnoteRef}"]`) // find the footnote link
+            .closest(".footnote-item") // find the parent container of the footnote
+            .find(".footnote-content"); // find the actual text content of the footnote
+    } else {
+        $targetContent = $link
+            .closest(".ck-content")
+            .find(url)
+            .closest("p");
+    }
+
+    if (!$targetContent.length) {
+        // If the target content is not found, return an empty string
+        return "";
+    }
+
+    const isEditable = $link.closest(".ck-content").hasClass("note-detail-editable-text-editor");
+    if (isEditable) {
+        /* Remove widget buttons for tables, formulas, and images in editable notes. */
+        $targetContent.find('.ck-widget__selection-handle').remove();
+        $targetContent.find('.ck-widget__type-around').remove();
+        $targetContent.find('.ck-widget__resizer').remove();
+
+        /* Handling in-line math formulas */
+        $targetContent.find('.ck-math-tex.ck-math-tex-inline.ck-widget').each(function () {
+            const $katex = $(this).find('.katex').first();
+            if ($katex.length) {
+                $(this).replaceWith($('<span class="math-tex"></span>').append($('<span></span>').append($katex.clone())));
+            }
+        });
+    }
+
+    let footnoteContent = $targetContent.html();
+    footnoteContent = `<div class="ck-content">${footnoteContent}</div>`
+    return footnoteContent || "";
 }
 
 export default {

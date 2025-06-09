@@ -1,3 +1,5 @@
+import "jquery";
+import "jquery-hotkeys";
 import utils from "./services/utils.js";
 import ko from "knockout";
 import "./stylesheets/bootstrap.scss";

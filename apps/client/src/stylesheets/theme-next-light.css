@@ -5,6 +5,12 @@
  * Color scheme
  */
 :root {
+
+    /* 
+     * ⚠️ NOTICE: This theme is currently in the beta stage of development.
+     * The names and purposes of these CSS variables are subject to frequent changes.
+     */
+
     --theme-style: light;
     --native-titlebar-background: #ffffff00;
 
@@ -83,6 +89,7 @@
     --menu-item-arrow-color: #00000080;
     --menu-item-delimiter-color: #00000030;
     --menu-item-group-header-color: #00000061;
+    --menu-section-background-color: #00000006;
 
     --modal-backdrop-color: #7c7c7c;
     --modal-shadow-color: #00000033;
@@ -194,6 +201,8 @@
     --scrollbar-background-color: transparent;
     --scrollbar-border-color: unset; /* Deprecated */
 
+    --selection-background-color: #3399FF70;
+
     --link-color: blue;
 
     --mermaid-theme: default;
@@ -234,4 +243,9 @@
     --help-code-background: #d7d5d5;
 
     --ck-editor-popup-border-color: var(--dropdown-border-color);
+    --ck-editor-toolbar-button-on-background: #00000030;
+    --ck-editor-toolbar-button-on-color: black;
+    --ck-editor-toolbar-button-on-shadow: none;
+    --ck-editor-toolbar-dropdown-button-open-background: #0000000f;
+
 }

@@ -51,8 +51,8 @@ async function getMap(db: Database, query: string, params: any[] = []) {
     return map;
 }
 
-async function getFlattenedResults(db: Database, key: string, query: string, params: any[] = []) {
-    const list = [];
+async function getFlattenedResults<T>(db: Database, key: string, query: string, params: any[] = []) {
+    const list: T[] = [];
     const result = await getResults(db, query, params);
 
     for (const row of result) {

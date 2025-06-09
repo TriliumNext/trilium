@@ -85,7 +85,7 @@ export default class NotePathsWidget extends NoteContextAwareWidget {
             this.$notePathIntro.text(t("note_paths.intro_not_placed"));
         }
 
-        const renderedPaths = [];
+        const renderedPaths: JQuery<HTMLElement>[] = [];
 
         for (const notePathRecord of sortedNotePaths) {
             const notePath = notePathRecord.notePath;
@@ -100,7 +100,7 @@ export default class NotePathsWidget extends NoteContextAwareWidget {
         const $pathItem = $("<li>");
         const pathSegments: string[] = [];
         const lastIndex = notePath.length - 1;
-        
+
         for (let i = 0; i < notePath.length; i++) {
             const noteId = notePath[i];
             pathSegments.push(noteId);
@@ -109,13 +109,13 @@ export default class NotePathsWidget extends NoteContextAwareWidget {
 
             $noteLink.find("a").addClass("no-tooltip-preview tn-link");
             $pathItem.append($noteLink);
-            
+
             if (i != lastIndex) {
                 $pathItem.append(" / ");
             }
         }
 
-        const icons = [];
+        const icons: string[] = [];
 
         if (this.notePath === notePath.join("/")) {
             $pathItem.addClass("path-current");

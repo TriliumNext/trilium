@@ -7,8 +7,6 @@
 	  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 	  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
     <link rel="manifest" crossorigin="use-credentials" href="manifest.webmanifest">
-    <% // TriliumNextTODO: move the css file to ${assetPath}/stylesheets/  %>
-    <link rel="stylesheet" href="<%= appPath %>/desktop.css">
     <title>TriliumNext Notes</title>
 </head>
 <body class="desktop heading-style-<%= headingStyle %> layout-<%= layoutOrientation %> platform-<%= platform %> <%= isElectron ? 'electron' : '' %> <%= hasNativeTitleBar ? 'native-titlebar' : '' %> <%= hasBackgroundEffects ? 'background-effects' : '' %>">
@@ -21,7 +19,7 @@
 
 <div id="toast-container" class="d-flex flex-column justify-content-center align-items-center"></div>
 
-<div class="dropdown-menu dropdown-menu-sm" id="context-menu-container"></div>
+<div class="dropdown-menu dropdown-menu-sm" id="context-menu-container" style="display: none"></div>
 
 <%- include("./partials/windowGlobal.ejs", locals) %>
 
@@ -34,17 +32,7 @@
 <!-- Required for correct loading of scripts in Electron -->
 <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
 
-<script src="<%= assetPath %>/node_modules/jquery/dist/jquery.min.js"></script>
-
-
-<!-- Include Fancytree library and skip -->
-<link href="<%= assetPath %>/stylesheets/tree.css" rel="stylesheet">
-<script src="<%= assetPath %>/node_modules/jquery.fancytree/dist/jquery.fancytree-all-deps.min.js"></script>
-
-<script src="<%= assetPath %>/node_modules/jquery-hotkeys/jquery-hotkeys.js"></script>
-
-<script src="<%= assetPath %>/node_modules/autocomplete.js/dist/autocomplete.jquery.min.js"></script>
-
+<link href="<%= appPath %>/bootstrap.css" rel="stylesheet">
 <link href="<%= assetPath %>/stylesheets/ckeditor-theme.css" rel="stylesheet">
 <link href="api/fonts" rel="stylesheet">
 <link href="<%= assetPath %>/stylesheets/theme-light.css" rel="stylesheet">
@@ -64,14 +52,8 @@
 <link href="<%= assetPath %>/stylesheets/style.css" rel="stylesheet">
 <link href="<%= assetPath %>/stylesheets/print.css" rel="stylesheet" media="print">
 
-<script>
-    $("body").show();
-</script>
-
 <script src="<%= appPath %>/runtime.js" crossorigin type="module"></script>
 <script src="<%= appPath %>/desktop.js" crossorigin type="module"></script>
-
-<link rel="stylesheet" type="text/css" href="<%= assetPath %>/node_modules/boxicons/css/boxicons.min.css">
 
 </body>
 </html>

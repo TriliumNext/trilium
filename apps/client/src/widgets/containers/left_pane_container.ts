@@ -4,8 +4,12 @@ import appContext, { type EventData } from "../../components/app_context.js";
 import type Component from "../../components/component.js";
 
 export default class LeftPaneContainer extends FlexContainer<Component> {
+    private currentLeftPaneVisible: boolean;
+    
     constructor() {
         super("column");
+
+        this.currentLeftPaneVisible = options.is("leftPaneVisible");
 
         this.id("left-pane");
         this.css("height", "100%");
@@ -13,19 +17,20 @@ export default class LeftPaneContainer extends FlexContainer<Component> {
     }
 
     isEnabled() {
-        return super.isEnabled() && options.is("leftPaneVisible");
+        return super.isEnabled() && this.currentLeftPaneVisible;
     }
 
-    entitiesReloadedEvent({ loadResults }: EventData<"entitiesReloaded">) {
-        if (loadResults.isOptionReloaded("leftPaneVisible") && document.hasFocus()) {
-            const visible = this.isEnabled();
-            this.toggleInt(visible);
+    setLeftPaneVisibilityEvent({ leftPaneVisible }: EventData<"setLeftPaneVisibility">) {
+        this.currentLeftPaneVisible = leftPaneVisible ?? !this.currentLeftPaneVisible;
+        const visible = this.isEnabled();
+        this.toggleInt(visible);
 
-            if (visible) {
-                this.triggerEvent("focusTree", {});
-            } else {
-                this.triggerEvent("focusOnDetail", { ntxId: appContext.tabManager.getActiveContext()?.ntxId });
-            }
+        if (visible) {
+            this.triggerEvent("focusTree", {});
+        } else {
+            this.triggerEvent("focusOnDetail", { ntxId: appContext.tabManager.getActiveContext()?.ntxId });
         }
+
+        options.save("leftPaneVisible", this.currentLeftPaneVisible.toString());
     }
 }

@@ -44,10 +44,7 @@ interface OptionRow {}
 
 interface NoteReorderingRow {}
 
-interface ContentNoteIdToComponentIdRow {
-    noteId: string;
-    componentId: string;
-}
+
 
 type EntityRowMappings = {
     notes: NoteRow;

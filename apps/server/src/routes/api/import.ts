@@ -101,7 +101,7 @@ async function importNotesToBranch(req: Request) {
     return note.getPojo();
 }
 
-async function importAttachmentsToNote(req: Request) {
+function importAttachmentsToNote(req: Request) {
     const { parentNoteId } = req.params;
     const { taskId, last } = req.body;
 
@@ -121,7 +121,7 @@ async function importAttachmentsToNote(req: Request) {
     // unlike in note import, we let the events run, because a huge number of attachments is not likely
 
     try {
-        await singleImportService.importAttachment(taskContext, file, parentNote);
+        singleImportService.importAttachment(taskContext, file, parentNote);
     } catch (e: unknown) {
         const [errMessage, errStack] = safeExtractMessageAndStackFromError(e);
 

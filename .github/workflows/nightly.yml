@@ -37,7 +37,7 @@ jobs:
             shell: bash
             forge_platform: darwin
           - name: linux
-            image: ubuntu-latest
+            image: ubuntu-22.04
             shell: bash
             forge_platform: linux
           - name: windows
@@ -102,7 +102,7 @@ jobs:
         arch: [x64, arm64]
         include:
           - arch: x64
-            runs-on: ubuntu-latest
+            runs-on: ubuntu-22.04
           - arch: arm64
             runs-on: ubuntu-24.04-arm
     runs-on: ${{ matrix.runs-on }}

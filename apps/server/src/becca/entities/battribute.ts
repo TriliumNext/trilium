@@ -62,7 +62,7 @@ class BAttribute extends AbstractBeccaEntity<BAttribute> {
         return this;
     }
 
-    init() {
+    override init() {
         if (this.attributeId) {
             this.becca.attributes[this.attributeId] = this;
         }
@@ -162,11 +162,11 @@ class BAttribute extends AbstractBeccaEntity<BAttribute> {
         }
     }
 
-    get isDeleted() {
+    override get isDeleted() {
         return !(this.attributeId in this.becca.attributes);
     }
 
-    beforeSaving(opts: SavingOpts = {}) {
+    override beforeSaving(opts: SavingOpts = {}) {
         if (!opts.skipValidation) {
             this.validate();
         }

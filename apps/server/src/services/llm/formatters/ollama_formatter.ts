@@ -1,7 +1,7 @@
 import type { Message } from '../ai_interface.js';
 import { BaseMessageFormatter } from './base_formatter.js';
 import sanitizeHtml from 'sanitize-html';
-import { PROVIDER_PROMPTS, FORMATTING_PROMPTS } from '../constants/llm_prompt_constants.js';
+import { PROVIDER_PROMPTS } from '../constants/llm_prompt_constants.js';
 import { LLM_CONSTANTS } from '../constants/provider_constants.js';
 import {
     HTML_ALLOWED_TAGS,
@@ -29,7 +29,7 @@ export class OllamaMessageFormatter extends BaseMessageFormatter {
      * @param context Optional context to include
      * @param preserveSystemPrompt When true, preserves existing system messages rather than replacing them
      */
-    formatMessages(messages: Message[], systemPrompt?: string, context?: string, preserveSystemPrompt?: boolean): Message[] {
+    formatMessages(messages: Message[], systemPrompt?: string, context?: string, preserveSystemPrompt?: boolean, useTools?: boolean): Message[] {
         const formattedMessages: Message[] = [];
 
         // Log the input messages with all their properties
@@ -37,7 +37,7 @@ export class OllamaMessageFormatter extends BaseMessageFormatter {
         messages.forEach((msg, index) => {
             const msgKeys = Object.keys(msg);
             log.info(`Message ${index} - role: ${msg.role}, keys: ${msgKeys.join(', ')}, content length: ${msg.content.length}`);
-            
+
             // Log special properties if present
             if (msg.tool_calls) {
                 log.info(`Message ${index} has ${msg.tool_calls.length} tool_calls`);
@@ -61,7 +61,19 @@ export class OllamaMessageFormatter extends BaseMessageFormatter {
             log.info(`Preserving existing system message: ${systemMessages[0].content.substring(0, 50)}...`);
         } else {
             // Use provided systemPrompt or default
-            const basePrompt = systemPrompt || PROVIDER_PROMPTS.COMMON.DEFAULT_ASSISTANT_INTRO;
+            let basePrompt = systemPrompt || PROVIDER_PROMPTS.COMMON.DEFAULT_ASSISTANT_INTRO;
+
+            // Check if any message has tool_calls or if useTools flag is set, indicating this is a tool-using conversation
+            const hasPreviousToolCalls = messages.some(msg => msg.tool_calls && msg.tool_calls.length > 0);
+            const hasToolResults = messages.some(msg => msg.role === 'tool');
+            const isToolUsingConversation = useTools || hasPreviousToolCalls || hasToolResults;
+
+            // Add tool instructions for Ollama when tools are being used
+            if (isToolUsingConversation && PROVIDER_PROMPTS.OLLAMA.TOOL_INSTRUCTIONS) {
+                log.info('Adding tool instructions to system prompt for Ollama');
+                basePrompt = `${basePrompt}\n\n${PROVIDER_PROMPTS.OLLAMA.TOOL_INSTRUCTIONS}`;
+            }
+
             formattedMessages.push({
                 role: 'system',
                 content: basePrompt
@@ -96,7 +108,7 @@ export class OllamaMessageFormatter extends BaseMessageFormatter {
                         ...msg, // Copy all properties
                         content: formattedContext // Override content with injected context
                     };
-                    
+
                     formattedMessages.push(newMessage);
                     log.info(`Created user message with context, final keys: ${Object.keys(newMessage).join(', ')}`);
 
@@ -104,7 +116,7 @@ export class OllamaMessageFormatter extends BaseMessageFormatter {
                 } else {
                     // For other messages, preserve all properties including any tool-related ones
                     log.info(`Preserving message with role ${msg.role}, keys: ${Object.keys(msg).join(', ')}`);
-                    
+
                     formattedMessages.push({
                         ...msg // Copy all properties
                     });
@@ -126,7 +138,7 @@ export class OllamaMessageFormatter extends BaseMessageFormatter {
         formattedMessages.forEach((msg, index) => {
             const msgKeys = Object.keys(msg);
             log.info(`Formatted message ${index} - role: ${msg.role}, keys: ${msgKeys.join(', ')}, content length: ${msg.content.length}`);
-            
+
             // Log special properties if present
             if (msg.tool_calls) {
                 log.info(`Formatted message ${index} has ${msg.tool_calls.length} tool_calls`);
@@ -151,13 +163,11 @@ export class OllamaMessageFormatter extends BaseMessageFormatter {
         if (!content) return '';
 
         try {
-            // Store our XML tags so we can restore them after cleaning
-            const noteTagsRegex = /<\/?note>/g;
+            // Define regexes for identifying and preserving tagged content
             const notesTagsRegex = /<\/?notes>/g;
-            const queryTagsRegex = /<\/?query>[^<]*<\/query>/g;
+            // const queryTagsRegex = /<\/?query>/g; // Commenting out unused variable
 
             // Capture tags to restore later
-            const noteTags = content.match(noteTagsRegex) || [];
             const noteTagPositions: number[] = [];
             let match;
             const regex = /<\/?note>/g;
@@ -166,17 +176,15 @@ export class OllamaMessageFormatter extends BaseMessageFormatter {
             }
 
             // Remember the notes tags
-            const notesTagsMatch = content.match(notesTagsRegex) || [];
             const notesTagPositions: number[] = [];
             while ((match = notesTagsRegex.exec(content)) !== null) {
                 notesTagPositions.push(match.index);
             }
 
-            // Remember the query tags
-            const queryTagsMatch = content.match(queryTagsRegex) || [];
+            // Remember the query tag
 
             // Temporarily replace XML tags with markers that won't be affected by sanitization
-            let modified = content
+            const modified = content
                 .replace(/<note>/g, '[NOTE_START]')
                 .replace(/<\/note>/g, '[NOTE_END]')
                 .replace(/<notes>/g, '[NOTES_START]')
@@ -184,7 +192,7 @@ export class OllamaMessageFormatter extends BaseMessageFormatter {
                 .replace(/<query>(.*?)<\/query>/g, '[QUERY]$1[/QUERY]');
 
             // First use the parent class to do standard cleaning
-            let sanitized = super.cleanContextContent(modified);
+            const sanitized = super.cleanContextContent(modified);
 
             // Then apply Ollama-specific aggressive cleaning
             // Remove any remaining HTML using sanitizeHtml while keeping our markers

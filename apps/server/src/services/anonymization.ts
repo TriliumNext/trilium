@@ -1,5 +1,5 @@
 import BUILTIN_ATTRIBUTES from "./builtin_attributes.js";
-import fs from "fs-extra";
+import fs from "fs";
 import dataDir from "./data_dir.js";
 import dateUtils from "./date_utils.js";
 import Database from "better-sqlite3";

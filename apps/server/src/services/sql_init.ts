@@ -186,6 +186,9 @@ function setDbAsInitialized() {
 }
 
 function optimize() {
+    if (config.General.readOnly) {
+        return;
+    }
     log.info("Optimizing database");
     const start = Date.now();
 

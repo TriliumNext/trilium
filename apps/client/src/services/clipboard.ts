@@ -4,6 +4,7 @@ import froca from "./froca.js";
 import linkService from "./link.js";
 import utils from "./utils.js";
 import { t } from "./i18n.js";
+import toast from "./toast.js";
 
 let clipboardBranchIds: string[] = [];
 let clipboardMode: string | null = null;
@@ -79,7 +80,7 @@ async function copy(branchIds: string[]) {
     if (utils.isElectron()) {
         // https://github.com/zadam/trilium/issues/2401
         const { clipboard } = require("electron");
-        const links = [];
+        const links: string[] = [];
 
         for (const branch of froca.getBranches(clipboardBranchIds)) {
             const $link = await linkService.createLink(`${branch.parentNoteId}/${branch.noteId}`, { referenceLink: true });
@@ -106,6 +107,39 @@ function isClipboardEmpty() {
     clipboardBranchIds = clipboardBranchIds.filter((branchId) => !!froca.getBranch(branchId));
 
     return clipboardBranchIds.length === 0;
+}
+
+export function copyText(text: string) {
+    if (!text) {
+        return;
+    }
+
+    let succeeded = false;
+
+    try {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(text);
+            succeeded = true;
+        } else {
+            // Fallback method: https://stackoverflow.com/a/72239825
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            succeeded = document.execCommand('copy');
+            document.body.removeChild(textArea);
+        }
+    } catch (e) {
+        console.warn(e);
+        succeeded = false;
+    }
+
+    if (succeeded) {
+        toast.showMessage(t("clipboard.copy_success"));
+    } else {
+        toast.showError(t("clipboard.copy_failed"));
+    }
 }
 
 export default {

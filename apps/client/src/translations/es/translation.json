@@ -1584,12 +1584,15 @@
     "auto-detect-language": "Detectado automáticamente"
   },
   "highlighting": {
-    "title": "Resaltado de sintaxis de de código para Notas de Texto",
+    "title": "",
     "description": "Controla el resaltado de sintaxis para bloques de código dentro de las notas de texto, las notas de código no serán afectadas.",
     "color-scheme": "Esquema de color"
   },
   "code_block": {
-    "word_wrapping": "Ajuste de palabras"
+    "word_wrapping": "Ajuste de palabras",
+    "theme_none": "Sin resaltado de sintaxis",
+    "theme_group_light": "Temas claros",
+    "theme_group_dark": "Temas oscuros"
   },
   "classic_editor_toolbar": {
     "title": "Formato"

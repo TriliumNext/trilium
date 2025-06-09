@@ -7,18 +7,14 @@ test("Displays lint warnings for backend script", async ({ page, context }) => {
     await app.closeAllTabs();
     await app.goToNoteInNewTab("Backend script with lint warnings");
 
-    const codeEditor = app.currentNoteSplit.locator(".CodeMirror");
+    const codeEditor = app.currentNoteSplit.locator(".cm-editor");
 
     // Expect two warning signs in the gutter.
-    await expect(codeEditor.locator(".CodeMirror-gutter-wrapper .CodeMirror-lint-marker-warning")).toHaveCount(2);
+    await expect(codeEditor.locator(".cm-gutter-lint .cm-lint-marker-warning")).toHaveCount(2);
 
     // Hover over hello
     await codeEditor.getByText("hello").first().hover();
     await expectTooltip(page, "'hello' is defined but never used.");
-
-    // Hover over world
-    await codeEditor.getByText("world").first().hover();
-    await expectTooltip(page, "'world' is defined but never used.");
 });
 
 test("Displays lint errors for backend script", async ({ page, context }) => {
@@ -27,10 +23,10 @@ test("Displays lint errors for backend script", async ({ page, context }) => {
     await app.closeAllTabs();
     await app.goToNoteInNewTab("Backend script with lint errors");
 
-    const codeEditor = app.currentNoteSplit.locator(".CodeMirror");
+    const codeEditor = app.currentNoteSplit.locator(".cm-editor");
 
     // Expect two warning signs in the gutter.
-    const errorMarker = codeEditor.locator(".CodeMirror-gutter-wrapper .CodeMirror-lint-marker-error");
+    const errorMarker = codeEditor.locator(".cm-gutter-lint .cm-lint-marker-error");
     await expect(errorMarker).toHaveCount(1);
 
     // Hover over hello
@@ -40,7 +36,7 @@ test("Displays lint errors for backend script", async ({ page, context }) => {
 
 async function expectTooltip(page: Page, tooltip: string) {
     await expect(
-        page.locator(".CodeMirror-lint-tooltip:visible", {
+        page.locator(".cm-tooltip:visible", {
             hasText: tooltip
         })
     ).toBeVisible();

@@ -5,6 +5,7 @@ import UploadimagePlugin from "./plugins/uploadimage.js";
 import ItalicAsEmPlugin from "./plugins/italic_as_em.js";
 import StrikethroughAsDel from "./plugins/strikethrough_as_del.js";
 import InternalLinkPlugin from "./plugins/internallink.js";
+import InsertDateTimePlugin from "./plugins/insert_date_time.js";
 import ReferenceLink from "./plugins/referencelink.js";
 import RemoveFormatLinksPlugin from "./plugins/remove_format_links.js";
 import IndentBlockShortcutPlugin from "./plugins/indent_block_shortcut.js";
@@ -23,23 +24,36 @@ import "@triliumnext/ckeditor5-mermaid/index.css";
 import "@triliumnext/ckeditor5-admonition/index.css";
 import "@triliumnext/ckeditor5-footnotes/index.css";
 import "@triliumnext/ckeditor5-math/index.css";
+import CodeBlockToolbar from "./plugins/code_block_toolbar.js";
+import CodeBlockLanguageDropdown from "./plugins/code_block_language_dropdown.js";
+import MoveBlockUpDownPlugin from "./plugins/move_block_updown.js";
+import ScrollOnUndoRedoPlugin from "./plugins/scroll_on_undo_redo.js"
 
+/**
+ * Plugins that are specific to Trilium and not part of the CKEditor 5 core, included in both text editors but not in the attribute editor.
+ */
 const TRILIUM_PLUGINS: typeof Plugin[] = [
+    UploadimagePlugin,
     CutToNotePlugin,
     ItalicAsEmPlugin,
 	StrikethroughAsDel,
-    ReferenceLink,
-    UploadimagePlugin,
     InternalLinkPlugin,
+	InsertDateTimePlugin,
     RemoveFormatLinksPlugin,
     IndentBlockShortcutPlugin,
     MarkdownImportPlugin,
-    MentionCustomization,
     IncludeNote,
     Uploadfileplugin,
-    SyntaxHighlighting
+    SyntaxHighlighting,
+    CodeBlockLanguageDropdown,
+    CodeBlockToolbar,
+    MoveBlockUpDownPlugin,
+	ScrollOnUndoRedoPlugin
 ];
 
+/**
+ * External plugins that are not part of the CKEditor 5 core and not part of Trilium, included in both text editors but not in the attribute editor.
+ */
 const EXTERNAL_PLUGINS: typeof Plugin[] = [
     Kbd,
     Mermaid,
@@ -49,17 +63,25 @@ const EXTERNAL_PLUGINS: typeof Plugin[] = [
 	AutoformatMath
 ];
 
+/**
+ * The minimal set of plugins required for the editor to work. This is used both in normal text editors (floating or fixed toolbar) and in the attribute editor.
+ */
 export const CORE_PLUGINS: typeof Plugin[] = [
     Clipboard, Enter, SelectAll,
     ShiftEnter, Typing, Undo,
 	Paragraph,
-    Mention
+    Mention,
+
+    // Trilium plugins
+    MentionCustomization,
+    ReferenceLink
 ];
 
+/**
+ * The set of plugins that are required for the editor to work. This is used in normal text editors (floating or fixed toolbar) but not in the attribute editor.
+ */
 export const COMMON_PLUGINS: typeof Plugin[] = [
     ...CORE_PLUGINS,
-    ...TRILIUM_PLUGINS,
-    ...EXTERNAL_PLUGINS,
 
 	CKFinderUploadAdapter,
 	Autoformat,
@@ -113,12 +135,16 @@ export const COMMON_PLUGINS: typeof Plugin[] = [
 	TextPartLanguage,
     Style,
     Bookmark,
-    Emoji
+    Emoji,
+
+    ...TRILIUM_PLUGINS,
+    ...EXTERNAL_PLUGINS
 ];
 
+/**
+ * The set of plugins specific to the popup editor (floating toolbar mode), and not the fixed toolbar mode.
+ */
 export const POPUP_EDITOR_PLUGINS: typeof Plugin[] = [
     ...COMMON_PLUGINS,
     BlockToolbar
 ];
-
-export const COMMON_SETTINGS = { };

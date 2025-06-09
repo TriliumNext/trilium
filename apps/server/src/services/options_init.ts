@@ -137,6 +137,21 @@ const defaultOptions: DefaultOption[] = [
 
     // Appearance
     { name: "splitEditorOrientation", value: "horizontal", isSynced: true },
+    {
+        name: "codeNoteTheme",
+        value: (optionsMap) => {
+            switch (optionsMap.theme) {
+                case "light":
+                case "next-light":
+                    return "default:vs-code-light";
+                case "dark":
+                case "next-dark":
+                default:
+                    return "default:vs-code-dark";
+            }
+        },
+        isSynced: false
+    },
 
     // Internationalization
     { name: "locale", value: "en", isSynced: true },
@@ -182,33 +197,20 @@ const defaultOptions: DefaultOption[] = [
     // AI Options
     { name: "aiEnabled", value: "false", isSynced: true },
     { name: "openaiApiKey", value: "", isSynced: false },
-    { name: "openaiDefaultModel", value: "gpt-4o", isSynced: true },
-    { name: "openaiEmbeddingModel", value: "text-embedding-3-small", isSynced: true },
+    { name: "openaiDefaultModel", value: "", isSynced: true },
     { name: "openaiBaseUrl", value: "https://api.openai.com/v1", isSynced: true },
     { name: "anthropicApiKey", value: "", isSynced: false },
-    { name: "anthropicDefaultModel", value: "claude-3-opus-20240229", isSynced: true },
-    { name: "voyageEmbeddingModel", value: "voyage-2", isSynced: true },
+    { name: "anthropicDefaultModel", value: "", isSynced: true },
     { name: "voyageApiKey", value: "", isSynced: false },
     { name: "anthropicBaseUrl", value: "https://api.anthropic.com/v1", isSynced: true },
     { name: "ollamaEnabled", value: "false", isSynced: true },
-    { name: "ollamaDefaultModel", value: "llama3", isSynced: true },
-    { name: "ollamaBaseUrl", value: "", isSynced: true },
-    { name: "ollamaEmbeddingModel", value: "nomic-embed-text", isSynced: true },
-    { name: "embeddingAutoUpdateEnabled", value: "true", isSynced: true },
+    { name: "ollamaDefaultModel", value: "", isSynced: true },
+    { name: "ollamaBaseUrl", value: "http://localhost:11434", isSynced: true },
 
     // Adding missing AI options
     { name: "aiTemperature", value: "0.7", isSynced: true },
     { name: "aiSystemPrompt", value: "", isSynced: true },
-    { name: "aiProviderPrecedence", value: "openai,anthropic,ollama", isSynced: true },
-    { name: "embeddingDimensionStrategy", value: "auto", isSynced: true },
-    { name: "embeddingProviderPrecedence", value: "openai,voyage,ollama,local", isSynced: true },
-    { name: "embeddingSimilarityThreshold", value: "0.75", isSynced: true },
-    { name: "enableAutomaticIndexing", value: "true", isSynced: true },
-    { name: "maxNotesPerLlmQuery", value: "3", isSynced: true },
-    { name: "embeddingBatchSize", value: "10", isSynced: true },
-    { name: "embeddingUpdateInterval", value: "5000", isSynced: true },
-    { name: "embeddingDefaultDimension", value: "1536", isSynced: true },
-    { name: "embeddingGenerationLocation", value: "client", isSynced: true },
+    { name: "aiSelectedProvider", value: "openai", isSynced: true },
 ];
 
 /**

@@ -110,6 +110,8 @@ export default class NoteTypeChooserDialog extends BasicWidget {
             //@ts-ignore
             if (e.clickEvent) {
                 e.preventDefault();
+            } else {
+                this.modal.hide();
             }
         });
     }

@@ -6,21 +6,7 @@ import type { OpenAIModelResponse, AnthropicModelResponse, OllamaModelResponse }
 
 export class ProviderService {
     constructor(private $widget: JQuery<HTMLElement>) {
-        // Initialize Voyage models (since they don't have a dynamic refresh yet)
-        this.initializeVoyageModels();
-    }
-
-    /**
-     * Initialize Voyage models with default values and ensure proper selection
-     */
-    private initializeVoyageModels() {
-        setTimeout(() => {
-            const $voyageModelSelect = this.$widget.find('.voyage-embedding-model');
-            if ($voyageModelSelect.length > 0) {
-                const currentValue = $voyageModelSelect.val();
-                this.ensureSelectedValue($voyageModelSelect, currentValue, 'voyageEmbeddingModel');
-            }
-        }, 100); // Small delay to ensure the widget is fully initialized
+        // AI provider settings
     }
 
     /**
@@ -95,29 +81,10 @@ export class ProviderService {
                     this.ensureSelectedValue($chatModelSelect, currentChatValue, 'openaiDefaultModel');
                 }
 
-                // Update the embedding models dropdown
-                if (response.embeddingModels?.length > 0) {
-                    const $embedModelSelect = this.$widget.find('.openai-embedding-model');
-                    const currentEmbedValue = $embedModelSelect.val();
-
-                    // Clear existing options
-                    $embedModelSelect.empty();
-
-                    // Sort models by name
-                    const sortedEmbedModels = [...response.embeddingModels].sort((a, b) => a.name.localeCompare(b.name));
-
-                    // Add models to the dropdown
-                    sortedEmbedModels.forEach(model => {
-                        $embedModelSelect.append(`<option value="${model.id}">${model.name}</option>`);
-                    });
-
-                    // Try to restore the previously selected value
-                    this.ensureSelectedValue($embedModelSelect, currentEmbedValue, 'openaiEmbeddingModel');
-                }
 
                 if (showLoading) {
                     // Show success message
-                    const totalModels = (response.chatModels?.length || 0) + (response.embeddingModels?.length || 0);
+                    const totalModels = (response.chatModels?.length || 0);
                     toastService.showMessage(`${totalModels} OpenAI models found.`);
                 }
 
@@ -187,14 +154,9 @@ export class ProviderService {
                     this.ensureSelectedValue($chatModelSelect, currentChatValue, 'anthropicDefaultModel');
                 }
 
-                // Handle embedding models if they exist
-                if (response.embeddingModels?.length > 0 && showLoading) {
-                    toastService.showMessage(`Found ${response.embeddingModels.length} Anthropic embedding models.`);
-                }
-
                 if (showLoading) {
                     // Show success message
-                    const totalModels = (response.chatModels?.length || 0) + (response.embeddingModels?.length || 0);
+                    const totalModels = (response.chatModels?.length || 0);
                     toastService.showMessage(`${totalModels} Anthropic models found.`);
                 }
 
@@ -240,41 +202,13 @@ export class ProviderService {
         }
 
         try {
+            // Use the general Ollama base URL
             const ollamaBaseUrl = this.$widget.find('.ollama-base-url').val() as string;
+
             const response = await server.get<OllamaModelResponse>(`llm/providers/ollama/models?baseUrl=${encodeURIComponent(ollamaBaseUrl)}`);
 
             if (response && response.success && response.models && response.models.length > 0) {
-                const $embedModelSelect = this.$widget.find('.ollama-embedding-model');
-                const currentValue = $embedModelSelect.val();
-
-                // Clear existing options
-                $embedModelSelect.empty();
-
-                // Add embedding-specific models first
-                const embeddingModels = response.models.filter(model =>
-                    model.name.includes('embed') || model.name.includes('bert'));
-
-                embeddingModels.forEach(model => {
-                    $embedModelSelect.append(`<option value="${model.name}">${model.name}</option>`);
-                });
-
-                if (embeddingModels.length > 0) {
-                    // Add separator if we have embedding models
-                    $embedModelSelect.append(`<option disabled>─────────────</option>`);
-                }
-
-                // Then add general models which can be used for embeddings too
-                const generalModels = response.models.filter(model =>
-                    !model.name.includes('embed') && !model.name.includes('bert'));
-
-                generalModels.forEach(model => {
-                    $embedModelSelect.append(`<option value="${model.name}">${model.name}</option>`);
-                });
-
-                // Try to restore the previously selected value
-                this.ensureSelectedValue($embedModelSelect, currentValue, 'ollamaEmbeddingModel');
-
-                // Also update the LLM model dropdown
+                // Update the LLM model dropdown
                 const $modelSelect = this.$widget.find('.ollama-default-model');
                 const currentModelValue = $modelSelect.val();
 

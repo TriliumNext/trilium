@@ -16,4 +16,24 @@ describe("Link", () => {
         const output = parseNavigationStateFromUrl(`#root/WWaBNf3SSA1b/mQ2tIzLVFKHL`);
         expect(output).toMatchObject({ notePath: "root/WWaBNf3SSA1b/mQ2tIzLVFKHL", noteId: "mQ2tIzLVFKHL" });
     });
+
+    it("parses notePath with spaces", () => {
+        const output = parseNavigationStateFromUrl(`  #root/WWaBNf3SSA1b/mQ2tIzLVFKHL`);
+        expect(output).toMatchObject({ notePath: "root/WWaBNf3SSA1b/mQ2tIzLVFKHL", noteId: "mQ2tIzLVFKHL" });
+    });
+
+    it("ignores external URL with internal hash anchor", () => {
+        const output = parseNavigationStateFromUrl(`https://en.wikipedia.org/wiki/Bearded_Collie#Health`);
+        expect(output).toMatchObject({});
+    });
+
+    it("ignores malformed but hash-containing external URL", () => {
+        const output = parseNavigationStateFromUrl("https://abc.com/#drop?searchString=firefox");
+        expect(output).toStrictEqual({});
+    });
+
+    it("ignores non-hash internal path", () => {
+        const output = parseNavigationStateFromUrl("/root/abc123");
+        expect(output).toStrictEqual({});
+    });
 });

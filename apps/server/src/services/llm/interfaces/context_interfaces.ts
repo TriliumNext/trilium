@@ -60,7 +60,6 @@ export interface IContextFormatter {
  */
 export interface ILLMService {
   sendMessage(message: string, options?: Record<string, unknown>): Promise<string>;
-  generateEmbedding?(text: string): Promise<number[]>;
   streamMessage?(message: string, callback: (text: string) => void, options?: Record<string, unknown>): Promise<string>;
 }
 

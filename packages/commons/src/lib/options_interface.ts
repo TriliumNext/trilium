@@ -47,6 +47,7 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     passwordDerivedKeySalt: string;
     encryptedDataKey: string;
     hoistedNoteId: string;
+    customDateTimeFormat: string;
 
     // Multi-Factor Authentication
     mfaEnabled: boolean;
@@ -91,6 +92,7 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
 
     // Appearance
     splitEditorOrientation: "horziontal" | "vertical";
+    codeNoteTheme: string;
 
     initialized: boolean;
     isPasswordSet: boolean;
@@ -131,32 +133,17 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     aiTemperature: string;
     openaiApiKey: string;
     openaiDefaultModel: string;
-    openaiEmbeddingModel: string;
     openaiBaseUrl: string;
     anthropicApiKey: string;
     anthropicDefaultModel: string;
-    voyageEmbeddingModel: string;
     voyageApiKey: string;
     anthropicBaseUrl: string;
     ollamaEnabled: boolean;
     ollamaBaseUrl: string;
     ollamaDefaultModel: string;
-    ollamaEmbeddingModel: string;
     codeOpenAiModel: string;
-    aiProviderPrecedence: string;
+    aiSelectedProvider: string;
 
-    // Embedding-related options
-    embeddingAutoUpdateEnabled: boolean;
-    embeddingUpdateInterval: number;
-    embeddingBatchSize: number;
-    embeddingDefaultDimension: number;
-    embeddingsDefaultProvider: string;
-    embeddingProviderPrecedence: string;
-    enableAutomaticIndexing: boolean;
-    embeddingGenerationLocation: string;
-    embeddingDimensionStrategy: string;
-    embeddingSimilarityThreshold: number;
-    maxNotesPerLlmQuery: number;
 }
 
 export type OptionNames = keyof OptionDefinitions;

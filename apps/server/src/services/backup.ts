@@ -2,7 +2,7 @@
 
 import dateUtils from "./date_utils.js";
 import optionService from "./options.js";
-import fs from "fs-extra";
+import fs from "fs";
 import dataDir from "./data_dir.js";
 import log from "./log.js";
 import syncMutexService from "./sync_mutex.js";

@@ -1,21 +1,13 @@
-import { isElectron, safeExtractMessageAndStackFromError } from "../services/utils.js";
-import multer from "multer";
-import log from "../services/log.js";
+import { isElectron } from "../services/utils.js";
 import express from "express";
-const router = express.Router();
+
 import auth from "../services/auth.js";
 import openID from '../services/open_id.js';
 import totp from './api/totp.js';
 import recoveryCodes from './api/recovery_codes.js';
-import cls from "../services/cls.js";
-import sql from "../services/sql.js";
-import entityChangesService from "../services/entity_changes.js";
 import { doubleCsrfProtection as csrfMiddleware } from "./csrf_protection.js";
 import { createPartialContentHandler } from "@triliumnext/express-partial-content";
 import rateLimit from "express-rate-limit";
-import AbstractBeccaEntity from "../becca/entities/abstract_becca_entity.js";
-import NotFoundError from "../errors/not_found_error.js";
-import ValidationError from "../errors/validation_error.js";
 
 // page routes
 import setupRoute from "./setup.js";
@@ -60,8 +52,8 @@ import fontsRoute from "./api/fonts.js";
 import etapiTokensApiRoutes from "./api/etapi_tokens.js";
 import relationMapApiRoute from "./api/relation-map.js";
 import otherRoute from "./api/other.js";
+import metricsRoute from "./api/metrics.js";
 import shareRoutes from "../share/routes.js";
-import embeddingsRoute from "./api/embeddings.js";
 import ollamaRoute from "./api/ollama.js";
 import openaiRoute from "./api/openai.js";
 import anthropicRoute from "./api/anthropic.js";
@@ -76,33 +68,15 @@ import etapiNoteRoutes from "../etapi/notes.js";
 import etapiSpecialNoteRoutes from "../etapi/special_notes.js";
 import etapiSpecRoute from "../etapi/spec.js";
 import etapiBackupRoute from "../etapi/backup.js";
+import etapiMetricsRoute from "../etapi/metrics.js";
 import apiDocsRoute from "./api_docs.js";
+import { apiResultHandler, apiRoute, asyncApiRoute, asyncRoute, route, router, uploadMiddlewareWithErrorHandling } from "./route_api.js";
 
-
-const MAX_ALLOWED_FILE_SIZE_MB = 250;
 const GET = "get",
     PST = "post",
     PUT = "put",
     PATCH = "patch",
     DEL = "delete";
-
-export type ApiResultHandler = (req: express.Request, res: express.Response, result: unknown) => number;
-export type ApiRequestHandler = (req: express.Request, res: express.Response, next: express.NextFunction) => unknown;
-
-// TODO: Deduplicate with etapi_utils.ts afterwards.
-type HttpMethod = "all" | "get" | "post" | "put" | "delete" | "patch" | "options" | "head";
-
-const uploadMiddleware = createUploadMiddleware();
-
-const uploadMiddlewareWithErrorHandling = function (req: express.Request, res: express.Response, next: express.NextFunction) {
-    uploadMiddleware(req, res, function (err) {
-        if (err?.code === "LIMIT_FILE_SIZE") {
-            res.setHeader("Content-Type", "text/plain").status(400).send(`Cannot upload file because it excceeded max allowed file size of ${MAX_ALLOWED_FILE_SIZE_MB} MiB`);
-        } else {
-            next();
-        }
-    });
-};
 
 function register(app: express.Application) {
 
@@ -127,7 +101,7 @@ function register(app: express.Application) {
     apiRoute(GET, '/api/totp/get', totp.getSecret);
 
     apiRoute(GET, '/api/oauth/status', openID.getOAuthStatus);
-    apiRoute(GET, '/api/oauth/validate', openID.isTokenValid);
+    asyncApiRoute(GET, '/api/oauth/validate', openID.isTokenValid);
 
     apiRoute(PST, '/api/totp_recovery/set', recoveryCodes.setRecoveryCodes);
     apiRoute(PST, '/api/totp_recovery/verify', recoveryCodes.verifyRecoveryCode);
@@ -157,7 +131,7 @@ function register(app: express.Application) {
     apiRoute(PUT, "/api/notes/:noteId/clone-after/:afterBranchId", cloningApiRoute.cloneNoteAfter);
     route(PUT, "/api/notes/:noteId/file", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], filesRoute.updateFile, apiResultHandler);
     route(GET, "/api/notes/:noteId/open", [auth.checkApiAuthOrElectron], filesRoute.openFile);
-    route(
+    asyncRoute(
         GET,
         "/api/notes/:noteId/open-partial",
         [auth.checkApiAuthOrElectron],
@@ -193,7 +167,7 @@ function register(app: express.Application) {
     apiRoute(GET, "/api/attachments/:attachmentId/blob", attachmentsApiRoute.getAttachmentBlob);
     route(GET, "/api/attachments/:attachmentId/image/:filename", [auth.checkApiAuthOrElectron], imageRoute.returnAttachedImage);
     route(GET, "/api/attachments/:attachmentId/open", [auth.checkApiAuthOrElectron], filesRoute.openAttachment);
-    route(
+    asyncRoute(
         GET,
         "/api/attachments/:attachmentId/open-partial",
         [auth.checkApiAuthOrElectron],
@@ -222,7 +196,7 @@ function register(app: express.Application) {
     route(GET, "/api/revisions/:revisionId/download", [auth.checkApiAuthOrElectron], revisionsApiRoute.downloadRevision);
 
     route(GET, "/api/branches/:branchId/export/:type/:format/:version/:taskId", [auth.checkApiAuthOrElectron], exportRoute.exportBranch);
-    route(PST, "/api/notes/:parentNoteId/notes-import", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], importRoute.importNotesToBranch, apiResultHandler);
+    asyncRoute(PST, "/api/notes/:parentNoteId/notes-import", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], importRoute.importNotesToBranch, apiResultHandler);
     route(PST, "/api/notes/:parentNoteId/attachments-import", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], importRoute.importAttachmentsToNote, apiResultHandler);
 
     apiRoute(GET, "/api/notes/:noteId/attributes", attributesRoute.getEffectiveNoteAttributes);
@@ -242,17 +216,16 @@ function register(app: express.Application) {
 
     apiRoute(GET, "/api/options", optionsApiRoute.getOptions);
     // FIXME: possibly change to sending value in the body to avoid host of HTTP server issues with slashes
-    apiRoute(PUT, "/api/options/:name/:value*", optionsApiRoute.updateOption);
+    apiRoute(PUT, "/api/options/:name/:value", optionsApiRoute.updateOption);
     apiRoute(PUT, "/api/options", optionsApiRoute.updateOptions);
     apiRoute(GET, "/api/options/user-themes", optionsApiRoute.getUserThemes);
-    apiRoute(GET, "/api/options/codeblock-themes", optionsApiRoute.getSyntaxHighlightingThemes);
     apiRoute(GET, "/api/options/locales", optionsApiRoute.getSupportedLocales);
 
     apiRoute(PST, "/api/password/change", passwordApiRoute.changePassword);
     apiRoute(PST, "/api/password/reset", passwordApiRoute.resetPassword);
 
-    apiRoute(PST, "/api/sync/test", syncApiRoute.testSync);
-    apiRoute(PST, "/api/sync/now", syncApiRoute.syncNow);
+    asyncApiRoute(PST, "/api/sync/test", syncApiRoute.testSync);
+    asyncApiRoute(PST, "/api/sync/now", syncApiRoute.syncNow);
     apiRoute(PST, "/api/sync/fill-entity-changes", syncApiRoute.fillEntityChanges);
     apiRoute(PST, "/api/sync/force-full-sync", syncApiRoute.forceFullSync);
     route(GET, "/api/sync/check", [auth.checkApiAuth], syncApiRoute.checkSync, apiResultHandler);
@@ -265,16 +238,17 @@ function register(app: express.Application) {
 
     apiRoute(PST, "/api/recent-notes", recentNotesRoute.addRecentNote);
     apiRoute(GET, "/api/app-info", appInfoRoute.getAppInfo);
+    apiRoute(GET, "/api/metrics", metricsRoute.getMetrics);
 
     // docker health check
     route(GET, "/api/health-check", [], () => ({ status: "ok" }), apiResultHandler);
 
     // group of the services below are meant to be executed from the outside
     route(GET, "/api/setup/status", [], setupApiRoute.getStatus, apiResultHandler);
-    route(PST, "/api/setup/new-document", [auth.checkAppNotInitialized], setupApiRoute.setupNewDocument, apiResultHandler, false);
-    route(PST, "/api/setup/sync-from-server", [auth.checkAppNotInitialized], setupApiRoute.setupSyncFromServer, apiResultHandler, false);
+    asyncRoute(PST, "/api/setup/new-document", [auth.checkAppNotInitialized], setupApiRoute.setupNewDocument, apiResultHandler);
+    asyncRoute(PST, "/api/setup/sync-from-server", [auth.checkAppNotInitialized], setupApiRoute.setupSyncFromServer, apiResultHandler);
     route(GET, "/api/setup/sync-seed", [auth.checkCredentials], setupApiRoute.getSyncSeed, apiResultHandler);
-    route(PST, "/api/setup/sync-seed", [auth.checkAppNotInitialized], setupApiRoute.saveSyncSeed, apiResultHandler, false);
+    asyncRoute(PST, "/api/setup/sync-seed", [auth.checkAppNotInitialized], setupApiRoute.saveSyncSeed, apiResultHandler);
 
     apiRoute(GET, "/api/autocomplete", autocompleteApiRoute.getAutocomplete);
     apiRoute(GET, "/api/autocomplete/notesCount", autocompleteApiRoute.getNotesCount);
@@ -305,21 +279,21 @@ function register(app: express.Application) {
     const clipperMiddleware = isElectron ? [] : [auth.checkEtapiToken];
 
     route(GET, "/api/clipper/handshake", clipperMiddleware, clipperRoute.handshake, apiResultHandler);
-    route(PST, "/api/clipper/clippings", clipperMiddleware, clipperRoute.addClipping, apiResultHandler);
-    route(PST, "/api/clipper/notes", clipperMiddleware, clipperRoute.createNote, apiResultHandler);
+    asyncRoute(PST, "/api/clipper/clippings", clipperMiddleware, clipperRoute.addClipping, apiResultHandler);
+    asyncRoute(PST, "/api/clipper/notes", clipperMiddleware, clipperRoute.createNote, apiResultHandler);
     route(PST, "/api/clipper/open/:noteId", clipperMiddleware, clipperRoute.openNote, apiResultHandler);
-    route(GET, "/api/clipper/notes-by-url/:noteUrl", clipperMiddleware, clipperRoute.findNotesByUrl, apiResultHandler);
+    asyncRoute(GET, "/api/clipper/notes-by-url/:noteUrl", clipperMiddleware, clipperRoute.findNotesByUrl, apiResultHandler);
 
-    apiRoute(GET, "/api/special-notes/inbox/:date", specialNotesRoute.getInboxNote);
-    apiRoute(GET, "/api/special-notes/days/:date", specialNotesRoute.getDayNote);
-    apiRoute(GET, "/api/special-notes/week-first-day/:date", specialNotesRoute.getWeekFirstDayNote);
-    apiRoute(GET, "/api/special-notes/weeks/:week", specialNotesRoute.getWeekNote);
-    apiRoute(GET, "/api/special-notes/months/:month", specialNotesRoute.getMonthNote);
-    apiRoute(GET, "/api/special-notes/quarters/:quarter", specialNotesRoute.getQuarterNote);
+    asyncApiRoute(GET, "/api/special-notes/inbox/:date", specialNotesRoute.getInboxNote);
+    asyncApiRoute(GET, "/api/special-notes/days/:date", specialNotesRoute.getDayNote);
+    asyncApiRoute(GET, "/api/special-notes/week-first-day/:date", specialNotesRoute.getWeekFirstDayNote);
+    asyncApiRoute(GET, "/api/special-notes/weeks/:week", specialNotesRoute.getWeekNote);
+    asyncApiRoute(GET, "/api/special-notes/months/:month", specialNotesRoute.getMonthNote);
+    asyncApiRoute(GET, "/api/special-notes/quarters/:quarter", specialNotesRoute.getQuarterNote);
     apiRoute(GET, "/api/special-notes/years/:year", specialNotesRoute.getYearNote);
     apiRoute(GET, "/api/special-notes/notes-for-month/:month", specialNotesRoute.getDayNotesForMonth);
     apiRoute(PST, "/api/special-notes/sql-console", specialNotesRoute.createSqlConsole);
-    apiRoute(PST, "/api/special-notes/save-sql-console", specialNotesRoute.saveSqlConsole);
+    asyncApiRoute(PST, "/api/special-notes/save-sql-console", specialNotesRoute.saveSqlConsole);
     apiRoute(PST, "/api/special-notes/search-note", specialNotesRoute.createSearchNote);
     apiRoute(PST, "/api/special-notes/save-search-note", specialNotesRoute.saveSearchNote);
     apiRoute(PST, "/api/special-notes/launchers/:noteId/reset", specialNotesRoute.resetLauncher);
@@ -328,25 +302,25 @@ function register(app: express.Application) {
 
     apiRoute(GET, "/api/sql/schema", sqlRoute.getSchema);
     apiRoute(PST, "/api/sql/execute/:noteId", sqlRoute.execute);
-    route(PST, "/api/database/anonymize/:type", [auth.checkApiAuthOrElectron, csrfMiddleware], databaseRoute.anonymize, apiResultHandler, false);
+    asyncRoute(PST, "/api/database/anonymize/:type", [auth.checkApiAuthOrElectron, csrfMiddleware], databaseRoute.anonymize, apiResultHandler);
     apiRoute(GET, "/api/database/anonymized-databases", databaseRoute.getExistingAnonymizedDatabases);
 
     if (process.env.TRILIUM_INTEGRATION_TEST === "memory") {
-        route(PST, "/api/database/rebuild/", [auth.checkApiAuthOrElectron], databaseRoute.rebuildIntegrationTestDatabase, apiResultHandler, false);
+        asyncRoute(PST, "/api/database/rebuild/", [auth.checkApiAuthOrElectron], databaseRoute.rebuildIntegrationTestDatabase, apiResultHandler);
     }
 
     // backup requires execution outside of transaction
-    route(PST, "/api/database/backup-database", [auth.checkApiAuthOrElectron, csrfMiddleware], databaseRoute.backupDatabase, apiResultHandler, false);
+    asyncRoute(PST, "/api/database/backup-database", [auth.checkApiAuthOrElectron, csrfMiddleware], databaseRoute.backupDatabase, apiResultHandler);
     apiRoute(GET, "/api/database/backups", databaseRoute.getExistingBackups);
 
     // VACUUM requires execution outside of transaction
-    route(PST, "/api/database/vacuum-database", [auth.checkApiAuthOrElectron, csrfMiddleware], databaseRoute.vacuumDatabase, apiResultHandler, false);
+    asyncRoute(PST, "/api/database/vacuum-database", [auth.checkApiAuthOrElectron, csrfMiddleware], databaseRoute.vacuumDatabase, apiResultHandler);
 
-    route(PST, "/api/database/find-and-fix-consistency-issues", [auth.checkApiAuthOrElectron, csrfMiddleware], databaseRoute.findAndFixConsistencyIssues, apiResultHandler, false);
+    asyncRoute(PST, "/api/database/find-and-fix-consistency-issues", [auth.checkApiAuthOrElectron, csrfMiddleware], databaseRoute.findAndFixConsistencyIssues, apiResultHandler);
 
     apiRoute(GET, "/api/database/check-integrity", databaseRoute.checkIntegrity);
 
-    route(PST, "/api/script/exec", [auth.checkApiAuth, csrfMiddleware], scriptRoute.exec, apiResultHandler, false);
+    asyncRoute(PST, "/api/script/exec", [auth.checkApiAuth, csrfMiddleware], scriptRoute.exec, apiResultHandler);
 
     apiRoute(PST, "/api/script/run/:noteId", scriptRoute.run);
     apiRoute(GET, "/api/script/startup", scriptRoute.getStartupBundles);
@@ -356,8 +330,8 @@ function register(app: express.Application) {
 
     // no CSRF since this is called from android app
     route(PST, "/api/sender/login", [loginRateLimiter], loginApiRoute.token, apiResultHandler);
-    route(PST, "/api/sender/image", [auth.checkEtapiToken, uploadMiddlewareWithErrorHandling], senderRoute.uploadImage, apiResultHandler);
-    route(PST, "/api/sender/note", [auth.checkEtapiToken], senderRoute.saveNote, apiResultHandler);
+    asyncRoute(PST, "/api/sender/image", [auth.checkEtapiToken, uploadMiddlewareWithErrorHandling], senderRoute.uploadImage, apiResultHandler);
+    asyncRoute(PST, "/api/sender/note", [auth.checkEtapiToken], senderRoute.saveNote, apiResultHandler);
 
     apiRoute(GET, "/api/keyboard-actions", keysRoute.getKeyboardActions);
     apiRoute(GET, "/api/keyboard-shortcuts-for-notes", keysRoute.getShortcutsForNotes);
@@ -365,8 +339,8 @@ function register(app: express.Application) {
     apiRoute(PST, "/api/relation-map", relationMapApiRoute.getRelationMap);
     apiRoute(PST, "/api/notes/erase-deleted-notes-now", notesApiRoute.eraseDeletedNotesNow);
     apiRoute(PST, "/api/notes/erase-unused-attachments-now", notesApiRoute.eraseUnusedAttachmentsNow);
-    apiRoute(GET, "/api/similar-notes/:noteId", similarNotesRoute.getSimilarNotes);
-    apiRoute(GET, "/api/backend-log", backendLogRoute.getBackendLog);
+    asyncApiRoute(GET, "/api/similar-notes/:noteId", similarNotesRoute.getSimilarNotes);
+    asyncApiRoute(GET, "/api/backend-log", backendLogRoute.getBackendLog);
     apiRoute(GET, "/api/stats/note-size/:noteId", statsRoute.getNoteSize);
     apiRoute(GET, "/api/stats/subtree-size/:noteId", statsRoute.getSubtreeSize);
     apiRoute(PST, "/api/delete-notes-preview", notesApiRoute.getDeleteNotesPreview);
@@ -392,199 +366,28 @@ function register(app: express.Application) {
     etapiSpecialNoteRoutes.register(router);
     etapiSpecRoute.register(router);
     etapiBackupRoute.register(router);
+    etapiMetricsRoute.register(router);
 
     // LLM Chat API
-    apiRoute(PST, "/api/llm/chat", llmRoute.createSession);
-    apiRoute(GET, "/api/llm/chat", llmRoute.listSessions);
-    apiRoute(GET, "/api/llm/chat/:sessionId", llmRoute.getSession);
-    apiRoute(PATCH, "/api/llm/chat/:sessionId", llmRoute.updateSession);
-    apiRoute(DEL, "/api/llm/chat/:chatNoteId", llmRoute.deleteSession);
-    apiRoute(PST, "/api/llm/chat/:chatNoteId/messages", llmRoute.sendMessage);
-    apiRoute(PST, "/api/llm/chat/:chatNoteId/messages/stream", llmRoute.streamMessage);
+    asyncApiRoute(PST, "/api/llm/chat", llmRoute.createSession);
+    asyncApiRoute(GET, "/api/llm/chat", llmRoute.listSessions);
+    asyncApiRoute(GET, "/api/llm/chat/:sessionId", llmRoute.getSession);
+    asyncApiRoute(PATCH, "/api/llm/chat/:sessionId", llmRoute.updateSession);
+    asyncApiRoute(DEL, "/api/llm/chat/:chatNoteId", llmRoute.deleteSession);
+    asyncApiRoute(PST, "/api/llm/chat/:chatNoteId/messages", llmRoute.sendMessage);
+    asyncApiRoute(PST, "/api/llm/chat/:chatNoteId/messages/stream", llmRoute.streamMessage);
 
-    // LLM index management endpoints - reorganized for REST principles
-    apiRoute(GET, "/api/llm/indexes/stats", llmRoute.getIndexStats);
-    apiRoute(PST, "/api/llm/indexes", llmRoute.startIndexing); // Create index process
-    apiRoute(GET, "/api/llm/indexes/failed", llmRoute.getFailedIndexes);
-    apiRoute(PUT, "/api/llm/indexes/notes/:noteId", llmRoute.retryFailedIndex); // Update index for note
-    apiRoute(PUT, "/api/llm/indexes/failed", llmRoute.retryAllFailedIndexes); // Update all failed indexes
-    apiRoute(GET, "/api/llm/indexes/notes/similar", llmRoute.findSimilarNotes); // Get similar notes
-    apiRoute(GET, "/api/llm/indexes/context", llmRoute.generateQueryContext); // Get context
-    apiRoute(PST, "/api/llm/indexes/notes/:noteId", llmRoute.indexNote); // Create index for specific note
 
-    // LLM embeddings endpoints
-    apiRoute(GET, "/api/llm/embeddings/similar/:noteId", embeddingsRoute.findSimilarNotes);
-    apiRoute(PST, "/api/llm/embeddings/search", embeddingsRoute.searchByText);
-    apiRoute(GET, "/api/llm/embeddings/providers", embeddingsRoute.getProviders);
-    apiRoute(PATCH, "/api/llm/embeddings/providers/:providerId", embeddingsRoute.updateProvider);
-    apiRoute(PST, "/api/llm/embeddings/reprocess", embeddingsRoute.reprocessAllNotes);
-    apiRoute(GET, "/api/llm/embeddings/queue-status", embeddingsRoute.getQueueStatus);
-    apiRoute(GET, "/api/llm/embeddings/stats", embeddingsRoute.getEmbeddingStats);
-    apiRoute(GET, "/api/llm/embeddings/failed", embeddingsRoute.getFailedNotes);
-    apiRoute(PST, "/api/llm/embeddings/retry/:noteId", embeddingsRoute.retryFailedNote);
-    apiRoute(PST, "/api/llm/embeddings/retry-all-failed", embeddingsRoute.retryAllFailedNotes);
-    apiRoute(PST, "/api/llm/embeddings/rebuild-index", embeddingsRoute.rebuildIndex);
-    apiRoute(GET, "/api/llm/embeddings/index-rebuild-status", embeddingsRoute.getIndexRebuildStatus);
 
     // LLM provider endpoints - moved under /api/llm/providers hierarchy
-    apiRoute(GET, "/api/llm/providers/ollama/models", ollamaRoute.listModels);
-    apiRoute(GET, "/api/llm/providers/openai/models", openaiRoute.listModels);
-    apiRoute(GET, "/api/llm/providers/anthropic/models", anthropicRoute.listModels);
+    asyncApiRoute(GET, "/api/llm/providers/ollama/models", ollamaRoute.listModels);
+    asyncApiRoute(GET, "/api/llm/providers/openai/models", openaiRoute.listModels);
+    asyncApiRoute(GET, "/api/llm/providers/anthropic/models", anthropicRoute.listModels);
 
     // API Documentation
     apiDocsRoute(app);
 
     app.use("", router);
-}
-
-/** Handling common patterns. If entity is not caught, serialization to JSON will fail */
-function convertEntitiesToPojo(result: unknown) {
-    if (result instanceof AbstractBeccaEntity) {
-        result = result.getPojo();
-    } else if (Array.isArray(result)) {
-        for (const idx in result) {
-            if (result[idx] instanceof AbstractBeccaEntity) {
-                result[idx] = result[idx].getPojo();
-            }
-        }
-    } else if (result && typeof result === "object") {
-        if ("note" in result && result.note instanceof AbstractBeccaEntity) {
-            result.note = result.note.getPojo();
-        }
-
-        if ("branch" in result && result.branch instanceof AbstractBeccaEntity) {
-            result.branch = result.branch.getPojo();
-        }
-    }
-
-    if (result && typeof result === "object" && "executionResult" in result) {
-        // from runOnBackend()
-        result.executionResult = convertEntitiesToPojo(result.executionResult);
-    }
-
-    return result;
-}
-
-function apiResultHandler(req: express.Request, res: express.Response, result: unknown) {
-    res.setHeader("trilium-max-entity-change-id", entityChangesService.getMaxEntityChangeId());
-
-    result = convertEntitiesToPojo(result);
-
-    // if it's an array and the first element is integer, then we consider this to be [statusCode, response] format
-    if (Array.isArray(result) && result.length > 0 && Number.isInteger(result[0])) {
-        const [statusCode, response] = result;
-
-        if (statusCode !== 200 && statusCode !== 201 && statusCode !== 204) {
-            log.info(`${req.method} ${req.originalUrl} returned ${statusCode} with response ${JSON.stringify(response)}`);
-        }
-
-        return send(res, statusCode, response);
-    } else if (result === undefined) {
-        return send(res, 204, "");
-    } else {
-        return send(res, 200, result);
-    }
-}
-
-function send(res: express.Response, statusCode: number, response: unknown) {
-    if (typeof response === "string") {
-        if (statusCode >= 400) {
-            res.setHeader("Content-Type", "text/plain");
-        }
-
-        res.status(statusCode).send(response);
-
-        return response.length;
-    } else {
-        const json = JSON.stringify(response);
-
-        res.setHeader("Content-Type", "application/json");
-        res.status(statusCode).send(json);
-
-        return json.length;
-    }
-}
-
-function apiRoute(method: HttpMethod, path: string, routeHandler: ApiRequestHandler) {
-    route(method, path, [auth.checkApiAuth, csrfMiddleware], routeHandler, apiResultHandler);
-}
-
-function route(method: HttpMethod, path: string, middleware: express.Handler[], routeHandler: ApiRequestHandler, resultHandler: ApiResultHandler | null = null, transactional = true) {
-    router[method](path, ...(middleware as express.Handler[]), (req: express.Request, res: express.Response, next: express.NextFunction) => {
-        const start = Date.now();
-
-        try {
-            cls.namespace.bindEmitter(req);
-            cls.namespace.bindEmitter(res);
-
-            const result = cls.init(() => {
-                cls.set("componentId", req.headers["trilium-component-id"]);
-                cls.set("localNowDateTime", req.headers["trilium-local-now-datetime"]);
-                cls.set("hoistedNoteId", req.headers["trilium-hoisted-note-id"] || "root");
-
-                const cb = () => routeHandler(req, res, next);
-
-                return transactional ? sql.transactional(cb) : cb();
-            });
-
-            if (!resultHandler) {
-                return;
-            }
-
-            if (result?.then) {
-                // promise
-                result.then((promiseResult: unknown) => handleResponse(resultHandler, req, res, promiseResult, start)).catch((e: unknown) => handleException(e, method, path, res));
-            } else {
-                handleResponse(resultHandler, req, res, result, start);
-            }
-        } catch (e) {
-            handleException(e, method, path, res);
-        }
-    });
-}
-
-function handleResponse(resultHandler: ApiResultHandler, req: express.Request, res: express.Response, result: unknown, start: number) {
-    // Skip result handling if the response has already been handled
-    if ((res as any).triliumResponseHandled) {
-        // Just log the request without additional processing
-        log.request(req, res, Date.now() - start, 0);
-        return;
-    }
-
-    const responseLength = resultHandler(req, res, result);
-    log.request(req, res, Date.now() - start, responseLength);
-}
-
-function handleException(e: unknown | Error, method: HttpMethod, path: string, res: express.Response) {
-    const [errMessage, errStack] = safeExtractMessageAndStackFromError(e);
-
-    log.error(`${method} ${path} threw exception: '${errMessage}', stack: ${errStack}`);
-
-    const resStatusCode = (e instanceof ValidationError || e instanceof NotFoundError) ? e.statusCode : 500;
-
-    res.status(resStatusCode).json({
-        message: errMessage
-    });
-
-}
-
-function createUploadMiddleware() {
-    const multerOptions: multer.Options = {
-        fileFilter: (req: express.Request, file, cb) => {
-            // UTF-8 file names are not well decoded by multer/busboy, so we handle the conversion on our side.
-            // See https://github.com/expressjs/multer/pull/1102.
-            file.originalname = Buffer.from(file.originalname, "latin1").toString("utf-8");
-            cb(null, true);
-        }
-    };
-
-    if (!process.env.TRILIUM_NO_UPLOAD_LIMIT) {
-        multerOptions.limits = {
-            fileSize: MAX_ALLOWED_FILE_SIZE_MB * 1024 * 1024
-        };
-    }
-
-    return multer(multerOptions).single("upload");
 }
 
 export default {

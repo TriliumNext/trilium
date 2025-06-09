@@ -215,8 +215,6 @@ class ListOrGridView extends ViewMode {
 
         const highlightedTokens = this.parentNote.highlightedTokens || [];
         if (highlightedTokens.length > 0) {
-            await import("script-loader!mark.js/dist/jquery.mark.min.js");
-
             const regex = highlightedTokens.map((token) => utils.escapeRegExp(token)).join("|");
 
             this.highlightRegex = new RegExp(regex, "gi");
@@ -320,11 +318,10 @@ class ListOrGridView extends ViewMode {
         $expander.on("click", () => this.toggleContent($card, note, !$card.hasClass("expanded")));
 
         if (this.highlightRegex) {
-            $card.find(".note-book-title").markRegExp(this.highlightRegex, {
+            const Mark = new (await import("mark.js")).default($card.find(".note-book-title")[0]);
+            Mark.markRegExp(this.highlightRegex, {
                 element: "span",
-                className: "ck-find-result",
-                separateWordSearch: false,
-                caseSensitive: false
+                className: "ck-find-result"
             });
         }
 
@@ -362,11 +359,10 @@ class ListOrGridView extends ViewMode {
             });
 
             if (this.highlightRegex) {
-                $renderedContent.markRegExp(this.highlightRegex, {
+                const Mark = new (await import("mark.js")).default($renderedContent[0]);
+                Mark.markRegExp(this.highlightRegex, {
                     element: "span",
-                    className: "ck-find-result",
-                    separateWordSearch: false,
-                    caseSensitive: false
+                    className: "ck-find-result"
                 });
             }
 

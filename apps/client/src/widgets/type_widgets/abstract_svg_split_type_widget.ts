@@ -138,8 +138,8 @@ export default abstract class AbstractSvgSplitTypeWidget extends AbstractSplitTy
      */
     async #setupPanZoom(preservePanZoom: boolean) {
         // Clean up
-        let pan = null;
-        let zoom = null;
+        let pan: SvgPanZoom.Point | null = null;
+        let zoom: number | null = null;
         if (preservePanZoom && this.zoomInstance) {
             // Store pan and zoom for same note, when the user is editing the note.
             pan = this.zoomInstance.getPan();

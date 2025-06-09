@@ -3,8 +3,8 @@ import build from "./build.js";
 import packageJson from "../../package.json" with { type: "json" };
 import dataDir from "./data_dir.js";
 
-const APP_DB_VERSION = 230;
-const SYNC_VERSION = 35;
+const APP_DB_VERSION = 232;
+const SYNC_VERSION = 36;
 const CLIPPER_PROTOCOL_VERSION = "1.0";
 
 export default {

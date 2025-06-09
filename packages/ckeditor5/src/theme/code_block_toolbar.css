@@ -1,0 +1,4 @@
+.ck.ck-balloon-panel.codeblock-language-list .ck-dropdown__panel {
+    max-height: 300px;
+    overflow-y: auto;
+}

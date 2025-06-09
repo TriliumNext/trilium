@@ -126,7 +126,8 @@
     "collapseWholeTree": "collapse whole note tree",
     "collapseSubTree": "collapse sub-tree",
     "tabShortcuts": "Tab shortcuts",
-    "newTabNoteLink": "<kbd>CTRL+click</kbd> - (or middle mouse click) on note link opens note in a new tab",
+    "newTabNoteLink": "<kbd>Ctrl+click</kbd> - (or <kbd>middle mouse click</kbd>) on note link opens note in a new tab",
+    "newTabWithActivationNoteLink": "<kbd>Ctrl+Shift+click</kbd> - (or <kbd>Shift+middle mouse click</kbd>) on note link opens and activates the note in a new tab",
     "onlyInDesktop": "Only in desktop (Electron build)",
     "openEmptyTab": "open empty tab",
     "closeActiveTab": "close active tab",
@@ -1123,10 +1124,8 @@
     "layout-horizontal-description": "launcher bar is underneath the tab bar, the tab bar is now full width."
   },
   "ai_llm": {
-    "embeddings_configuration": "Embeddings Configuration",
     "not_started": "Not started",
-    "title": "AI & Embedding Settings",
-    "embedding_statistics": "Embedding Statistics",
+    "title": "AI Settings",
     "processed_notes": "Processed Notes",
     "total_notes": "Total Notes",
     "progress": "Progress",
@@ -1134,7 +1133,6 @@
     "failed_notes": "Failed Notes",
     "last_processed": "Last Processed",
     "refresh_stats": "Refresh Statistics",
-    "no_failed_embeddings": "No failed embeddings found.",
     "enable_ai_features": "Enable AI/LLM features",
     "enable_ai_description": "Enable AI features like note summarization, content generation, and other LLM capabilities",
     "openai_tab": "OpenAI",
@@ -1159,20 +1157,16 @@
     "anthropic_api_key_description": "Your Anthropic API key for accessing Claude models",
     "default_model": "Default Model",
     "openai_model_description": "Examples: gpt-4o, gpt-4-turbo, gpt-3.5-turbo",
-    "embedding_model": "Embedding Model",
-    "openai_embedding_model_description": "Model used for generating embeddings (text-embedding-3-small recommended)",
     "base_url": "Base URL",
     "openai_url_description": "Default: https://api.openai.com/v1",
     "anthropic_settings": "Anthropic Settings",
     "anthropic_url_description": "Base URL for the Anthropic API (default: https://api.anthropic.com)",
     "anthropic_model_description": "Anthropic Claude models for chat completion",
     "voyage_settings": "Voyage AI Settings",
-    "voyage_api_key_description": "Your Voyage AI API key for accessing embeddings services",
     "ollama_settings": "Ollama Settings",
     "ollama_url_description": "URL for the Ollama API (default: http://localhost:11434)",
     "ollama_model_description": "Ollama model to use for chat completion",
     "anthropic_configuration": "Anthropic Configuration",
-    "voyage_embedding_model_description": "Voyage AI embedding models for text embeddings (voyage-2 recommended)",
     "voyage_configuration": "Voyage AI Configuration",
     "voyage_url_description": "Default: https://api.voyageai.com/v1",
     "ollama_configuration": "Ollama Configuration",
@@ -1180,28 +1174,10 @@
     "enable_ollama_description": "Enable Ollama for local AI model usage",
     "ollama_url": "Ollama URL",
     "ollama_model": "Ollama Model",
-    "ollama_embedding_model": "Embedding Model",
-    "ollama_embedding_model_description": "Specialized model for generating embeddings (vector representations)",
     "refresh_models": "Refresh Models",
     "refreshing_models": "Refreshing...",
-    "embedding_configuration": "Embeddings Configuration",
-    "embedding_default_provider": "Default Provider",
-    "embedding_default_provider_description": "Select the default provider used for generating note embeddings",
-    "embedding_provider_precedence": "Embedding Provider Precedence",
-    "embedding_providers_order": "Embedding Provider Order",
-    "embedding_providers_order_description": "Set the order of embedding providers in comma-separated format (e.g., \"openai,voyage,ollama,local\")",
     "enable_automatic_indexing": "Enable Automatic Indexing",
-    "enable_automatic_indexing_description": "Automatically generate embeddings for new and updated notes",
-    "embedding_auto_update_enabled": "Auto-update Embeddings",
-    "embedding_auto_update_enabled_description": "Automatically update embeddings when notes are modified",
-    "recreate_embeddings": "Recreate All Embeddings",
-    "recreate_embeddings_description": "Regenerate all note embeddings from scratch (may take a long time for large note collections)",
-    "recreate_embeddings_started": "Embeddings regeneration started. This may take a long time for large note collections.",
-    "recreate_embeddings_error": "Error starting embeddings regeneration. Check logs for details.",
-    "recreate_embeddings_confirm": "Are you sure you want to recreate all embeddings? This may take a long time for large note collections.",
     "rebuild_index": "Rebuild Index",
-    "rebuild_index_description": "Rebuild the vector search index for better performance (much faster than recreating embeddings)",
-    "rebuild_index_started": "Embedding index rebuild started. This may take several minutes.",
     "rebuild_index_error": "Error starting index rebuild. Check logs for details.",
     "note_title": "Note Title",
     "error": "Error",
@@ -1211,48 +1187,19 @@
     "partial": "{{ percentage }}% completed",
     "retry_queued": "Note queued for retry",
     "retry_failed": "Failed to queue note for retry",
-    "embedding_provider_precedence_description": "Comma-separated list of providers in order of precedence for embeddings search (e.g., 'openai,ollama,anthropic')",
-    "embedding_dimension_strategy": "Embedding Dimension Strategy",
-    "embedding_dimension_auto": "Auto (Recommended)",
-    "embedding_dimension_fixed": "Fixed",
-    "embedding_similarity_threshold": "Similarity Threshold",
-    "embedding_similarity_threshold_description": "Minimum similarity score for notes to be included in search results (0-1)",
     "max_notes_per_llm_query": "Max Notes Per Query",
     "max_notes_per_llm_query_description": "Maximum number of similar notes to include in AI context",
-    "embedding_dimension_strategy_description": "Choose how embeddings are handled. 'Native' preserves maximum information by adapting smaller vectors to match larger ones (recommended). 'Regenerate' creates new embeddings with the target model for specific search needs.",
-    "drag_providers_to_reorder": "Drag providers up or down to set your preferred order for embedding searches",
     "active_providers": "Active Providers",
     "disabled_providers": "Disabled Providers",
     "remove_provider": "Remove provider from search",
     "restore_provider": "Restore provider to search",
-    "embedding_generation_location": "Generation Location",
-    "embedding_generation_location_description": "Select where embedding generation should happen",
-    "embedding_generation_location_client": "Client/Server",
-    "embedding_generation_location_sync_server": "Sync Server",
-    "enable_auto_update_embeddings": "Auto-update Embeddings",
-    "enable_auto_update_embeddings_description": "Automatically update embeddings when notes are modified",
-    "auto_update_embeddings": "Auto-update Embeddings",
-    "auto_update_embeddings_desc": "Automatically update embeddings when notes are modified",
     "similarity_threshold": "Similarity Threshold",
     "similarity_threshold_description": "Minimum similarity score (0-1) for notes to be included in context for LLM queries",
-    "embedding_batch_size": "Batch Size",
-    "embedding_batch_size_description": "Number of notes to process in a single batch (1-50)",
-    "embedding_update_interval": "Update Interval (ms)",
-    "embedding_update_interval_description": "Time between processing batches of embeddings (in milliseconds)",
-    "embedding_default_dimension": "Default Dimension",
-    "embedding_default_dimension_description": "Default embedding vector dimension when creating new embeddings",
-    "reprocess_all_embeddings": "Reprocess All Embeddings",
-    "reprocess_all_embeddings_description": "Queue all notes for embedding processing. This may take some time depending on your number of notes.",
-    "reprocessing_embeddings": "Reprocessing...",
-    "reprocess_started": "Embedding reprocessing started in the background",
-    "reprocess_error": "Error starting embedding reprocessing",
 
     "reprocess_index": "Rebuild Search Index",
-    "reprocess_index_description": "Optimize the search index for better performance. This uses existing embeddings without regenerating them (much faster than reprocessing all embeddings).",
     "reprocessing_index": "Rebuilding...",
     "reprocess_index_started": "Search index optimization started in the background",
     "reprocess_index_error": "Error rebuilding search index",
-
     "index_rebuild_progress": "Index Rebuild Progress",
     "index_rebuilding": "Optimizing index ({{percentage}}%)",
     "index_rebuild_complete": "Index optimization complete",
@@ -1262,7 +1209,6 @@
     "incomplete": "Incomplete ({{percentage}}%)",
     "complete": "Complete (100%)",
     "refreshing": "Refreshing...",
-    "stats_error": "Error fetching embedding statistics",
     "auto_refresh_notice": "Auto-refreshes every {{seconds}} seconds",
     "note_queued_for_retry": "Note queued for retry",
     "failed_to_retry_note": "Failed to retry note",
@@ -1270,7 +1216,6 @@
     "failed_to_retry_all": "Failed to retry notes",
     "ai_settings": "AI Settings",
     "api_key_tooltip": "API key for accessing the service",
-    "confirm_delete_embeddings": "Are you sure you want to delete all AI embeddings? This will remove all semantic search capabilities until notes are reindexed, which can take a significant amount of time.",
     "empty_key_warning": {
       "anthropic": "Anthropic API key is empty. Please enter a valid API key.",
       "openai": "OpenAI API key is empty. Please enter a valid API key.",
@@ -1303,7 +1248,6 @@
     "note_chat": "Note Chat",
     "notes_indexed": "{{ count }} note indexed",
     "notes_indexed_plural": "{{ count }} notes indexed",
-    "reset_embeddings": "Reset Embeddings",
     "sources": "Sources",
     "start_indexing": "Start Indexing",
     "use_advanced_context": "Use Advanced Context",
@@ -1315,7 +1259,12 @@
       "create_new_ai_chat": "Create new AI Chat"
     },
     "create_new_ai_chat": "Create new AI Chat",
-    "configuration_warnings": "There are some issues with your AI configuration. Please check your settings."
+    "configuration_warnings": "There are some issues with your AI configuration. Please check your settings.",
+    "experimental_warning": "The LLM feature is currently experimental - you have been warned.",
+    "selected_provider": "Selected Provider",
+    "selected_provider_description": "Choose the AI provider for chat and completion features",
+    "select_model": "Select model...",
+    "select_provider": "Select provider..."
   },
   "zoom_factor": {
     "title": "Zoom Factor (desktop build only)",
@@ -1431,6 +1380,12 @@
     "description": "Automatic read-only note size is the size after which notes will be displayed in a read-only mode (for performance reasons).",
     "label": "Automatic read-only size (text notes)",
     "unit": "characters"
+  },
+  "custom_date_time_format": {
+    "title": "Custom Date/Time Format",
+    "description": "Customize the format of the date and time inserted via <kbd></kbd> or the toolbar. See <a href=\"https://day.js.org/docs/en/display/format\" target=\"_blank\" rel=\"noopener noreferrer\">Day.js docs</a> for available format tokens.",
+    "format_string": "Format string:",
+    "formatted_time": "Formatted date/time:"
   },
   "i18n": {
     "title": "Localization",
@@ -1780,7 +1735,9 @@
   },
   "clipboard": {
     "cut": "Note(s) have been cut into clipboard.",
-    "copied": "Note(s) have been copied into clipboard."
+    "copied": "Note(s) have been copied into clipboard.",
+    "copy_failed": "Cannot copy to clipboard due to permission issues.",
+    "copy_success": "Copied to clipboard."
   },
   "entrypoints": {
     "note-revision-created": "Note revision has been created.",
@@ -1823,12 +1780,16 @@
     "auto-detect-language": "Auto-detected"
   },
   "highlighting": {
-    "title": "Code Syntax Highlighting for Text Notes",
+    "title": "Code Blocks",
     "description": "Controls the syntax highlighting for code blocks inside text notes, code notes will not be affected.",
     "color-scheme": "Color Scheme"
   },
   "code_block": {
-    "word_wrapping": "Word wrapping"
+    "word_wrapping": "Word wrapping",
+    "theme_none": "No syntax highlighting",
+    "theme_group_light": "Light themes",
+    "theme_group_dark": "Dark themes",
+    "copy_title": "Copy to clipboard"
   },
   "classic_editor_toolbar": {
     "title": "Formatting"
@@ -1960,5 +1921,10 @@
   },
   "svg": {
     "export_to_png": "The diagram could not be exported to PNG."
+  },
+  "code_theme": {
+    "title": "Appearance",
+    "word_wrapping": "Word wrapping",
+    "color-scheme": "Color scheme"
   }
 }

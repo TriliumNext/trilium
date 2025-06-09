@@ -84,7 +84,7 @@ async function importOpml(taskContext: TaskContext, fileBuffer: string | Buffer,
     }
 
     const outlines = xml.opml.body[0].outline || [];
-    let returnNote = null;
+    let returnNote: BNote | null = null;
 
     for (const outline of outlines) {
         const note = importOutline(outline, parentNote.noteId);

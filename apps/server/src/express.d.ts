@@ -1,14 +1,7 @@
-import { Session } from "express-session";
+import type { SessionData } from "express-session";
 
 export declare module "express-serve-static-core" {
     interface Request {
-        session: Session & {
-            loggedIn: boolean;
-            lastAuthState: {
-                totpEnabled: boolean;
-                ssoEnabled: boolean;
-            };
-        };
         headers: {
             "x-local-date"?: string;
             "x-labels"?: string;
@@ -22,6 +15,16 @@ export declare module "express-serve-static-core" {
             "trilium-hoisted-note-id"?: string;
 
             "user-agent"?: string;
+        };
+    }
+}
+
+export declare module "express-session" {
+    interface SessionData {
+        loggedIn: boolean;
+        lastAuthState: {
+            totpEnabled: boolean;
+            ssoEnabled: boolean;
         };
     }
 }

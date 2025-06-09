@@ -135,14 +135,14 @@ class IncludeNoteEditing extends Plugin {
 }
 
 class InsertIncludeNoteCommand extends Command {
-	execute() {
+	override execute() {
 		const editorEl = this.editor.editing.view.getDomRoot();
 		const component = glob.getComponentByEl(editorEl);
 
 		component.triggerCommand('addIncludeNoteToText');
 	}
 
-	refresh() {
+	override refresh() {
 		const model = this.editor.model;
 		const selection = model.document.selection;
         const firstPosition = selection.getFirstPosition();

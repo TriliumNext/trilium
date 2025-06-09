@@ -126,30 +126,17 @@ export type NoteType = (typeof ALLOWED_NOTE_TYPES)[number];
 
 export interface NoteRow {
     noteId: string;
-    deleteId: string;
+    deleteId?: string;
     title: string;
     type: NoteType;
     mime: string;
-    isProtected: boolean;
-    isDeleted: boolean;
-    blobId: string;
-    dateCreated: string;
-    dateModified: string;
-    utcDateCreated: string;
-    utcDateModified: string;
+    isProtected?: boolean;
+    isDeleted?: boolean;
+    blobId?: string;
+    dateCreated?: string;
+    dateModified?: string;
+    utcDateCreated?: string;
+    utcDateModified?: string;
     content?: string | Buffer;
 }
 
-export interface NoteEmbeddingRow {
-    embedId: string;
-    noteId: string;
-    providerId: string;
-    modelId: string;
-    dimension: number;
-    embedding: Buffer;
-    version: number;
-    dateCreated: string;
-    utcDateCreated: string;
-    dateModified: string;
-    utcDateModified: string;
-}

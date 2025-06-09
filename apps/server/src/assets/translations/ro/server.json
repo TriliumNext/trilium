@@ -189,11 +189,6 @@
   "special_notes": {
     "search_prefix": "Căutare:"
   },
-  "code_block": {
-    "theme_none": "Fără evidențiere de sintaxă",
-    "theme_group_dark": "Teme întunecate",
-    "theme_group_light": "Teme luminoase"
-  },
   "test_sync": {
     "not-configured": "Calea către serverul de sincronizare nu este configurată. Configurați sincronizarea înainte.",
     "successful": "Comunicarea cu serverul de sincronizare a avut loc cu succes, s-a început sincronizarea."

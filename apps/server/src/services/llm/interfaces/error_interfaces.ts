@@ -37,16 +37,6 @@ export interface OllamaError extends LLMServiceError {
 }
 
 /**
- * Embedding-specific error interface
- */
-export interface EmbeddingError extends LLMServiceError {
-  provider: string;
-  model?: string;
-  batchSize?: number;
-  isRetryable: boolean;
-}
-
-/**
  * Guard function to check if an error is a specific type of error
  */
 export function isLLMServiceError(error: unknown): error is LLMServiceError {

@@ -3,6 +3,7 @@ import utils from "../../services/utils.js";
 import linkService from "../../services/link.js";
 import server from "../../services/server.js";
 import type FNote from "../../entities/fnote.js";
+import options from "../../services/options.js";
 import type { ExcalidrawElement, Theme } from "@excalidraw/excalidraw/element/types";
 import type { AppState, BinaryFileData, ExcalidrawImperativeAPI, ExcalidrawProps, LibraryItem, SceneData } from "@excalidraw/excalidraw/types";
 import type { JSX } from "react";
@@ -132,7 +133,7 @@ export default class ExcalidrawTypeWidget extends TypeWidget {
 
         // currently required by excalidraw, in order to allows self-hosting fonts locally.
         // this avoids making excalidraw load the fonts from an external CDN.
-        (window as any).EXCALIDRAW_ASSET_PATH = `${window.location.origin}/${asset_path}/app-dist/excalidraw/`;
+        (window as any).EXCALIDRAW_ASSET_PATH = `${window.location.pathname}/node_modules/@excalidraw/excalidraw/dist/prod`;
 
         // temporary vars
         this.currentNoteId = "";
@@ -447,6 +448,9 @@ export default class ExcalidrawTypeWidget extends TypeWidget {
     }
 
     onChangeHandler() {
+        if (options.is("databaseReadonly")) {
+            return;
+        }
         // changeHandler is called upon any tiny change in excalidraw. button clicked, hover, etc.
         // make sure only when a new element is added, we actually save something.
         const isNewSceneVersion = this.isNewSceneVersion();
@@ -540,7 +544,7 @@ export default class ExcalidrawTypeWidget extends TypeWidget {
                         this.saveData();
                     },
                     onChange: () => this.onChangeHandler(),
-                    viewModeEnabled: false,
+                    viewModeEnabled: options.is("databaseReadonly"),
                     zenModeEnabled: false,
                     gridModeEnabled: false,
                     isCollaborating: false,
@@ -567,6 +571,10 @@ export default class ExcalidrawTypeWidget extends TypeWidget {
      * info: sceneVersions are not incrementing. it seems to be a pseudo-random number
      */
     isNewSceneVersion() {
+        if (options.is("databaseReadonly")) {
+            return false;
+        }
+
         const sceneVersion = this.getSceneVersion();
 
         return (

@@ -30,18 +30,27 @@ By default, `config.ini`, the [database](../Advanced%20Usage/Database.md), and o
 export TRILIUM_DATA_DIR=/home/myuser/data/my-trilium-data
 ```
 
+### Disabling / Modifying the Upload Limit
+
+If you're running into the 250MB limit imposed on the server by default, and you'd like to increase the upload limit, you can set the `TRILIUM_NO_UPLOAD_LIMIT` environment variable to `true` disable it completely:
+
+```
+export TRILIUM_NO_UPLOAD_LIMIT=true 
+```
+
+Or, if you'd simply like to _increase_ the upload limit size to something beyond 250MB, you can set the `MAX_ALLOWED_FILE_SIZE_MB` environment variable to something larger than the integer `250` (e.g. `450` in the following example):
+
+```
+export MAX_ALLOWED_FILE_SIZE_MB=450
+```
+
 ### Disabling Authentication
 
-If you are running Trilium on localhost only or if authentication is handled by another component, you can disable Trilium’s authentication by adding the following to `config.ini`:
-
-```
-[General]
-noAuthentication=true
-```
+See <a class="reference-link" href="Server%20Installation/Authentication.md">Authentication</a>.
 
 ## Reverse Proxy Setup
 
-To configure a reverse proxy for Trilium, you can use either **nginx** or **Apache**.
+To configure a reverse proxy for Trilium, you can use either **nginx** or **Apache**. You can also check out the documentation stored in the Reverse proxy folder.
 
 ### nginx
 

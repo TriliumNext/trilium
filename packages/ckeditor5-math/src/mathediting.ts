@@ -27,6 +27,18 @@ export default class MathEditing extends Plugin {
 
 	public init(): void {
 		const editor = this.editor;
+
+		const originalProcessor = editor.data.processor;
+		const originalToView = originalProcessor.toView.bind(originalProcessor);
+		const mathSpanRegex = /<span class="math-tex">([\s\S]*?)<\/span>/g;
+		originalProcessor.toView = (data: string) => {
+			// Preprocessing: preserve line breaks inside math formulas by replacing \n with <!--LF-->
+			const processedData = data.replace(mathSpanRegex, (_, content) =>
+				`<span class="math-tex">${content.replace(/\n/g, '___MATH_TEX_LF___')}</span>`
+			);
+			return originalToView(processedData);
+		};
+
 		editor.commands.add( 'math', new MathCommand( editor ) );
 
 		this._defineSchema();
@@ -120,8 +132,7 @@ export default class MathEditing extends Plugin {
 				model: ( viewElement, { writer } ) => {
 					const child = viewElement.getChild( 0 );
 					if ( child?.is( '$text' ) ) {
-						const equation = child.data.trim();
-
+						const equation = child.data.trim().replace(/___MATH_TEX_LF___/g, '\n');
 						const params = Object.assign( extractDelimiters( equation ), {
 							type: mathConfig.forceOutputType ?
 								mathConfig.outputType :

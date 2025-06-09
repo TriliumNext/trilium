@@ -6,7 +6,6 @@ import attributeService from "./attributes.js";
 import cloningService from "./cloning.js";
 import dayjs from "dayjs";
 import hoistedNoteService from "./hoisted_note.js";
-import i18next from "i18next";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter.js";
 import noteService from "./notes.js";
 import optionService from "./options.js";
@@ -16,6 +15,7 @@ import searchContext from "../services/search/search_context.js";
 import searchService from "../services/search/services/search.js";
 import sql from "./sql.js";
 import { t } from "i18next";
+import { ordinal } from "./i18n.js";
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(quarterOfYear);
@@ -67,24 +67,7 @@ function getTimeUnitReplacements(timeUnit: TimeUnit): string[] {
     return units.slice(0, index + 1).flatMap(unit => baseReplacements[unit]);
 }
 
-async function ordinal(date: Dayjs, lng: string) {
-    const localeMap: Record<string, string> = {
-        cn: "zh-cn",
-        tw: "zh-tw"
-    };
-
-    const dayjsLocale = localeMap[lng] || lng;
-
-    try {
-        await import(`dayjs/locale/${dayjsLocale}.js`);
-    } catch (err) {
-        console.warn(`Could not load locale ${dayjsLocale}`, err);
-    }
-
-    return dayjs(date).locale(dayjsLocale).format("Do");
-}
-
-async function getJournalNoteTitle(
+function getJournalNoteTitle(
     rootNote: BNote,
     timeUnit: TimeUnit,
     dateObj: Dayjs,
@@ -102,7 +85,7 @@ async function getJournalNoteTitle(
     const monthName = t(MONTH_TRANSLATION_IDS[dateObj.month()]);
     const weekDay = t(WEEKDAY_TRANSLATION_IDS[dateObj.day()]);
     const numberStr = number.toString();
-    const ordinalStr = await ordinal(dateObj, i18next.language);
+    const ordinalStr = ordinal(dateObj);
 
     const allReplacements: Record<string, string> = {
         // Common date formats
@@ -228,7 +211,7 @@ function getQuarterNumberStr(date: Dayjs) {
     return `${date.year()}-Q${date.quarter()}`;
 }
 
-async function getQuarterNote(quarterStr: string, _rootNote: BNote | null = null): Promise<BNote> {
+function getQuarterNote(quarterStr: string, _rootNote: BNote | null = null): BNote {
     const rootNote = _rootNote || getRootCalendarNote();
 
     quarterStr = quarterStr.trim().substring(0, 7);
@@ -247,7 +230,7 @@ async function getQuarterNote(quarterStr: string, _rootNote: BNote | null = null
     const quarterStartDate = dayjs().year(parseInt(yearStr)).month(firstMonth).date(1);
 
     const yearNote = getYearNote(yearStr, rootNote);
-    const noteTitle = await getJournalNoteTitle(
+    const noteTitle = getJournalNoteTitle(
         rootNote, "quarter", quarterStartDate, quarterNumber
     );
 
@@ -269,7 +252,7 @@ async function getQuarterNote(quarterStr: string, _rootNote: BNote | null = null
     return quarterNote as unknown as BNote;
 }
 
-async function getMonthNote(dateStr: string, _rootNote: BNote | null = null): Promise<BNote> {
+function getMonthNote(dateStr: string, _rootNote: BNote | null = null): BNote {
     const rootNote = _rootNote || getRootCalendarNote();
 
     const monthStr = dateStr.substring(0, 7);
@@ -283,15 +266,15 @@ async function getMonthNote(dateStr: string, _rootNote: BNote | null = null): Pr
         return monthNote;
     }
 
-    let monthParentNote;
+    let monthParentNote: BNote | null;
 
     if (rootNote.hasLabel("enableQuarterNote")) {
-        monthParentNote = await getQuarterNote(getQuarterNumberStr(dayjs(dateStr)), rootNote);
+        monthParentNote = getQuarterNote(getQuarterNumberStr(dayjs(dateStr)), rootNote);
     } else {
         monthParentNote = getYearNote(dateStr, rootNote);
     }
 
-    const noteTitle = await getJournalNoteTitle(
+    const noteTitle = getJournalNoteTitle(
         rootNote, "month", dayjs(dateStr), parseInt(monthNumber)
     );
 
@@ -313,7 +296,7 @@ async function getMonthNote(dateStr: string, _rootNote: BNote | null = null): Pr
 
 function getWeekStartDate(date: Dayjs): Dayjs {
     const day = date.day();
-    let diff;
+    let diff: number;
 
     if (optionService.getOption("firstDayOfWeek") === "0") { // Sunday
         diff = date.date() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
@@ -408,7 +391,7 @@ function getWeekFirstDayNote(dateStr: string, rootNote: BNote | null = null) {
  * @param _rootNote a {@link BNote} representing the calendar root, or {@code null} or not specified to use the default root calendar note.
  * @returns a Promise that resolves to the {@link BNote} corresponding to the week note.
  */
-async function getWeekNote(weekStr: string, _rootNote: BNote | null = null): Promise<BNote | null> {
+function getWeekNote(weekStr: string, _rootNote: BNote | null = null): BNote | null {
     const rootNote = _rootNote || getRootCalendarNote();
     if (!rootNote.hasLabel("enableWeekNote")) {
         return null;
@@ -435,10 +418,10 @@ async function getWeekNote(weekStr: string, _rootNote: BNote | null = null): Pro
     const startMonth = startDate.month();
     const endMonth = endDate.month();
 
-    const monthNote = await getMonthNote(startDate.format("YYYY-MM-DD"), rootNote);
-    const noteTitle = await getJournalNoteTitle(rootNote, "week", startDate, weekNumber);
+    const monthNote = getMonthNote(startDate.format("YYYY-MM-DD"), rootNote);
+    const noteTitle = getJournalNoteTitle(rootNote, "week", startDate, weekNumber);
 
-    sql.transactional(async () => {
+    sql.transactional(() => {
         weekNote = createNote(monthNote, noteTitle);
 
         attributeService.createLabel(weekNote.noteId, WEEK_LABEL, weekStr);
@@ -452,7 +435,7 @@ async function getWeekNote(weekStr: string, _rootNote: BNote | null = null): Pro
 
         // If the week spans different months, clone the week note in the other month as well
         if (startMonth !== endMonth) {
-            const secondMonthNote = await getMonthNote(endDate.format("YYYY-MM-DD"), rootNote);
+            const secondMonthNote = getMonthNote(endDate.format("YYYY-MM-DD"), rootNote);
             cloningService.cloneNoteToParentNote(weekNote.noteId, secondMonthNote.noteId);
         }
     });
@@ -460,7 +443,7 @@ async function getWeekNote(weekStr: string, _rootNote: BNote | null = null): Pro
     return weekNote as unknown as BNote;
 }
 
-async function getDayNote(dateStr: string, _rootNote: BNote | null = null): Promise<BNote> {
+function getDayNote(dateStr: string, _rootNote: BNote | null = null): BNote {
     const rootNote = _rootNote || getRootCalendarNote();
 
     dateStr = dateStr.trim().substring(0, 10);
@@ -473,16 +456,16 @@ async function getDayNote(dateStr: string, _rootNote: BNote | null = null): Prom
         return dateNote;
     }
 
-    let dateParentNote;
+    let dateParentNote: BNote | null;
 
     if (rootNote.hasLabel("enableWeekNote")) {
-        dateParentNote = await getWeekNote(getWeekNumberStr(dayjs(dateStr)), rootNote);
+        dateParentNote = getWeekNote(getWeekNumberStr(dayjs(dateStr)), rootNote);
     } else {
-        dateParentNote = await getMonthNote(dateStr, rootNote);
+        dateParentNote = getMonthNote(dateStr, rootNote);
     }
 
     const dayNumber = dateStr.substring(8, 10);
-    const noteTitle = await getJournalNoteTitle(
+    const noteTitle = getJournalNoteTitle(
         rootNote, "day", dayjs(dateStr), parseInt(dayNumber)
     );
 

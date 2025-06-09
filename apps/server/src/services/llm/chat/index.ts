@@ -2,7 +2,6 @@
  * Chat module export
  */
 import restChatService from './rest_chat_service.js';
-import sessionsStore from './sessions_store.js';
 import { ContextHandler } from './handlers/context_handler.js';
 import { ToolHandler } from './handlers/tool_handler.js';
 import { StreamHandler } from './handlers/stream_handler.js';
@@ -13,7 +12,6 @@ import type { LLMStreamMessage } from '../interfaces/chat_ws_messages.js';
 // Export components
 export {
     restChatService as default,
-    sessionsStore,
     ContextHandler,
     ToolHandler,
     StreamHandler,

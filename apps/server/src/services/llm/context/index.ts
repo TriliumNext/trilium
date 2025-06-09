@@ -33,7 +33,7 @@ async function getSemanticContext(
         }
 
         // Get an LLM service
-        const llmService = aiServiceManager.getInstance().getService();
+        const llmService = await aiServiceManager.getInstance().getService();
 
         const result = await contextService.processQuery("", llmService, {
             maxResults: options.maxSimilarNotes || 5,
@@ -543,7 +543,7 @@ export class ContextExtractor {
         try {
             const { default: aiServiceManager } = await import('../ai_service_manager.js');
             const contextService = aiServiceManager.getInstance().getContextService();
-            const llmService = aiServiceManager.getInstance().getService();
+            const llmService = await aiServiceManager.getInstance().getService();
 
             if (!contextService) {
                 return "Context service not available.";

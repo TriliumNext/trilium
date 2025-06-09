@@ -35,10 +35,16 @@
   ],
   "references": [
     {
-      "path": "../../packages/ckeditor5/tsconfig.lib.json"
+      "path": "../../packages/highlightjs/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/codemirror/tsconfig.lib.json"
     },
     {
       "path": "../../packages/commons/tsconfig.lib.json"
+    },
+    {
+      "path": "../../packages/ckeditor5/tsconfig.lib.json"
     }
   ]
 }

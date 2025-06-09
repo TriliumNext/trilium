@@ -1,7 +1,6 @@
 import renderService from "./render.js";
 import protectedSessionService from "./protected_session.js";
 import protectedSessionHolder from "./protected_session_holder.js";
-import libraryLoader from "./library_loader.js";
 import openService from "./open.js";
 import froca from "./froca.js";
 import utils from "./utils.js";
@@ -10,12 +9,13 @@ import treeService from "./tree.js";
 import FNote from "../entities/fnote.js";
 import FAttachment from "../entities/fattachment.js";
 import imageContextMenuService from "../menus/image_context_menu.js";
-import { applySingleBlockSyntaxHighlight, applySyntaxHighlight } from "./syntax_highlight.js";
+import { applySingleBlockSyntaxHighlight, formatCodeBlocks } from "./syntax_highlight.js";
 import { loadElkIfNeeded, postprocessMermaidSvg } from "./mermaid.js";
-import { normalizeMimeTypeForCKEditor } from "./mime_type_definitions.js";
 import renderDoc from "./doc_renderer.js";
-import { t } from "i18next";
+import { t } from "../services/i18n.js";
 import WheelZoom from 'vanilla-js-wheel-zoom';
+import { renderMathInElement } from "./math.js";
+import { normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
 
 let idCounter = 1;
 
@@ -94,8 +94,6 @@ async function renderText(note: FNote | FAttachment, $renderedContent: JQuery<HT
         $renderedContent.append($('<div class="ck-content">').html(blob.content));
 
         if ($renderedContent.find("span.math-tex").length > 0) {
-            await libraryLoader.requireLibrary(libraryLoader.KATEX);
-
             renderMathInElement($renderedContent[0], { trust: true });
         }
 
@@ -108,7 +106,7 @@ async function renderText(note: FNote | FAttachment, $renderedContent: JQuery<HT
             await linkService.loadReferenceLinkTitle($(el));
         }
 
-        await applySyntaxHighlight($renderedContent);
+        await formatCodeBlocks($renderedContent);
     } else if (note instanceof FNote) {
         await renderChildrenList($renderedContent, note);
     }

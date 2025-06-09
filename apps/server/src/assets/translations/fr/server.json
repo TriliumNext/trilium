@@ -189,11 +189,6 @@
   "special_notes": {
     "search_prefix": "Recherche :"
   },
-  "code_block": {
-    "theme_none": "Pas de coloration syntaxique",
-    "theme_group_light": "Thèmes clairs",
-    "theme_group_dark": "Thèmes sombres"
-  },
   "test_sync": {
     "not-configured": "L'hôte du serveur de synchronisation n'est pas configuré. Veuillez d'abord configurer la synchronisation.",
     "successful": "L'établissement de liaison du serveur de synchronisation a été réussi, la synchronisation a été démarrée."

@@ -28,7 +28,7 @@ interface NoteDefinition extends AttributeDefinitions, RelationDefinitions {
  * ]);
  */
 export function buildNotes(notes: NoteDefinition[]) {
-    const ids = [];
+    const ids: string[] = [];
 
     for (const noteDef of notes) {
         ids.push(buildNote(noteDef).noteId);

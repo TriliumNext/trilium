@@ -9,7 +9,7 @@ export interface Locale {
     electronLocale?: string;
 }
 
-export const LOCALES: Locale[] = [
+const UNSORTED_LOCALES = [
     {
         id: "en",
         name: "English",
@@ -75,4 +75,9 @@ export const LOCALES: Locale[] = [
         rtl: true,
         contentOnly: true
     }
-].sort((a, b) => a.name.localeCompare(b.name));
+] as const;
+
+export const LOCALES: Locale[] = Array.from(UNSORTED_LOCALES)
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+export type LOCALE_IDS = typeof UNSORTED_LOCALES[number]["id"];

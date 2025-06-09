@@ -2,7 +2,7 @@
  * Utility functions for LLM Chat
  */
 import { marked } from "marked";
-import { applySyntaxHighlight } from "../../services/syntax_highlight.js";
+import { formatCodeBlocks } from "../../services/syntax_highlight.js";
 
 /**
  * Format markdown content for display
@@ -62,7 +62,7 @@ export function escapeHtml(text: string): string {
  * Apply syntax highlighting to content
  */
 export function applyHighlighting(element: HTMLElement): void {
-    applySyntaxHighlight($(element));
+    formatCodeBlocks($(element));
 }
 
 /**

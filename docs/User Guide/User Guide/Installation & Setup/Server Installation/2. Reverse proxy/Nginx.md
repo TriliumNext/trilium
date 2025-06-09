@@ -16,6 +16,13 @@ Configure Nginx proxy and HTTPS. The operating system here is Ubuntu 18.04.
 3.  Fill the file with the context shown below, part of the setting show be changed. Then you can enjoy your web with HTTPS forced and proxy.
     
     ```
+    # This part configures, where your Trilium server is running
+    upstream trilium {
+      zone trilium 64k;
+      server 127.0.0.1:8080; # change it to a different hostname and port if non-default is used
+      keepalive 2;
+    }
+    
     # This part is for proxy and HTTPS configure
     server {
         listen 443 ssl;
@@ -35,9 +42,8 @@ Configure Nginx proxy and HTTPS. The operating system here is Ubuntu 18.04.
             proxy_set_header X-Forwarded-Proto $scheme;
             proxy_set_header Upgrade $http_upgrade;
             proxy_set_header Connection "upgrade";
-            proxy_pass http://127.0.0.1:8080; # change it to a different port if non-default is used
+            proxy_pass http://trilium;
             proxy_read_timeout 90;
-            proxy_redirect http://127.0.0.1:8080 https://trilium.example.net; # change them based on your IP, port and domain
         }
     }
     
@@ -55,16 +61,16 @@ Configure Nginx proxy and HTTPS. The operating system here is Ubuntu 18.04.
     
     ```
         location /trilium/instance-one {
+            rewrite /trilium/instance-one/(.*) /$1  break;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
             proxy_set_header Upgrade $http_upgrade;
             proxy_set_header Connection "upgrade";
-            proxy_pass http://127.0.0.1:8080; # change it to a different port if non-default is used
+            proxy_pass http://trilium;
             proxy_cookie_path / /trilium/instance-one
             proxy_read_timeout 90;
-            proxy_redirect http://127.0.0.1:8080 https://trilium.example.net; # change them based on your IP, port and domain
         }
     
     ```

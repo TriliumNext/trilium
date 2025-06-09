@@ -28,13 +28,19 @@ export default class OpenNoteButtonWidget extends OnClickButtonWidget {
         if (evt.which === 3) {
             return;
         }
+        const hoistedNoteId = this.getHoistedNoteId();
         const ctrlKey = utils.isCtrlKey(evt);
 
         if ((evt.which === 1 && ctrlKey) || evt.which === 2) {
-            await appContext.tabManager.openInNewTab(this.noteToOpen.noteId);
+            const activate = evt.shiftKey ? true : false;
+            await appContext.tabManager.openInNewTab(this.noteToOpen.noteId, hoistedNoteId, activate);
         } else {
             await appContext.tabManager.openInSameTab(this.noteToOpen.noteId);
         }
+    }
+
+    getHoistedNoteId() {
+        return this.noteToOpen.getRelationValue("hoistedNote") || appContext.tabManager.getActiveContext()?.hoistedNoteId;
     }
 
     initialRenderCompleteEvent() {

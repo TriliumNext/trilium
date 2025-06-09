@@ -76,7 +76,7 @@ function getNoteTitleArrayForPath(notePathArray: string[]) {
         return [getNoteTitle(notePathArray[0])];
     }
 
-    const titles = [];
+    const titles: string[] = [];
 
     let parentNoteId = "root";
     let hoistedNotePassed = false;

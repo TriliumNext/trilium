@@ -47,7 +47,7 @@ export class ContextFormatter implements IContextFormatter {
             let modelName = providerId;
 
             // Look up model capabilities
-            const modelCapabilities = await modelCapabilitiesService.getModelCapabilities(modelName);
+            const modelCapabilities = await modelCapabilitiesService.getChatModelCapabilities(modelName);
 
             // Calculate available context size for this conversation
             const availableContextSize = calculateAvailableContextSize(

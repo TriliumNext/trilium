@@ -7,7 +7,8 @@ import { initializeTranslations } from "./services/i18n.js";
 
 async function startApplication() {
     await initializeTranslations();
-    await import("./www.js");
+    const startTriliumServer = (await import("./www.js")).default;
+    await startTriliumServer();
 }
 
 startApplication();

@@ -19,7 +19,7 @@ import RightPanelWidget from "./right_panel_widget.js";
 import options from "../services/options.js";
 import OnClickButtonWidget from "./buttons/onclick_button.js";
 import appContext, { type EventData } from "../components/app_context.js";
-import libraryLoader from "../services/library_loader.js";
+import katex from "../services/math.js";
 import type FNote from "../entities/fnote.js";
 
 const TPL = /*html*/`<div class="toc-widget">
@@ -29,21 +29,86 @@ const TPL = /*html*/`<div class="toc-widget">
             contain: none;
             overflow: auto;
             position: relative;
+            padding-left:0px !important;
         }
 
         .toc ol {
-            padding-left: 25px;
+            position: relative;
+            overflow: hidden;
+            padding-left: 0px;
+            transition: max-height 0.3s ease;
         }
 
-        .toc > ol {
-            padding-left: 20px;
+        .toc li.collapsed + ol {
+            display:none;
+        }
+
+        .toc li + ol:before {
+            content: "";
+            position: absolute;
+            height: 100%;
+            border-left: 1px solid var(--main-border-color);
+            z-index: 10;
         }
 
         .toc li {
+            display: flex;
+            position: relative;
+            list-style: none;
+            align-items: center;
+            padding-left: 7px;
             cursor: pointer;
             text-align: justify;
             word-wrap: break-word;
             hyphens: auto;
+        }
+
+        .toc > ol {
+            --toc-depth-level: 1;
+        }
+        .toc > ol > ol {
+            --toc-depth-level: 2;
+        }
+        .toc > ol > ol > ol {
+            --toc-depth-level: 3;
+        }
+        .toc > ol > ol > ol > ol {
+            --toc-depth-level: 4;
+        }
+        .toc > ol > ol > ol > ol > ol {
+            --toc-depth-level: 5;
+        }
+
+        .toc > ol ol::before {
+            left: calc((var(--toc-depth-level) - 2) * 20px + 14px);
+        }
+
+        .toc li {
+            padding-left: calc((var(--toc-depth-level) - 1) * 20px + 4px);
+        }
+
+        .toc li .collapse-button {
+            display: flex;
+            position: relative;
+            width: 21px;
+            height: 21px;
+            flex-shrink: 0;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
+        }
+
+        .toc li.collapsed .collapse-button {
+            transform: rotate(-90deg);
+        }
+
+        .toc li .item-content {
+            margin-left: 25px;
+            flex: 1;
+        }
+
+        .toc li .collapse-button + .item-content {
+            margin-left: 4px;
         }
 
         .toc li:hover {
@@ -189,7 +254,6 @@ export default class TocWidget extends RightPanelWidget {
                 } catch (e) {
                     if (e instanceof ReferenceError && e.message.includes("katex is not defined")) {
                         // Load KaTeX if it is not already loaded
-                        await libraryLoader.requireLibrary(libraryLoader.KATEX);
                         try {
                             rendered = katex.renderToString(latexCode, {
                                 throwOnError: false
@@ -231,8 +295,16 @@ export default class TocWidget extends RightPanelWidget {
         // Note heading 2 is the first level Trilium makes available to the note
         let curLevel = 2;
         const $ols = [$toc];
+        let $previousLi: JQuery<HTMLElement> | undefined;
+
+        if (!(this.noteContext?.viewScope?.tocCollapsedHeadings instanceof Set)) {
+            this.noteContext!.viewScope!.tocCollapsedHeadings = new Set<string>();
+        }
+        const tocCollapsedHeadings = this.noteContext!.viewScope!.tocCollapsedHeadings as Set<string>;
+        const validHeadingKeys = new Set<string>(); // Used to clean up obsolete entries in tocCollapsedHeadings
+
         let headingCount = 0;
-        for (let m = null, headingIndex = 0; (m = headingTagsRegex.exec(html)) !== null; headingIndex++) {
+        for (let m: RegExpMatchArray | null = null, headingIndex = 0; (m = headingTagsRegex.exec(html)) !== null; headingIndex++) {
             //
             // Nest/unnest whatever necessary number of ordered lists
             //
@@ -244,6 +316,11 @@ export default class TocWidget extends RightPanelWidget {
                     const $ol = $("<ol>");
                     $ols[$ols.length - 1].append($ol);
                     $ols.push($ol);
+
+                    if ($previousLi) {
+                        const headingKey = `h${newLevel}_${headingIndex}_${$previousLi?.text().trim()}`;
+                        this.setupCollapsibleHeading($ol, $previousLi, headingKey, tocCollapsedHeadings, validHeadingKeys);
+                    }
                 }
             } else if (levelDelta < 0) {
                 // Close as many lists as curLevel - newLevel
@@ -259,10 +336,19 @@ export default class TocWidget extends RightPanelWidget {
             //
 
             const headingText = await this.replaceMathTextWithKatax(m[2]);
-            const $li = $("<li>").html(headingText);
-            $li.on("click", () => this.jumpToHeading(headingIndex));
+            const $itemContent = $('<div class="item-content">').html(headingText);
+            const $li = $("<li>").append($itemContent)
+                .on("click", () => this.jumpToHeading(headingIndex));
             $ols[$ols.length - 1].append($li);
             headingCount = headingIndex;
+            $previousLi = $li;
+        }
+
+        //  Clean up unused entries in tocCollapsedHeadings
+        for (const key of tocCollapsedHeadings) {
+            if (!validHeadingKeys.has(key)) {
+                tocCollapsedHeadings.delete(key);
+            }
         }
 
         $toc = this.pullLeft($toc);
@@ -286,7 +372,7 @@ export default class TocWidget extends RightPanelWidget {
 
             const $first = $toc.children(":first");
 
-            if ($first[0].tagName !== "OL") {
+            if ($first[0].tagName.toLowerCase() !== "ol") {
                 break;
             }
 
@@ -308,16 +394,72 @@ export default class TocWidget extends RightPanelWidget {
         const isDocNote = this.note.type === "doc";
         const isReadOnly = await this.noteContext.isReadOnly();
 
-        let $container;
+        let $container: JQuery<HTMLElement> | null = null;
         if (isReadOnly || isDocNote) {
             $container = await this.noteContext.getContentElement();
         } else {
             const textEditor = await this.noteContext.getTextEditor();
-            $container = $(textEditor.sourceElement);
+            if (textEditor?.sourceElement) {
+                $container = $(textEditor.sourceElement);
+            }
         }
 
         const headingElement = $container?.find(":header:not(section.include-note :header)")?.[headingIndex];
         headingElement?.scrollIntoView({ behavior: "smooth" });
+    }
+
+    async setupCollapsibleHeading($ol: JQuery<HTMLElement>, $previousLi: JQuery<HTMLElement>, headingKey: string, tocCollapsedHeadings: Set<string>, validHeadingKeys: Set<string>) {
+        if ($previousLi && $previousLi.find(".collapse-button").length === 0) {
+            const $collapseButton = $('<div class="collapse-button bx bx-chevron-down"></div>');
+            $previousLi.prepend($collapseButton);
+
+            // Restore the previous collapsed state
+            if (tocCollapsedHeadings?.has(headingKey)) {
+                $previousLi.addClass("collapsed");
+                validHeadingKeys.add(headingKey);
+            } else {
+                $previousLi.removeClass("collapsed");
+            }
+
+            $collapseButton.on("click", (event) => {
+                event.stopPropagation();
+                if ($previousLi.hasClass("animating")) return;
+                const willCollapse  = !$previousLi.hasClass("collapsed");
+                $previousLi.addClass("animating");
+
+                if (willCollapse) { // Collapse
+                    $ol.css("maxHeight", `${$ol.prop("scrollHeight")}px`);
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            $ol.css("maxHeight", "0px");
+                            $collapseButton.css("transform", "rotate(-90deg)");
+                        });
+                    });
+                    setTimeout(() => {
+                        $ol.css("maxHeight", "");
+                        $previousLi.addClass("collapsed");
+                        $previousLi.removeClass("animating");
+                    }, 300);
+                } else { // Expand
+                    $previousLi.removeClass("collapsed");
+                    $ol.css("maxHeight", "0px");
+                    requestAnimationFrame(() => {
+                        $ol.css("maxHeight", `${$ol.prop("scrollHeight")}px`);
+                        $collapseButton.css("transform", "");
+                    });
+                    setTimeout(() => {
+                        $ol.css("maxHeight", "");
+                        $previousLi.removeClass("animating");
+                    }, 300);
+                }
+
+                if (willCollapse) { // Store collapsed headings
+                    tocCollapsedHeadings!.add(headingKey);
+                } else {
+                    tocCollapsedHeadings!.delete(headingKey);
+                }
+            });
+        }
     }
 
     async closeTocCommand() {

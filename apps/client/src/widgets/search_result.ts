@@ -55,9 +55,15 @@ export default class SearchResultWidget extends NoteContextAwareWidget {
     }
 
     async refreshWithNote(note: FNote) {
+        const noResults = note.getChildNoteIds().length === 0 && !!note.searchResultsLoaded;
+
         this.$content.empty();
-        this.$noResults.toggle(note.getChildNoteIds().length === 0 && !!note.searchResultsLoaded);
+        this.$noResults.toggle(noResults);
         this.$notExecutedYet.toggle(!note.searchResultsLoaded);
+
+        if (noResults || !note.searchResultsLoaded) {
+            return;
+        }
 
         const noteListRenderer = new NoteListRenderer(this.$content, note, note.getChildNoteIds(), true);
         await noteListRenderer.renderList();

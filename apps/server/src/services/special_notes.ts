@@ -9,6 +9,7 @@ import searchService from "./search/services/search.js";
 import SearchContext from "./search/search_context.js";
 import hiddenSubtree from "./hidden_subtree.js";
 import { t } from "i18next";
+import { BNote } from "./backend_script_entrypoint.js";
 const { LBTPL_NOTE_LAUNCHER, LBTPL_CUSTOM_WIDGET, LBTPL_SPACER, LBTPL_SCRIPT } = hiddenSubtree;
 
 function getInboxNote(date: string) {
@@ -17,7 +18,7 @@ function getInboxNote(date: string) {
         throw new Error("Unable to find workspace note");
     }
 
-    let inbox;
+    let inbox: BNote;
 
     if (!workspaceNote.isRoot()) {
         inbox = workspaceNote.searchNoteInSubtree("#workspaceInbox");

@@ -8,6 +8,26 @@ import type { Tool, ToolHandler } from './tool_interfaces.js';
 import log from '../../log.js';
 import becca from '../../../becca/becca.js';
 
+interface CodeBlock {
+    code: string;
+    language?: string;
+}
+
+interface Heading {
+    text: string;
+    level: number; // 1 for H1, 2 for H2, etc.
+}
+
+interface List {
+    type: "unordered" | "ordered";
+    items: string[];
+}
+
+interface Table {
+    headers: string[];
+    rows: string[][];
+}
+
 /**
  * Definition of the content extraction tool
  */
@@ -137,8 +157,8 @@ export class ContentExtractionTool implements ToolHandler {
     /**
      * Extract lists from HTML content
      */
-    private extractLists(content: string): Array<{ type: string, items: string[] }> {
-        const lists = [];
+    private extractLists(content: string): List[] {
+        const lists: List[] = [];
 
         // Extract unordered lists
         const ulRegex = /<ul[^>]*>([\s\S]*?)<\/ul>/gi;
@@ -179,7 +199,7 @@ export class ContentExtractionTool implements ToolHandler {
      * Extract list items from list content
      */
     private extractListItems(listContent: string): string[] {
-        const items = [];
+        const items: string[] = [];
         const itemRegex = /<li[^>]*>([\s\S]*?)<\/li>/gi;
         let itemMatch;
 
@@ -196,15 +216,15 @@ export class ContentExtractionTool implements ToolHandler {
     /**
      * Extract tables from HTML content
      */
-    private extractTables(content: string): Array<{ headers: string[], rows: string[][] }> {
-        const tables = [];
+    private extractTables(content: string): Table[] {
+        const tables: Table[] = [];
         const tableRegex = /<table[^>]*>([\s\S]*?)<\/table>/gi;
-        let tableMatch;
+        let tableMatch: RegExpExecArray | null;
 
         while ((tableMatch = tableRegex.exec(content)) !== null) {
             const tableContent = tableMatch[1];
-            const headers = [];
-            const rows = [];
+            const headers: string[] = [];
+            const rows: string[][] = [];
 
             // Extract table headers
             const headerRegex = /<th[^>]*>([\s\S]*?)<\/th>/gi;
@@ -218,7 +238,7 @@ export class ContentExtractionTool implements ToolHandler {
             let rowMatch;
             while ((rowMatch = rowRegex.exec(tableContent)) !== null) {
                 const rowContent = rowMatch[1];
-                const cells = [];
+                const cells: string[] = [];
 
                 const cellRegex = /<td[^>]*>([\s\S]*?)<\/td>/gi;
                 let cellMatch;
@@ -246,7 +266,7 @@ export class ContentExtractionTool implements ToolHandler {
      * Extract headings from HTML content
      */
     private extractHeadings(content: string): Array<{ level: number, text: string }> {
-        const headings = [];
+        const headings: Heading[] = [];
 
         for (let i = 1; i <= 6; i++) {
             const headingRegex = new RegExp(`<h${i}[^>]*>([\\s\\S]*?)<\/h${i}>`, 'gi');
@@ -270,7 +290,7 @@ export class ContentExtractionTool implements ToolHandler {
      * Extract code blocks from HTML content
      */
     private extractCodeBlocks(content: string): Array<{ language?: string, code: string }> {
-        const codeBlocks = [];
+        const codeBlocks: CodeBlock[] = [];
 
         // Look for <pre> and <code> blocks
         const preRegex = /<pre[^>]*>([\s\S]*?)<\/pre>/gi;

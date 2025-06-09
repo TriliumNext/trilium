@@ -38,6 +38,7 @@ const TPL = /*html*/`
                             <p class="card-text">
                             <ul>
                                 <li>${t("help.newTabNoteLink")}</li>
+                                <li>${t("help.newTabWithActivationNoteLink")}</li>
                             </ul>
                             <h6>${t("help.onlyInDesktop")}:</h6>
                             <ul>

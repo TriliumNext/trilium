@@ -53,11 +53,12 @@ export default class NoteLauncher extends AbstractLauncher {
             await appContext.tabManager.openInSameTab(targetNoteId, hoistedNoteId);
         } else {
             const ctrlKey = utils.isCtrlKey(evt);
+            const activate = evt.shiftKey ? true : false;
 
             if ((evt.which === 1 && ctrlKey) || evt.which === 2) {
                 // TODO: Fix once tabManager is ported.
                 //@ts-ignore
-                await appContext.tabManager.openInNewTab(targetNoteId, hoistedNoteId);
+                await appContext.tabManager.openInNewTab(targetNoteId, hoistedNoteId, activate);
             } else {
                 // TODO: Fix once tabManager is ported.
                 //@ts-ignore

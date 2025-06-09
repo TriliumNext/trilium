@@ -113,6 +113,7 @@ export default class AdmonitionUI extends Plugin {
 				model: new ViewModel({
 					commandParam: type,
 					label: admonition.title,
+					class: `ck-tn-admonition-option ck-tn-admonition-${type}`,
 					role: 'menuitemradio',
 					withText: true
 				})

@@ -118,3 +118,122 @@ The `--user` directive is unsupported. Instead, use the `USER_UID` and `USER_GID
 ### Note on timezones
 
 If you are having timezone issues and you are not using docker-compose, you may need to add a `TZ` environment variable with the [TZ identifier](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) of your local timezone.
+
+## Rootless Docker Image
+
+> [!NOTE]
+> Please keep in mind that the data directory is at `/home/trilium/trilium-data` instead of the typical `/home/node/trilium-data`. This is because a new user is created and used to run Trilium within the rootless containers.
+
+If you would prefer to run Trilium without having to run the Docker container as `root`, you can use either of the provided Debian (default) and Alpine-based images with the `rootless` tag. 
+
+_**If you're unsure, stick to the “rootful” Docker image referenced above.**_
+
+Below are some commands to pull the rootless images:
+
+```
+# For Debian-based image
+docker pull triliumnext/notes:rootless
+
+# For Alpine-based image
+docker pull triliumnext/notes:rootless-alpine
+```
+
+### Why Rootless?
+
+Running containers as non-root is a security best practice that reduces the potential impact of container breakouts. If an attacker manages to escape the container, they'll only have the permissions of the non-root user instead of full root access to the host.
+
+### How It Works
+
+The rootless Trilium image:
+
+1.  Creates a non-root user (`trilium`) during build time
+2.  Configures the application to run as this non-root user
+3.  Allows runtime customization of the user's UID/GID via Docker's `--user` flag
+4.  Does not require a separate Docker `entrypoint` script
+
+### Usage
+
+#### **Using docker-compose (Recommended)**
+
+```
+# Run with default UID/GID (1000:1000)
+docker-compose -f docker-compose.rootless.yml up -d
+
+# Run with custom UID/GID (e.g., match your host user)
+TRILIUM_UID=$(id -u) TRILIUM_GID=$(id -g) docker-compose -f docker-compose.rootless.yml up -d
+
+# Specify a custom data directory
+TRILIUM_DATA_DIR=/path/to/your/data TRILIUM_UID=$(id -u) TRILIUM_GID=$(id -g) docker-compose -f docker-compose.rootless.yml up -d
+
+```
+
+#### **Using Docker CLI**
+
+```
+# Build the image
+docker build -t triliumnext/notes:rootless -f apps/server/Dockerfile.rootless .
+
+# Run with default UID/GID (1000:1000)
+docker run -d --name trilium -p 8080:8080 -v ~/trilium-data:/home/trilium/trilium-data triliumnext/notes:rootless
+
+# Run with custom UID/GID
+docker run -d --name trilium -p 8080:8080 --user $(id -u):$(id -g) -v ~/trilium-data:/home/trilium/trilium-data triliumnext/notes:rootless
+
+```
+
+### Environment Variables
+
+*   `TRILIUM_UID`: UID to use for the container process (passed to Docker's `--user` flag)
+*   `TRILIUM_GID`: GID to use for the container process (passed to Docker's `--user` flag)
+*   `TRILIUM_DATA_DIR`: Path to the data directory inside the container (default: `/home/node/trilium-data`)
+
+### Volume Permissions
+
+If you encounter permission issues with the data volume, ensure that:
+
+1.  The host directory has appropriate permissions for the UID/GID you're using
+2.  You're setting both `TRILIUM_UID` and `TRILIUM_GID` to match the owner of the host directory
+
+```
+# For example, if your data directory is owned by UID 1001 and GID 1001:
+TRILIUM_UID=1001 TRILIUM_GID=1001 docker-compose -f docker-compose.rootless.yml up -d
+
+```
+
+### Considerations
+
+*   The container starts with a specific UID/GID which can be customized at runtime
+*   Unlike the traditional setup, this approach does not use a separate entrypoint script with `usermod`/`groupmod` commands
+*   The container cannot modify its own UID/GID at runtime, which is a security feature of rootless containers
+
+### Available Rootless Images
+
+Two rootless variants are provided:
+
+1.  **Debian-based** (default): Uses the Debian Bullseye Slim base image
+    *   Dockerfile: `apps/server/Dockerfile.rootless`
+    *   Recommended for most users
+2.  **Alpine-based**: Uses the Alpine base image for smaller size
+    *   Dockerfile: `apps/server/Dockerfile.alpine.rootless`
+    *   Smaller image size, but may have compatibility issues with some systems
+
+### Building Custom Rootless Images
+
+If you would prefer, you can also customize the UID/GID at build time:
+
+```
+# For Debian-based image with custom UID/GID
+docker build --build-arg USER=myuser --build-arg UID=1001 --build-arg GID=1001 \
+  -t triliumnext/notes:rootless-custom -f apps/server/Dockerfile.rootless .
+
+# For Alpine-based image with custom UID/GID
+docker build --build-arg USER=myuser --build-arg UID=1001 --build-arg GID=1001 \
+  -t triliumnext/notes:alpine-rootless-custom -f apps/server/Dockerfile.alpine.rootless .
+
+```
+
+Available build arguments:
+
+*   `USER`: Username for the non-root user (default: trilium)
+*   `UID`: User ID for the non-root user (default: 1000)
+*   `GID`: Group ID for the non-root user (default: 1000)

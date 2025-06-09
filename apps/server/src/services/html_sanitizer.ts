@@ -1,5 +1,5 @@
 import sanitizeHtml from "sanitize-html";
-import sanitizeUrl from "@braintree/sanitize-url";
+import { sanitizeUrl } from "@braintree/sanitize-url";
 import optionService from "./options.js";
 
 // Be consistent with `ALLOWED_PROTOCOLS` in `src\public\app\services\link.js`
@@ -190,6 +190,6 @@ function sanitize(dirtyHtml: string) {
 export default {
     sanitize,
     sanitizeUrl: (url: string) => {
-        return sanitizeUrl.sanitizeUrl(url).trim();
+        return sanitizeUrl(url).trim();
     }
 };

@@ -20,9 +20,10 @@ export default class AbstractTextTypeWidget extends TypeWidget {
             const isLeftClick = e.which === 1;
             const isMiddleClick = e.which === 2;
             const ctrlKey = utils.isCtrlKey(e);
+            const activate = (isLeftClick && ctrlKey && e.shiftKey) || (isMiddleClick && e.shiftKey);
 
             if ((isLeftClick && ctrlKey) || isMiddleClick) {
-                this.openImageInNewTab($(e.target));
+                this.openImageInNewTab($(e.target), activate);
             } else if (isLeftClick && singleClickOpens) {
                 this.openImageInCurrentTab($(e.target));
             }
@@ -39,11 +40,11 @@ export default class AbstractTextTypeWidget extends TypeWidget {
         }
     }
 
-    async openImageInNewTab($img: JQuery<HTMLElement>) {
+    async openImageInNewTab($img: JQuery<HTMLElement>, activate: boolean = false) {
         const parsedImage = await this.parseFromImage($img);
 
         if (parsedImage) {
-            appContext.tabManager.openTabWithNoteWithHoisting(parsedImage.noteId, { viewScope: parsedImage.viewScope });
+            appContext.tabManager.openTabWithNoteWithHoisting(parsedImage.noteId, { activate, viewScope: parsedImage.viewScope });
         } else {
             window.open($img.prop("src"), "_blank");
         }

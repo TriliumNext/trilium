@@ -8,7 +8,6 @@ ignoredBuiltDependencies:
 onlyBuiltDependencies:
 - '@parcel/watcher'
 - '@scarf/scarf'
-- '@swc/core'
 - bufferutil
 - core-js-pure
 - esbuild
@@ -19,9 +18,6 @@ onlyBuiltDependencies:
 - electron-winstaller
 - fs-xattr
 - macos-alias
-
-overrides:
-  "node-abi": 4.8.0
 
 shamefullyHoist: true
 nodeLinker: isolated

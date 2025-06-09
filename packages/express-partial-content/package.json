@@ -5,16 +5,16 @@
   "version": "1.1.0",
   "type": "module",
   "private": true,
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
+  "main": "./dist/main.js",
+  "module": "./dist/main.js",
   "types": "./dist/index.d.ts",
   "exports": {
     "./package.json": "./package.json",
     ".": {
       "development": "./src/index.ts",
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
+      "import": "./dist/main.js",
+      "default": "./dist/main.js"
     }
   },
   "keywords": [
@@ -27,16 +27,29 @@
     "name": "express-partial-content",
     "targets": {
       "build": {
-        "executor": "@nx/js:swc",
+        "executor": "@nx/esbuild:esbuild",
         "outputs": [
           "{options.outputPath}"
         ],
+        "defaultConfiguration": "production",
         "options": {
-          "outputPath": "packages/express-partial-content/dist",
-          "tsConfig": "packages/express-partial-content/tsconfig.lib.json",
-          "packageJson": "packages/express-partial-content/package.json",
           "main": "packages/express-partial-content/src/index.ts",
-          "stripLeadingPaths": true
+          "outputPath": "packages/express-partial-content/dist",
+          "outputFileName": "main.js",
+          "tsConfig": "packages/express-partial-content/tsconfig.lib.json",
+          "platform": "node",
+          "format": [
+            "esm"
+          ],
+          "declarationRootDir": "packages/express-partial-content/src"
+        },
+        "configurations": {
+          "development": {
+            "minify": false
+          },
+          "production": {
+            "minify": true
+          }
         }
       }
     }

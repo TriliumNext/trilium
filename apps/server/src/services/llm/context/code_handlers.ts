@@ -160,7 +160,7 @@ function extractJsStructure(content: string): string {
     }
 
     // Look for class declarations
-    const classes = [];
+    const classes: string[] = [];
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
         if (line.startsWith('class ') || line.includes(' class ')) {
@@ -173,7 +173,7 @@ function extractJsStructure(content: string): string {
     }
 
     // Look for function declarations
-    const functions = [];
+    const functions: string[] = [];
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
         if (line.startsWith('function ') ||
@@ -212,7 +212,7 @@ function extractPythonStructure(content: string): string {
     }
 
     // Look for class declarations
-    const classes = [];
+    const classes: string[] = [];
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
         if (line.startsWith('class ')) {
@@ -225,7 +225,7 @@ function extractPythonStructure(content: string): string {
     }
 
     // Look for function declarations
-    const functions = [];
+    const functions: string[] = [];
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
         if (line.startsWith('def ')) {
@@ -263,7 +263,7 @@ function extractClassBasedStructure(content: string): string {
     }
 
     // Look for class declarations
-    const classes = [];
+    const classes: string[] = [];
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
         if (line.match(/^(public|private|protected)?\s*(class|interface|enum)\s+\w+/)) {
@@ -276,7 +276,7 @@ function extractClassBasedStructure(content: string): string {
     }
 
     // Look for method declarations
-    const methods = [];
+    const methods: string[] = [];
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
         if (line.match(/^(public|private|protected)?\s*(static)?\s*[\w<>[\]]+\s+\w+\s*\(/)) {
@@ -319,7 +319,7 @@ function extractGoStructure(content: string): string {
     }
 
     // Look for type declarations (structs, interfaces)
-    const types = [];
+    const types: string[] = [];
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
         if (line.startsWith('type ') && (line.includes(' struct ') || line.includes(' interface '))) {
@@ -332,7 +332,7 @@ function extractGoStructure(content: string): string {
     }
 
     // Look for function declarations
-    const functions = [];
+    const functions: string[] = [];
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
         if (line.startsWith('func ')) {
@@ -366,7 +366,7 @@ function extractRustStructure(content: string): string {
     }
 
     // Look for struct/enum/trait declarations
-    const types = [];
+    const types: string[] = [];
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
         if (line.startsWith('struct ') || line.startsWith('enum ') || line.startsWith('trait ')) {
@@ -379,8 +379,8 @@ function extractRustStructure(content: string): string {
     }
 
     // Look for function/impl declarations
-    const functions = [];
-    const impls = [];
+    const functions: string[] = [];
+    const impls: string[] = [];
 
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();

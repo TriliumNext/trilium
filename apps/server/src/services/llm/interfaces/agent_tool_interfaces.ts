@@ -1,5 +1,10 @@
 import type { ChatResponse } from '../ai_interface.js';
-import type { VectorSearchResult } from '../context_extractors/vector_search_tool.js';
+// VectorSearchResult type definition moved here since vector search tool was removed
+export interface VectorSearchResult {
+    searchResults: Array<any>;
+    totalResults: number;
+    executionTime: number;
+}
 import type { NoteInfo, NotePathInfo, NoteHierarchyLevel } from '../context_extractors/note_navigator_tool.js';
 import type { DecomposedQuery, SubQuery } from '../context_extractors/query_decomposition_tool.js';
 import type { ThinkingProcess, ThinkingStep } from '../context_extractors/contextual_thinking_tool.js';

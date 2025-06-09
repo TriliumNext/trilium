@@ -49,13 +49,10 @@ Only in desktop (electron build):
 
 ## Editing notes
 
-*   For <a class="reference-link" href="../Note%20Types/Text.md">Text</a> notes, refer to <a class="reference-link" href="../Note%20Types/Text/Keyboard%20shortcuts.md">Keyboard shortcuts</a> and <a class="reference-link" href="../Note%20Types/Text/Markdown-like%20formatting.md">Markdown-like formatting</a>.
-*   <kbd>Alt</kbd>\-<kbd>F10</kbd> - bring up inline formatting toolbar (arrow keys <kbd><span>←</span></kbd>,<kbd><span>→</span></kbd> to navigate, <kbd>Enter</kbd> to apply)
-*   <kbd>Alt</kbd>\-<kbd>F10</kbd> - again to bring up block formatting toolbar
+> [!NOTE]
+> For keyboard shortcuts specific to <a class="reference-link" href="../Note%20Types/Text.md">Text</a> notes, refer to <a class="reference-link" href="../Note%20Types/Text/Keyboard%20shortcuts.md">Keyboard shortcuts</a> and <a class="reference-link" href="../Note%20Types/Text/Markdown-like%20formatting.md">Markdown-like formatting</a>.
+
 *   <kbd>Enter</kbd> in tree pane switches from tree pane into note title. Enter from note title switches focus to text editor. <kbd>Ctrl</kbd>+<kbd>.</kbd> switches back from editor to tree pane.
-*   <kbd>Ctrl</kbd>+<kbd>K</kbd> - create / edit [external link](../Note%20Types/Text/Links.md)
-*   <kbd>Ctrl</kbd>+<kbd>L</kbd> - create [internal (note) link](../Note%20Types/Text/Links.md)
-*   <kbd>Alt</kbd>+<kbd>T</kbd> - inserts current date and time at caret position
 *   <kbd>Ctrl</kbd>+<kbd>.</kbd> - jump away from the editor to tree pane and scroll to current note
 
 ## Runtime shortcuts

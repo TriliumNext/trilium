@@ -217,7 +217,7 @@ export default class SplitNoteContainer extends FlexContainer<SplitNoteWidget> {
     }
 
     refreshNotShown(data: NoteSwitchedContext | EventData<"activeContextChanged">) {
-        const promises = [];
+        const promises: (Promise<unknown> | null | undefined)[] = [];
 
         for (const subContext of data.noteContext.getMainContext().getSubContexts()) {
             if (!subContext.ntxId) {

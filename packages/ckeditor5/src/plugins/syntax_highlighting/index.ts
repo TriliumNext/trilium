@@ -1,6 +1,11 @@
-import type { Element, Writer } from "ckeditor5";
+import type { Element, Position, Writer } from "ckeditor5";
 import type { Node, Editor } from "ckeditor5";
 import { Plugin } from "ckeditor5";
+
+interface SpanStackEntry {
+    className: string;
+    posStart: Position;
+}
 
 /*
  * This code is an adaptation of https://github.com/antoniotejada/Trilium-SyntaxHighlightWidget with additional improvements, such as:
@@ -173,14 +178,6 @@ export default class SyntaxHighlighting extends Plugin {
             return;
         }
 
-        // Find the corresponding language for the given mimetype.
-        const highlightJsLanguage = this.config.mapLanguageName(mimeType);
-
-        if (mimeType !== this.config.defaultMimeType && !highlightJsLanguage) {
-            console.warn(`Unsupported highlight.js for mime type ${mimeType}.`);
-            return;
-        }
-
         // Don't highlight if the code is too big, as the typing performance will be highly degraded.
         if (codeBlock.childCount >= HIGHLIGHT_MAX_BLOCK_COUNT) {
             return;
@@ -230,17 +227,22 @@ export default class SyntaxHighlighting extends Plugin {
         if (mimeType === this.config.defaultMimeType) {
             highlightRes = this.hljs.highlightAuto(text);
         } else {
-            highlightRes = this.hljs.highlight(text, { language: highlightJsLanguage });
+            highlightRes = this.hljs.highlight(text, { language: mimeType });
         }
+
+        if (!highlightRes) {
+            return;
+        }
+
         dbg("text\n" + text);
         dbg("html\n" + highlightRes.value);
 
         let iHtml = 0;
         let html = highlightRes.value;
-        let spanStack = [];
+        let spanStack: SpanStackEntry[] = [];
         let iChild = -1;
         let childText = "";
-        let child = null;
+        let child: Node | null = null;
         let iChildText = 0;
 
         while (iHtml < html.length) {
@@ -355,11 +357,6 @@ const debugLevel = debugLevels.indexOf("warn");
 let warn = function (...args: unknown[]) {};
 if (debugLevel >= debugLevels.indexOf("warn")) {
     warn = console.warn.bind(console, tag + ": ");
-}
-
-let info = function (...args: unknown[]) {};
-if (debugLevel >= debugLevels.indexOf("info")) {
-    info = console.info.bind(console, tag + ": ");
 }
 
 let log = function (...args: unknown[]) {};

@@ -43,7 +43,8 @@ const TPL = /*html*/`
             </label>
         </div>
     </div>
-</div>`;
+</div>
+`;
 
 interface Theme {
     val: string;

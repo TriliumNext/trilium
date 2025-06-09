@@ -1,7 +1,11 @@
-import TypeWidget from "./type_widget.js";
-import libraryLoader from "../../services/library_loader.js";
-import options from "../../services/options.js";
+import { getThemeById } from "@triliumnext/codemirror";
 import type FNote from "../../entities/fnote.js";
+import options from "../../services/options.js";
+import TypeWidget from "./type_widget.js";
+import CodeMirror, { type EditorConfig } from "@triliumnext/codemirror";
+import type { EventData } from "../../components/app_context.js";
+
+export const DEFAULT_PREFIX = "default:";
 
 /**
  * An abstract {@link TypeWidget} which implements the CodeMirror editor, meant to be used as a parent for
@@ -19,43 +23,27 @@ import type FNote from "../../entities/fnote.js";
 export default class AbstractCodeTypeWidget extends TypeWidget {
 
     protected $editor!: JQuery<HTMLElement>;
-    protected codeEditor!: CodeMirrorInstance;
+    protected codeEditor!: CodeMirror;
 
     doRender() {
         this.initialized = this.#initEditor();
     }
 
     async #initEditor() {
-        await libraryLoader.requireLibrary(libraryLoader.CODE_MIRROR);
-
-        // these conflict with backward/forward navigation shortcuts
-        delete CodeMirror.keyMap.default["Alt-Left"];
-        delete CodeMirror.keyMap.default["Alt-Right"];
-
-        CodeMirror.modeURL = `${window.glob.assetPath}/node_modules/codemirror/mode/%N/%N.js`;
-        const jsMode = CodeMirror.modeInfo.find((mode) => mode.name === "JavaScript");
-        if (jsMode) {
-            jsMode.mimes.push(...["application/javascript;env=frontend", "application/javascript;env=backend"]);
-        }
-        const sqlMode = CodeMirror.modeInfo.find((mode) => mode.name === "SQLite");
-        if (sqlMode) {
-            sqlMode.mimes = ["text/x-sqlite", "text/x-sqlite;schema=trilium"];
-        }
-
-        this.codeEditor = CodeMirror(this.$editor[0], {
-            value: "",
-            viewportMargin: Infinity,
-            indentUnit: 4,
-            matchBrackets: true,
-            matchTags: { bothTags: true },
-            highlightSelectionMatches: { showToken: false, annotateScrollbar: false },
-            lineNumbers: true,
-            // we line wrap partly also because without it horizontal scrollbar displays only when you scroll
-            // all the way to the bottom of the note. With line wrap, there's no horizontal scrollbar so no problem
+        this.codeEditor = new CodeMirror({
+            parent: this.$editor[0],
             lineWrapping: options.is("codeLineWrapEnabled"),
             ...this.getExtraOpts()
         });
-        this.onEditorInitialized();
+
+        // Load the theme.
+        const themeId = options.get("codeNoteTheme");
+        if (themeId?.startsWith(DEFAULT_PREFIX)) {
+            const theme = getThemeById(themeId.substring(DEFAULT_PREFIX.length));
+            if (theme) {
+                await this.codeEditor.setTheme(theme);
+            }
+        }
     }
 
     /**
@@ -64,7 +52,7 @@ export default class AbstractCodeTypeWidget extends TypeWidget {
      *
      * @returns the extra options to be passed to the CodeMirror constructor.
      */
-    getExtraOpts(): Partial<CodeMirrorOpts> {
+    getExtraOpts(): Partial<EditorConfig> {
         return {};
     }
 
@@ -81,50 +69,73 @@ export default class AbstractCodeTypeWidget extends TypeWidget {
     /**
      * Must be called by the derived classes in `#doRefresh(note)` in order to react to changes.
      *
-     * @param {*} note the note that was changed.
-     * @param {*} content the new content of the note.
+     * @param the note that was changed.
+     * @param new content of the note.
      */
     _update(note: { mime: string }, content: string) {
-        // CodeMirror breaks pretty badly on null, so even though it shouldn't happen (guarded by a consistency check)
-        // we provide fallback
-        this.codeEditor.setValue(content || "");
+        this.codeEditor.setText(content);
+        this.codeEditor.setMimeType(note.mime);
         this.codeEditor.clearHistory();
-
-        let info = CodeMirror.findModeByMIME(note.mime);
-        if (!info) {
-            // Switch back to plain text if CodeMirror does not have a mode for whatever MIME type we're editing.
-            // To avoid inheriting a mode from a previously open code note.
-            info = CodeMirror.findModeByMIME("text/plain");
-        }
-
-        this.codeEditor.setOption("mode", info.mime);
-        CodeMirror.autoLoadMode(this.codeEditor, info.mode);
     }
 
     show() {
         this.$widget.show();
-
-        if (this.codeEditor) {
-            // show can be called before render
-            this.codeEditor.refresh();
-        }
+        this.updateBackgroundColor();
     }
 
     focus() {
-        this.$editor.focus();
         this.codeEditor.focus();
     }
 
     scrollToEnd() {
-        this.codeEditor.setCursor(this.codeEditor.lineCount(), 0);
+        this.codeEditor.scrollToEnd();
         this.codeEditor.focus();
     }
 
     cleanup() {
         if (this.codeEditor) {
             this.spacedUpdate.allowUpdateWithoutChange(() => {
-                this.codeEditor.setValue("");
+                this.codeEditor.setText("");
             });
         }
+        this.updateBackgroundColor("unset");
     }
+
+    async executeWithCodeEditorEvent({ resolve, ntxId }: EventData<"executeWithCodeEditor">) {
+        if (!this.isNoteContext(ntxId)) {
+            return;
+        }
+
+        await this.initialized;
+
+        resolve(this.codeEditor);
+    }
+
+    async entitiesReloadedEvent({ loadResults }: EventData<"entitiesReloaded">) {
+        if (loadResults.isOptionReloaded("codeNoteTheme")) {
+            const themeId = options.get("codeNoteTheme");
+            if (themeId?.startsWith(DEFAULT_PREFIX)) {
+                const theme = getThemeById(themeId.substring(DEFAULT_PREFIX.length));
+                if (theme) {
+                    await this.codeEditor.setTheme(theme);
+                }
+                this.updateBackgroundColor();
+            }
+        }
+
+        if (loadResults.isOptionReloaded("codeLineWrapEnabled")) {
+            this.codeEditor.setLineWrapping(options.is("codeLineWrapEnabled"));
+        }
+    }
+
+    updateBackgroundColor(color?: string) {
+        if (this.note?.mime === "text/x-sqlite;schema=trilium") {
+            // Don't apply a background color for SQL console notes.
+            return;
+        }
+
+        const $editorEl = $(this.codeEditor.dom);
+        this.$widget.closest(".scrolling-container").css("background-color", color ?? $editorEl.css("background-color"));
+    }
+
 }

@@ -22,10 +22,3 @@ declare global {
         importMarkdownInline(): void;
     }
 }
-
-declare module "ckeditor5" {
-    interface Editor {
-        getSelectedHtml(): string;
-        removeSelection(): Promise<void>;
-    }
-}

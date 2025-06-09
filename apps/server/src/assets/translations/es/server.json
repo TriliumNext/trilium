@@ -189,11 +189,6 @@
   "special_notes": {
     "search_prefix": "Buscar:"
   },
-  "code_block": {
-    "theme_none": "Sin resaltado de sintaxis",
-    "theme_group_light": "Temas claros",
-    "theme_group_dark": "Temas oscuros"
-  },
   "test_sync": {
     "not-configured": "El servidor de sincronización no está configurado. Por favor configure primero la sincronización.",
     "successful": "El protocolo de enlace del servidor de sincronización ha sido exitoso, la sincronización ha comenzado."

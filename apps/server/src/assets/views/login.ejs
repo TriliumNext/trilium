@@ -13,7 +13,7 @@
         }
     </style>
     <% // TriliumNextTODO: move the css file to ${assetPath}/stylesheets/  %>
-    <link rel="stylesheet" href="<%= appPath %>/login.css">
+    <link rel="stylesheet" href="<%= appPath %>/bootstrap.css">
     <link rel="stylesheet" href="<%= assetPath %>/stylesheets/theme-light.css">
     <link rel="stylesheet" href="<%= assetPath %>/stylesheets/theme-next.css">
     <link rel="stylesheet" href="<%= assetPath %>/stylesheets/style.css">
@@ -21,13 +21,13 @@
 <body>
 <div class="container login-page">
     <div class="col-xs-12 col-sm-10 col-md-6 col-lg-4 col-xl-4 mx-auto pt-4">
-        <img class="img-fluid d-block mx-auto" style="height: 8rem;" src="<%= assetPath %>/images/icon-color.svg" aria-hidden="true" draggable="false" >
+        <img class="img-fluid d-block mx-auto" style="height: 8rem;" src="<%= assetPathFragment %>/images/icon-color.svg" aria-hidden="true" draggable="false" >
         <h1 class="text-center"><%= t("login.heading") %></h1>
 
         <% if (ssoEnabled) { %>
             <a href="/authenticate" class="google-login-btn">
-                <img src="<%= assetPath %>/images/google-logo.svg" alt="Google logo">
-                <%= t("login.sign_in_with_google") %>
+                <img src="<%= ssoIssuerIcon.length === 0 ? assetPathFragment + '/images/google-logo.svg' : ssoIssuerIcon %>" alt="<%= ssoIssuerName %>">
+                <%= t("login.sign_in_with_sso", { ssoIssuerName: ssoIssuerName }) %>
             </a>
         <% } else { %>
             <form action="login" method="POST">

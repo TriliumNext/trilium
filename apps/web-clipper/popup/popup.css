@@ -1,0 +1,48 @@
+body {
+  width: 300px;
+  font-size: 12px;
+  font-family: sans-serif;
+}
+
+.button {
+  margin: 3% auto;
+  padding: 4px;
+  text-align: center;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background-color: #eee;
+  cursor: pointer;
+  color: black;
+}
+
+.wide {
+  min-width: 8em;
+}
+
+.full {
+  display: block;
+  width: 100%;
+}
+
+#save-link-with-note-wrapper {
+  display: none;
+}
+
+#save-link-with-note-textarea {
+  width: 100%;
+}
+
+#save-button {
+  border-color: #0062cc;
+  background-color: #0069d9;
+  color: white;
+}
+
+#check-connection-button {
+  float: right;
+  margin-top: -6px;
+}
+
+button[disabled] {
+  color: #aaa;
+}

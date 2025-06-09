@@ -5,21 +5,25 @@ import BasicWidget from "../basic_widget.js";
 import toastService from "../../services/toast.js";
 import appContext from "../../components/app_context.js";
 import server from "../../services/server.js";
+import noteAutocompleteService from "../../services/note_autocomplete.js";
 
 import { TPL, addMessageToChat, showSources, hideSources, showLoadingIndicator, hideLoadingIndicator } from "./ui.js";
 import { formatMarkdown } from "./utils.js";
 import { createChatSession, checkSessionExists, setupStreamingResponse, getDirectResponse } from "./communication.js";
 import { extractInChatToolSteps } from "./message_processor.js";
-import { validateEmbeddingProviders } from "./validation.js";
+import { validateProviders } from "./validation.js";
 import type { MessageData, ToolExecutionStep, ChatData } from "./types.js";
-import { applySyntaxHighlight } from "../../services/syntax_highlight.js";
+import { formatCodeBlocks } from "../../services/syntax_highlight.js";
+import { ClassicEditor, type CKTextEditor, type MentionFeed } from "@triliumnext/ckeditor5";
+import type { Suggestion } from "../../services/note_autocomplete.js";
 
 import "../../stylesheets/llm_chat.css";
 
 export default class LlmChatPanel extends BasicWidget {
     private noteContextChatMessages!: HTMLElement;
     private noteContextChatForm!: HTMLFormElement;
-    private noteContextChatInput!: HTMLTextAreaElement;
+    private noteContextChatInput!: HTMLElement;
+    private noteContextChatInputEditor!: CKTextEditor;
     private noteContextChatSendButton!: HTMLButtonElement;
     private chatContainer!: HTMLElement;
     private loadingIndicator!: HTMLElement;
@@ -29,9 +33,14 @@ export default class LlmChatPanel extends BasicWidget {
     private useAdvancedContextCheckbox!: HTMLInputElement;
     private showThinkingCheckbox!: HTMLInputElement;
     private validationWarning!: HTMLElement;
-    private chatNoteId: string | null = null;
-    private noteId: string | null = null; // The actual noteId for the Chat Note
-    private currentNoteId: string | null = null;
+    private thinkingContainer!: HTMLElement;
+    private thinkingBubble!: HTMLElement;
+    private thinkingText!: HTMLElement;
+    private thinkingToggle!: HTMLElement;
+
+    // Simplified to just use noteId - this represents the AI Chat note we're working with
+    private noteId: string | null = null;
+    private currentNoteId: string | null = null; // The note providing context (for regular notes)
     private _messageHandlerId: number | null = null;
     private _messageHandler: any = null;
 
@@ -60,7 +69,6 @@ export default class LlmChatPanel extends BasicWidget {
             totalTokens?: number;
         };
     } = {
-        model: 'default',
         temperature: 0.7,
         toolExecutions: []
     };
@@ -82,12 +90,21 @@ export default class LlmChatPanel extends BasicWidget {
         this.messages = messages;
     }
 
-    public getChatNoteId(): string | null {
-        return this.chatNoteId;
+    public getNoteId(): string | null {
+        return this.noteId;
     }
 
-    public setChatNoteId(chatNoteId: string | null): void {
-        this.chatNoteId = chatNoteId;
+    public setNoteId(noteId: string | null): void {
+        this.noteId = noteId;
+    }
+
+    // Deprecated - keeping for backward compatibility but mapping to noteId
+    public getChatNoteId(): string | null {
+        return this.noteId;
+    }
+
+    public setChatNoteId(noteId: string | null): void {
+        this.noteId = noteId;
     }
 
     public getNoteContextChatMessages(): HTMLElement {
@@ -104,7 +121,7 @@ export default class LlmChatPanel extends BasicWidget {
         const element = this.$widget[0];
         this.noteContextChatMessages = element.querySelector('.note-context-chat-messages') as HTMLElement;
         this.noteContextChatForm = element.querySelector('.note-context-chat-form') as HTMLFormElement;
-        this.noteContextChatInput = element.querySelector('.note-context-chat-input') as HTMLTextAreaElement;
+        this.noteContextChatInput = element.querySelector('.note-context-chat-input') as HTMLElement;
         this.noteContextChatSendButton = element.querySelector('.note-context-chat-send-button') as HTMLButtonElement;
         this.chatContainer = element.querySelector('.note-context-chat-container') as HTMLElement;
         this.loadingIndicator = element.querySelector('.loading-indicator') as HTMLElement;
@@ -114,6 +131,10 @@ export default class LlmChatPanel extends BasicWidget {
         this.useAdvancedContextCheckbox = element.querySelector('.use-advanced-context-checkbox') as HTMLInputElement;
         this.showThinkingCheckbox = element.querySelector('.show-thinking-checkbox') as HTMLInputElement;
         this.validationWarning = element.querySelector('.provider-validation-warning') as HTMLElement;
+        this.thinkingContainer = element.querySelector('.llm-thinking-container') as HTMLElement;
+        this.thinkingBubble = element.querySelector('.thinking-bubble') as HTMLElement;
+        this.thinkingText = element.querySelector('.thinking-text') as HTMLElement;
+        this.thinkingToggle = element.querySelector('.thinking-toggle') as HTMLElement;
 
         // Set up event delegation for the settings link
         this.validationWarning.addEventListener('click', (e) => {
@@ -124,15 +145,84 @@ export default class LlmChatPanel extends BasicWidget {
             }
         });
 
-        this.initializeEventListeners();
+        // Set up thinking toggle functionality
+        this.setupThinkingToggle();
+
+        // Initialize CKEditor with mention support (async)
+        this.initializeCKEditor().then(() => {
+            this.initializeEventListeners();
+        }).catch(error => {
+            console.error('Failed to initialize CKEditor, falling back to basic event listeners:', error);
+            this.initializeBasicEventListeners();
+        });
 
         return this.$widget;
+    }
+
+    private async initializeCKEditor() {
+        const mentionSetup: MentionFeed[] = [
+            {
+                marker: "@",
+                feed: (queryText: string) => noteAutocompleteService.autocompleteSourceForCKEditor(queryText),
+                itemRenderer: (item) => {
+                    const suggestion = item as Suggestion;
+                    const itemElement = document.createElement("button");
+                    itemElement.innerHTML = `${suggestion.highlightedNotePathTitle} `;
+                    return itemElement;
+                },
+                minimumCharacters: 0
+            }
+        ];
+
+        this.noteContextChatInputEditor = await ClassicEditor.create(this.noteContextChatInput, {
+            toolbar: {
+                items: [] // No toolbar for chat input
+            },
+            placeholder: this.noteContextChatInput.getAttribute('data-placeholder') || 'Enter your message...',
+            mention: {
+                feeds: mentionSetup
+            },
+            licenseKey: "GPL"
+        });
+
+        // Set minimal height
+        const editorElement = this.noteContextChatInputEditor.ui.getEditableElement();
+        if (editorElement) {
+            editorElement.style.minHeight = '60px';
+            editorElement.style.maxHeight = '200px';
+            editorElement.style.overflowY = 'auto';
+        }
+
+        // Set up keybindings after editor is ready
+        this.setupEditorKeyBindings();
+
+        console.log('CKEditor initialized successfully for LLM chat input');
+    }
+
+    private initializeBasicEventListeners() {
+        // Fallback event listeners for when CKEditor fails to initialize
+        this.noteContextChatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            // In fallback mode, the noteContextChatInput should contain a textarea
+            const textarea = this.noteContextChatInput.querySelector('textarea');
+            if (textarea) {
+                const content = textarea.value;
+                this.sendMessage(content);
+            }
+        });
     }
 
     cleanup() {
         console.log(`LlmChatPanel cleanup called, removing any active WebSocket subscriptions`);
         this._messageHandler = null;
         this._messageHandlerId = null;
+
+        // Clean up CKEditor instance
+        if (this.noteContextChatInputEditor) {
+            this.noteContextChatInputEditor.destroy().catch(error => {
+                console.error('Error destroying CKEditor:', error);
+            });
+        }
     }
 
     /**
@@ -226,16 +316,22 @@ export default class LlmChatPanel extends BasicWidget {
                 }
             }
 
-            const dataToSave: ChatData = {
+            // Only save if we have a valid note ID
+            if (!this.noteId) {
+                console.warn('Cannot save chat data: no noteId available');
+                return;
+            }
+
+            const dataToSave = {
                 messages: this.messages,
-                chatNoteId: this.chatNoteId,
                 noteId: this.noteId,
+                chatNoteId: this.noteId, // For backward compatibility
                 toolSteps: toolSteps,
                 // Add sources if we have them
                 sources: this.sources || [],
                 // Add metadata
                 metadata: {
-                    model: this.metadata?.model || 'default',
+                    model: this.metadata?.model || undefined,
                     provider: this.metadata?.provider || undefined,
                     temperature: this.metadata?.temperature || 0.7,
                     lastUpdated: new Date().toISOString(),
@@ -244,13 +340,122 @@ export default class LlmChatPanel extends BasicWidget {
                 }
             };
 
-            console.log(`Saving chat data with chatNoteId: ${this.chatNoteId}, noteId: ${this.noteId}, ${toolSteps.length} tool steps, ${this.sources?.length || 0} sources, ${toolExecutions.length} tool executions`);
+            console.log(`Saving chat data with noteId: ${this.noteId}, ${toolSteps.length} tool steps, ${this.sources?.length || 0} sources, ${toolExecutions.length} tool executions`);
 
             // Save the data to the note attribute via the callback
             // This is the ONLY place we should save data, letting the container widget handle persistence
             await this.onSaveData(dataToSave);
         } catch (error) {
             console.error('Error saving chat data:', error);
+        }
+    }
+
+    /**
+     * Save current chat data to a specific note ID
+     */
+    async saveCurrentDataToSpecificNote(targetNoteId: string | null) {
+        if (!this.onSaveData || !targetNoteId) {
+            console.warn('Cannot save chat data: no saveData callback or no targetNoteId available');
+            return;
+        }
+
+        try {
+            // Extract current tool execution steps if any exist
+            const toolSteps = extractInChatToolSteps(this.noteContextChatMessages);
+
+            // Get tool executions from both UI and any cached executions in metadata
+            let toolExecutions: Array<{
+                id: string;
+                name: string;
+                arguments: any;
+                result: any;
+                error?: string;
+                timestamp: string;
+            }> = [];
+
+            // First include any tool executions already in metadata (from streaming events)
+            if (this.metadata?.toolExecutions && Array.isArray(this.metadata.toolExecutions)) {
+                toolExecutions = [...this.metadata.toolExecutions];
+                console.log(`Including ${toolExecutions.length} tool executions from metadata`);
+            }
+
+            // Also extract any visible tool steps from the UI
+            const extractedExecutions = toolSteps.map(step => {
+                // Parse tool execution information
+                if (step.type === 'tool-execution') {
+                    try {
+                        const content = JSON.parse(step.content);
+                        return {
+                            id: content.toolCallId || `tool-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                            name: content.tool || 'unknown',
+                            arguments: content.args || {},
+                            result: content.result || {},
+                            error: content.error,
+                            timestamp: new Date().toISOString()
+                        };
+                    } catch (e) {
+                        // If we can't parse it, create a basic record
+                        return {
+                            id: `tool-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                            name: 'unknown',
+                            arguments: {},
+                            result: step.content,
+                            timestamp: new Date().toISOString()
+                        };
+                    }
+                } else if (step.type === 'result' && step.name) {
+                    // Handle result steps with a name
+                    return {
+                        id: `tool-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                        name: step.name,
+                        arguments: {},
+                        result: step.content,
+                        timestamp: new Date().toISOString()
+                    };
+                }
+                return {
+                    id: `tool-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                    name: 'unknown',
+                    arguments: {},
+                    result: 'Unrecognized tool step',
+                    timestamp: new Date().toISOString()
+                };
+            });
+
+            // Merge the tool executions, keeping only unique IDs
+            const existingIds = new Set(toolExecutions.map((t: {id: string}) => t.id));
+            for (const exec of extractedExecutions) {
+                if (!existingIds.has(exec.id)) {
+                    toolExecutions.push(exec);
+                    existingIds.add(exec.id);
+                }
+            }
+
+            const dataToSave = {
+                messages: this.messages,
+                noteId: targetNoteId,
+                chatNoteId: targetNoteId, // For backward compatibility
+                toolSteps: toolSteps,
+                // Add sources if we have them
+                sources: this.sources || [],
+                // Add metadata
+                metadata: {
+                    model: this.metadata?.model || undefined,
+                    provider: this.metadata?.provider || undefined,
+                    temperature: this.metadata?.temperature || 0.7,
+                    lastUpdated: new Date().toISOString(),
+                    // Add tool executions
+                    toolExecutions: toolExecutions
+                }
+            };
+
+            console.log(`Saving chat data to specific note ${targetNoteId}, ${toolSteps.length} tool steps, ${this.sources?.length || 0} sources, ${toolExecutions.length} tool executions`);
+
+            // Save the data to the note attribute via the callback
+            // This is the ONLY place we should save data, letting the container widget handle persistence
+            await this.onSaveData(dataToSave);
+        } catch (error) {
+            console.error('Error saving chat data to specific note:', error);
         }
     }
 
@@ -266,16 +471,52 @@ export default class LlmChatPanel extends BasicWidget {
             const savedData = await this.onGetData() as ChatData;
 
             if (savedData?.messages?.length > 0) {
+                // Check if we actually have new content to avoid unnecessary UI rebuilds
+                const currentMessageCount = this.messages.length;
+                const savedMessageCount = savedData.messages.length;
+
+                // If message counts are the same, check if content is different
+                const hasNewContent = savedMessageCount > currentMessageCount ||
+                    JSON.stringify(this.messages) !== JSON.stringify(savedData.messages);
+
+                if (!hasNewContent) {
+                    console.log("No new content detected, skipping UI rebuild");
+                    return true;
+                }
+
+                console.log(`Loading saved data: ${currentMessageCount} -> ${savedMessageCount} messages`);
+
+                // Store current scroll position if we need to preserve it
+                const shouldPreserveScroll = savedMessageCount > currentMessageCount && currentMessageCount > 0;
+                const currentScrollTop = shouldPreserveScroll ? this.chatContainer.scrollTop : 0;
+                const currentScrollHeight = shouldPreserveScroll ? this.chatContainer.scrollHeight : 0;
+
                 // Load messages
+                const oldMessages = [...this.messages];
                 this.messages = savedData.messages;
 
-                // Clear and rebuild the chat UI
-                this.noteContextChatMessages.innerHTML = '';
+                // Only rebuild UI if we have significantly different content
+                if (savedMessageCount > currentMessageCount) {
+                    // We have new messages - just add the new ones instead of rebuilding everything
+                    const newMessages = savedData.messages.slice(currentMessageCount);
+                    console.log(`Adding ${newMessages.length} new messages to UI`);
 
-                this.messages.forEach(message => {
-                    const role = message.role as 'user' | 'assistant';
-                    this.addMessageToChat(role, message.content);
-                });
+                    newMessages.forEach(message => {
+                        const role = message.role as 'user' | 'assistant';
+                        this.addMessageToChat(role, message.content);
+                    });
+                } else {
+                    // Content changed but count is same - need to rebuild
+                    console.log("Message content changed, rebuilding UI");
+
+                    // Clear and rebuild the chat UI
+                    this.noteContextChatMessages.innerHTML = '';
+
+                    this.messages.forEach(message => {
+                        const role = message.role as 'user' | 'assistant';
+                        this.addMessageToChat(role, message.content);
+                    });
+                }
 
                 // Restore tool execution steps if they exist
                 if (savedData.toolSteps && Array.isArray(savedData.toolSteps) && savedData.toolSteps.length > 0) {
@@ -319,11 +560,31 @@ export default class LlmChatPanel extends BasicWidget {
                 // Load Chat Note ID if available
                 if (savedData.noteId) {
                     console.log(`Using noteId as Chat Note ID: ${savedData.noteId}`);
-                    this.chatNoteId = savedData.noteId;
                     this.noteId = savedData.noteId;
                 } else {
                     console.log(`No noteId found in saved data, cannot load chat session`);
                     return false;
+                }
+
+                // Restore scroll position if we were preserving it
+                if (shouldPreserveScroll) {
+                    // Calculate the new scroll position to maintain relative position
+                    const newScrollHeight = this.chatContainer.scrollHeight;
+                    const scrollDifference = newScrollHeight - currentScrollHeight;
+                    const newScrollTop = currentScrollTop + scrollDifference;
+
+                    // Only scroll down if we're near the bottom, otherwise preserve exact position
+                    const wasNearBottom = (currentScrollTop + this.chatContainer.clientHeight) >= (currentScrollHeight - 50);
+
+                    if (wasNearBottom) {
+                        // User was at bottom, scroll to new bottom
+                        this.chatContainer.scrollTop = newScrollHeight;
+                        console.log("User was at bottom, scrolling to new bottom");
+                    } else {
+                        // User was not at bottom, try to preserve their position
+                        this.chatContainer.scrollTop = newScrollTop;
+                        console.log(`Preserving scroll position: ${currentScrollTop} -> ${newScrollTop}`);
+                    }
                 }
 
                 return true;
@@ -464,10 +725,19 @@ export default class LlmChatPanel extends BasicWidget {
         }
 
         // Check for any provider validation issues when refreshing
-        await validateEmbeddingProviders(this.validationWarning);
+        await validateProviders(this.validationWarning);
 
         // Get current note context if needed
         const currentActiveNoteId = appContext.tabManager.getActiveContext()?.note?.noteId || null;
+
+        // For AI Chat notes, the note itself IS the chat session
+        // So currentNoteId and noteId should be the same
+        if (this.noteId && currentActiveNoteId === this.noteId) {
+            // We're in an AI Chat note - don't reset, just load saved data
+            console.log(`Refreshing AI Chat note ${this.noteId} - loading saved data`);
+            await this.loadSavedData();
+            return;
+        }
 
         // If we're switching to a different note, we need to reset
         if (this.currentNoteId !== currentActiveNoteId) {
@@ -476,7 +746,6 @@ export default class LlmChatPanel extends BasicWidget {
             // Reset the UI and data
             this.noteContextChatMessages.innerHTML = '';
             this.messages = [];
-            this.chatNoteId = null;
             this.noteId = null; // Also reset the chat note ID
             this.hideSources(); // Hide any sources from previous note
 
@@ -488,7 +757,7 @@ export default class LlmChatPanel extends BasicWidget {
         const hasSavedData = await this.loadSavedData();
 
         // Only create a new session if we don't have a session or saved data
-        if (!this.chatNoteId || !this.noteId || !hasSavedData) {
+        if (!this.noteId || !hasSavedData) {
             // Create a new chat session
             await this.createChatSession();
         }
@@ -499,19 +768,15 @@ export default class LlmChatPanel extends BasicWidget {
      */
     private async createChatSession() {
         try {
-            // Create a new chat session, passing the current note ID if it exists
-            const { chatNoteId, noteId } = await createChatSession(
-                this.currentNoteId ? this.currentNoteId : undefined
-            );
+            // If we already have a noteId (for AI Chat notes), use it
+            const contextNoteId = this.noteId || this.currentNoteId;
 
-            if (chatNoteId) {
-                // If we got back an ID from the API, use it
-                this.chatNoteId = chatNoteId;
+            // Create a new chat session, passing the context note ID
+            const noteId = await createChatSession(contextNoteId ? contextNoteId : undefined);
 
-                // For new sessions, the noteId should equal the chatNoteId
-                // This ensures we're using the note ID consistently
-                this.noteId = noteId || chatNoteId;
-
+            if (noteId) {
+                // Set the note ID for this chat
+                this.noteId = noteId;
                 console.log(`Created new chat session with noteId: ${this.noteId}`);
             } else {
                 throw new Error("Failed to create chat session - no ID returned");
@@ -531,18 +796,31 @@ export default class LlmChatPanel extends BasicWidget {
     private async sendMessage(content: string) {
         if (!content.trim()) return;
 
+        // Extract mentions from the content if using CKEditor
+        let mentions: Array<{noteId: string; title: string; notePath: string}> = [];
+        let plainTextContent = content;
+
+        if (this.noteContextChatInputEditor) {
+            const extracted = this.extractMentionsAndContent(content);
+            mentions = extracted.mentions;
+            plainTextContent = extracted.content;
+        }
+
         // Add the user message to the UI and data model
-        this.addMessageToChat('user', content);
+        this.addMessageToChat('user', plainTextContent);
         this.messages.push({
             role: 'user',
-            content: content
+            content: plainTextContent,
+            mentions: mentions.length > 0 ? mentions : undefined
         });
 
         // Save the data immediately after a user message
         await this.saveCurrentData();
 
         // Clear input and show loading state
-        this.noteContextChatInput.value = '';
+        if (this.noteContextChatInputEditor) {
+            this.noteContextChatInputEditor.setData('');
+        }
         showLoadingIndicator(this.loadingIndicator);
         this.hideSources();
 
@@ -551,13 +829,14 @@ export default class LlmChatPanel extends BasicWidget {
             const showThinking = this.showThinkingCheckbox.checked;
 
             // Add logging to verify parameters
-            console.log(`Sending message with: useAdvancedContext=${useAdvancedContext}, showThinking=${showThinking}, noteId=${this.currentNoteId}, sessionId=${this.chatNoteId}`);
+            console.log(`Sending message with: useAdvancedContext=${useAdvancedContext}, showThinking=${showThinking}, noteId=${this.currentNoteId}, sessionId=${this.noteId}`);
 
             // Create the message parameters
             const messageParams = {
-                content,
+                content: plainTextContent,
                 useAdvancedContext,
-                showThinking
+                showThinking,
+                mentions: mentions.length > 0 ? mentions : undefined
             };
 
             // Try websocket streaming (preferred method)
@@ -597,14 +876,14 @@ export default class LlmChatPanel extends BasicWidget {
      */
     private async processUserMessage(content: string) {
         // Check for validation issues first
-        await validateEmbeddingProviders(this.validationWarning);
+        await validateProviders(this.validationWarning);
 
         // Make sure we have a valid session
-        if (!this.chatNoteId) {
+        if (!this.noteId) {
             // If no session ID, create a new session
             await this.createChatSession();
 
-            if (!this.chatNoteId) {
+            if (!this.noteId) {
                 // If still no session ID, show error and return
                 console.error("Failed to create chat session");
                 toastService.showError("Failed to create chat session");
@@ -621,7 +900,9 @@ export default class LlmChatPanel extends BasicWidget {
         }
 
         // Clear input and show loading state
-        this.noteContextChatInput.value = '';
+        if (this.noteContextChatInputEditor) {
+            this.noteContextChatInputEditor.setData('');
+        }
         showLoadingIndicator(this.loadingIndicator);
         this.hideSources();
 
@@ -633,7 +914,7 @@ export default class LlmChatPanel extends BasicWidget {
             await this.saveCurrentData();
 
             // Add logging to verify parameters
-            console.log(`Sending message with: useAdvancedContext=${useAdvancedContext}, showThinking=${showThinking}, noteId=${this.currentNoteId}, sessionId=${this.chatNoteId}`);
+            console.log(`Sending message with: useAdvancedContext=${useAdvancedContext}, showThinking=${showThinking}, noteId=${this.currentNoteId}, sessionId=${this.noteId}`);
 
             // Create the message parameters
             const messageParams = {
@@ -670,12 +951,12 @@ export default class LlmChatPanel extends BasicWidget {
      */
     private async handleDirectResponse(messageParams: any): Promise<boolean> {
         try {
-            if (!this.chatNoteId) return false;
+            if (!this.noteId) return false;
 
-            console.log(`Getting direct response using sessionId: ${this.chatNoteId} (noteId: ${this.noteId})`);
+            console.log(`Getting direct response using sessionId: ${this.noteId} (noteId: ${this.noteId})`);
 
             // Get a direct response from the server
-            const postResponse = await getDirectResponse(this.chatNoteId, messageParams);
+            const postResponse = await getDirectResponse(this.noteId, messageParams);
 
             // If the POST request returned content directly, display it
             if (postResponse && postResponse.content) {
@@ -695,8 +976,8 @@ export default class LlmChatPanel extends BasicWidget {
                     this.showSources(postResponse.sources);
                 }
 
-                // Process the assistant response
-                this.processAssistantResponse(postResponse.content, postResponse);
+                // Process the assistant response with original chat note ID
+                this.processAssistantResponse(postResponse.content, postResponse, this.noteId);
 
                 hideLoadingIndicator(this.loadingIndicator);
                 return true;
@@ -712,7 +993,7 @@ export default class LlmChatPanel extends BasicWidget {
     /**
      * Process an assistant response - add to UI and save
      */
-    private async processAssistantResponse(content: string, fullResponse?: any) {
+    private async processAssistantResponse(content: string, fullResponse?: any, originalChatNoteId?: string | null) {
         // Add the response to the chat UI
         this.addMessageToChat('assistant', content);
 
@@ -738,8 +1019,8 @@ export default class LlmChatPanel extends BasicWidget {
             ];
         }
 
-        // Save to note
-        this.saveCurrentData().catch(err => {
+        // Save to note - use original chat note ID if provided
+        this.saveCurrentDataToSpecificNote(originalChatNoteId || this.noteId).catch(err => {
             console.error("Failed to save assistant response to note:", err);
         });
     }
@@ -748,11 +1029,11 @@ export default class LlmChatPanel extends BasicWidget {
      * Set up streaming response via WebSocket
      */
     private async setupStreamingResponse(messageParams: any): Promise<void> {
-        if (!this.chatNoteId) {
+        if (!this.noteId) {
             throw new Error("No session ID available");
         }
 
-        console.log(`Setting up streaming response using sessionId: ${this.chatNoteId} (noteId: ${this.noteId})`);
+        console.log(`Setting up streaming response using sessionId: ${this.noteId} (noteId: ${this.noteId})`);
 
         // Store tool executions captured during streaming
         const toolExecutionsCache: Array<{
@@ -764,12 +1045,15 @@ export default class LlmChatPanel extends BasicWidget {
             timestamp: string;
         }> = [];
 
+        // Store the original chat note ID to ensure we save to the correct note even if user switches
+        const originalChatNoteId = this.noteId;
+
         return setupStreamingResponse(
-            this.chatNoteId,
+            this.noteId,
             messageParams,
             // Content update handler
             (content: string, isDone: boolean = false) => {
-                this.updateStreamingUI(content, isDone);
+                this.updateStreamingUI(content, isDone, originalChatNoteId);
 
                 // Update session data with additional metadata when streaming is complete
                 if (isDone) {
@@ -801,7 +1085,7 @@ export default class LlmChatPanel extends BasicWidget {
                             similarity?: number;
                             content?: string;
                         }>;
-                    }>(`llm/chat/${this.chatNoteId}`)
+                    }>(`llm/chat/${this.noteId}`)
                         .then((sessionData) => {
                             console.log("Got updated session data:", sessionData);
 
@@ -836,9 +1120,9 @@ export default class LlmChatPanel extends BasicWidget {
                                 }
                             }
 
-                            // Save the updated data to the note
-                            this.saveCurrentData()
-                                .catch(err => console.error("Failed to save data after streaming completed:", err));
+                            // DON'T save here - let the server handle saving the complete conversation
+                            // to avoid race conditions between client and server saves
+                            console.log("Updated metadata after streaming completion, server should save");
                         })
                         .catch(err => console.error("Error fetching session data after streaming:", err));
                 }
@@ -876,11 +1160,9 @@ export default class LlmChatPanel extends BasicWidget {
 
                     console.log(`Cached tool execution for ${toolData.tool} to be saved later`);
 
-                    // Save immediately after receiving a tool execution
-                    // This ensures we don't lose tool execution data if streaming fails
-                    this.saveCurrentData().catch(err => {
-                        console.error("Failed to save tool execution data:", err);
-                    });
+                    // DON'T save immediately during streaming - let the server handle saving
+                    // to avoid race conditions between client and server saves
+                    console.log(`Tool execution cached, will be saved by server`);
                 }
             },
             // Complete handler
@@ -897,14 +1179,20 @@ export default class LlmChatPanel extends BasicWidget {
     /**
      * Update the UI with streaming content
      */
-    private updateStreamingUI(assistantResponse: string, isDone: boolean = false) {
-        // Get the existing assistant message or create a new one
-        let assistantMessageEl = this.noteContextChatMessages.querySelector('.assistant-message:last-child');
+    private updateStreamingUI(assistantResponse: string, isDone: boolean = false, originalChatNoteId?: string | null) {
+        // Track if we have a streaming message in progress
+        const hasStreamingMessage = !!this.noteContextChatMessages.querySelector('.assistant-message.streaming');
 
-        if (!assistantMessageEl) {
-            // If no assistant message yet, create one
+        // Create a new message element or use the existing streaming one
+        let assistantMessageEl: HTMLElement;
+
+        if (hasStreamingMessage) {
+            // Use the existing streaming message
+            assistantMessageEl = this.noteContextChatMessages.querySelector('.assistant-message.streaming')!;
+        } else {
+            // Create a new message element
             assistantMessageEl = document.createElement('div');
-            assistantMessageEl.className = 'assistant-message message mb-3';
+            assistantMessageEl.className = 'assistant-message message mb-3 streaming';
             this.noteContextChatMessages.appendChild(assistantMessageEl);
 
             // Add assistant profile icon
@@ -919,38 +1207,31 @@ export default class LlmChatPanel extends BasicWidget {
             assistantMessageEl.appendChild(messageContent);
         }
 
-        // Update the content
+        // Update the content with the current response
         const messageContent = assistantMessageEl.querySelector('.message-content') as HTMLElement;
         messageContent.innerHTML = formatMarkdown(assistantResponse);
 
-        // Apply syntax highlighting if this is the final update
+        // When the response is complete
         if (isDone) {
-            applySyntaxHighlight($(assistantMessageEl as HTMLElement));
+            // Remove the streaming class to mark this message as complete
+            assistantMessageEl.classList.remove('streaming');
 
-            // Update message in the data model for storage
-            // Find the last assistant message to update, or add a new one if none exists
-            const assistantMessages = this.messages.filter(msg => msg.role === 'assistant');
-            const lastAssistantMsgIndex = assistantMessages.length > 0 ?
-                this.messages.lastIndexOf(assistantMessages[assistantMessages.length - 1]) : -1;
+            // Apply syntax highlighting
+            formatCodeBlocks($(assistantMessageEl as HTMLElement));
 
-            if (lastAssistantMsgIndex >= 0) {
-                // Update existing message
-                this.messages[lastAssistantMsgIndex].content = assistantResponse;
-            } else {
-                // Add new message
-                this.messages.push({
-                    role: 'assistant',
-                    content: assistantResponse
-                });
-            }
+            // Hide the thinking display when response is complete
+            this.hideThinkingDisplay();
 
-            // Hide loading indicator
-            hideLoadingIndicator(this.loadingIndicator);
-
-            // Save the final state to the Chat Note
-            this.saveCurrentData().catch(err => {
-                console.error("Failed to save assistant response to note:", err);
+            // Always add a new message to the data model
+            // This ensures we preserve all distinct assistant messages
+            this.messages.push({
+                role: 'assistant',
+                content: assistantResponse,
+                timestamp: new Date()
             });
+
+            // Save the updated message list to the original chat note
+            this.saveCurrentDataToSpecificNote(originalChatNoteId || this.noteId);
         }
 
         // Scroll to bottom
@@ -1203,32 +1484,308 @@ export default class LlmChatPanel extends BasicWidget {
      * Show thinking state in the UI
      */
     private showThinkingState(thinkingData: string) {
-        // Thinking state is now updated via the in-chat UI in updateStreamingUI
-        // This method is now just a hook for the WebSocket handlers
+        // Parse the thinking content to extract text between <think> tags
+        const thinkingContent = this.parseThinkingContent(thinkingData);
 
-        // Show the loading indicator
+        if (thinkingContent) {
+            this.showThinkingDisplay(thinkingContent);
+        } else {
+            // Fallback: show raw thinking data
+            this.showThinkingDisplay(thinkingData);
+        }
+
+        // Show the loading indicator as well
         this.loadingIndicator.style.display = 'flex';
+    }
+
+    /**
+     * Parse thinking content from LLM response
+     */
+    private parseThinkingContent(content: string): string | null {
+        if (!content) return null;
+
+        // Look for content between <think> and </think> tags
+        const thinkRegex = /<think>([\s\S]*?)<\/think>/gi;
+        const matches: string[] = [];
+        let match: RegExpExecArray | null;
+
+        while ((match = thinkRegex.exec(content)) !== null) {
+            matches.push(match[1].trim());
+        }
+
+        if (matches.length > 0) {
+            return matches.join('\n\n--- Next thought ---\n\n');
+        }
+
+        // Check for incomplete thinking blocks (streaming in progress)
+        const incompleteThinkRegex = /<think>([\s\S]*?)$/i;
+        const incompleteMatch = content.match(incompleteThinkRegex);
+
+        if (incompleteMatch && incompleteMatch[1]) {
+            return incompleteMatch[1].trim() + '\n\n[Thinking in progress...]';
+        }
+
+        // If no think tags found, check if the entire content might be thinking
+        if (content.toLowerCase().includes('thinking') ||
+            content.toLowerCase().includes('reasoning') ||
+            content.toLowerCase().includes('let me think') ||
+            content.toLowerCase().includes('i need to') ||
+            content.toLowerCase().includes('first, ') ||
+            content.toLowerCase().includes('step 1') ||
+            content.toLowerCase().includes('analysis:')) {
+            return content;
+        }
+
+        return null;
     }
 
     private initializeEventListeners() {
         this.noteContextChatForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const content = this.noteContextChatInput.value;
-            this.sendMessage(content);
-        });
 
-        // Add auto-resize functionality to the textarea
-        this.noteContextChatInput.addEventListener('input', () => {
-            this.noteContextChatInput.style.height = 'auto';
-            this.noteContextChatInput.style.height = `${this.noteContextChatInput.scrollHeight}px`;
-        });
+            let content = '';
 
-        // Handle Enter key (send on Enter, new line on Shift+Enter)
-        this.noteContextChatInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                this.noteContextChatForm.dispatchEvent(new Event('submit'));
+            if (this.noteContextChatInputEditor && this.noteContextChatInputEditor.getData) {
+                // Use CKEditor content
+                content = this.noteContextChatInputEditor.getData();
+            } else {
+                // Fallback: check if there's a textarea (fallback mode)
+                const textarea = this.noteContextChatInput.querySelector('textarea');
+                if (textarea) {
+                    content = textarea.value;
+                } else {
+                    // Last resort: try to get text content from the div
+                    content = this.noteContextChatInput.textContent || this.noteContextChatInput.innerText || '';
+                }
+            }
+
+            if (content.trim()) {
+                this.sendMessage(content);
             }
         });
+
+        // Handle Enter key (send on Enter, new line on Shift+Enter) via CKEditor
+        // We'll set this up after CKEditor is initialized
+        this.setupEditorKeyBindings();
+    }
+
+    private setupEditorKeyBindings() {
+        if (this.noteContextChatInputEditor && this.noteContextChatInputEditor.keystrokes) {
+            try {
+                this.noteContextChatInputEditor.keystrokes.set('Enter', (key, stop) => {
+                    if (!key.shiftKey) {
+                        stop();
+                        this.noteContextChatForm.dispatchEvent(new Event('submit'));
+                    }
+                });
+                console.log('CKEditor keybindings set up successfully');
+            } catch (error) {
+                console.warn('Failed to set up CKEditor keybindings:', error);
+            }
+        }
+    }
+
+    /**
+     * Extract note mentions and content from CKEditor
+     */
+    private extractMentionsAndContent(editorData: string): { content: string; mentions: Array<{noteId: string; title: string; notePath: string}> } {
+        const mentions: Array<{noteId: string; title: string; notePath: string}> = [];
+
+        // Parse the HTML content to extract mentions
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = editorData;
+
+        // Find all mention elements - CKEditor uses specific patterns for mentions
+        // Look for elements with data-mention attribute or specific mention classes
+        const mentionElements = tempDiv.querySelectorAll('[data-mention], .mention, span[data-id]');
+
+        mentionElements.forEach(mentionEl => {
+            try {
+                // Try different ways to extract mention data based on CKEditor's format
+                let mentionData: any = null;
+
+                // Method 1: data-mention attribute (JSON format)
+                if (mentionEl.hasAttribute('data-mention')) {
+                    mentionData = JSON.parse(mentionEl.getAttribute('data-mention') || '{}');
+                }
+                // Method 2: data-id attribute (simple format)
+                else if (mentionEl.hasAttribute('data-id')) {
+                    const dataId = mentionEl.getAttribute('data-id');
+                    const textContent = mentionEl.textContent || '';
+
+                    // Parse the dataId to extract note information
+                    if (dataId && dataId.startsWith('@')) {
+                        const cleanId = dataId.substring(1); // Remove the @
+                        mentionData = {
+                            id: cleanId,
+                            name: textContent,
+                            notePath: cleanId // Assume the ID contains the path
+                        };
+                    }
+                }
+                // Method 3: Check if this is a reference link (href=#notePath)
+                else if (mentionEl.tagName === 'A' && mentionEl.hasAttribute('href')) {
+                    const href = mentionEl.getAttribute('href');
+                    if (href && href.startsWith('#')) {
+                        const notePath = href.substring(1);
+                        mentionData = {
+                            notePath: notePath,
+                            noteTitle: mentionEl.textContent || 'Unknown Note'
+                        };
+                    }
+                }
+
+                if (mentionData && (mentionData.notePath || mentionData.link)) {
+                    const notePath = mentionData.notePath || mentionData.link?.substring(1); // Remove # from link
+                    const noteId = notePath ? notePath.split('/').pop() : null;
+                    const title = mentionData.noteTitle || mentionData.name || mentionEl.textContent || 'Unknown Note';
+
+                    if (noteId) {
+                        mentions.push({
+                            noteId: noteId,
+                            title: title,
+                            notePath: notePath
+                        });
+                        console.log(`Extracted mention: noteId=${noteId}, title=${title}, notePath=${notePath}`);
+                    }
+                }
+            } catch (e) {
+                console.warn('Failed to parse mention data:', e, mentionEl);
+            }
+        });
+
+        // Convert to plain text for the LLM, but preserve the structure
+        const content = tempDiv.textContent || tempDiv.innerText || '';
+
+        console.log(`Extracted ${mentions.length} mentions from editor content`);
+        return { content, mentions };
+    }
+
+    private setupThinkingToggle() {
+        if (this.thinkingToggle) {
+            this.thinkingToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleThinkingDetails();
+            });
+        }
+
+        // Also make the entire header clickable
+        const thinkingHeader = this.thinkingBubble?.querySelector('.thinking-header');
+        if (thinkingHeader) {
+            thinkingHeader.addEventListener('click', (e) => {
+                const target = e.target as HTMLElement;
+                if (!target.closest('.thinking-toggle')) {
+                    this.toggleThinkingDetails();
+                }
+            });
+        }
+    }
+
+    private toggleThinkingDetails() {
+        const content = this.thinkingBubble?.querySelector('.thinking-content') as HTMLElement;
+        const toggle = this.thinkingToggle?.querySelector('i');
+
+        if (content && toggle) {
+            const isVisible = content.style.display !== 'none';
+
+            if (isVisible) {
+                content.style.display = 'none';
+                toggle.className = 'bx bx-chevron-down';
+                this.thinkingToggle.classList.remove('expanded');
+            } else {
+                content.style.display = 'block';
+                toggle.className = 'bx bx-chevron-up';
+                this.thinkingToggle.classList.add('expanded');
+            }
+        }
+    }
+
+    /**
+     * Show the thinking display with optional initial content
+     */
+    private showThinkingDisplay(initialText: string = '') {
+        if (this.thinkingContainer) {
+            this.thinkingContainer.style.display = 'block';
+
+            if (initialText && this.thinkingText) {
+                this.updateThinkingText(initialText);
+            }
+
+            // Scroll to show the thinking display
+            this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
+        }
+    }
+
+    /**
+     * Update the thinking text content
+     */
+    private updateThinkingText(text: string) {
+        if (this.thinkingText) {
+            // Format the thinking text for better readability
+            const formattedText = this.formatThinkingText(text);
+            this.thinkingText.textContent = formattedText;
+
+            // Auto-scroll if content is expanded
+            const content = this.thinkingBubble?.querySelector('.thinking-content') as HTMLElement;
+            if (content && content.style.display !== 'none') {
+                this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
+            }
+        }
+    }
+
+    /**
+     * Format thinking text for better presentation
+     */
+    private formatThinkingText(text: string): string {
+        if (!text) return text;
+
+        // Clean up the text
+        let formatted = text.trim();
+
+        // Add some basic formatting
+        formatted = formatted
+            // Add spacing around section markers
+            .replace(/(\d+\.\s)/g, '\n$1')
+            // Clean up excessive whitespace
+            .replace(/\n\s*\n\s*\n/g, '\n\n')
+            // Trim again
+            .trim();
+
+        return formatted;
+    }
+
+    /**
+     * Hide the thinking display
+     */
+    private hideThinkingDisplay() {
+        if (this.thinkingContainer) {
+            this.thinkingContainer.style.display = 'none';
+
+            // Reset the toggle state
+            const content = this.thinkingBubble?.querySelector('.thinking-content') as HTMLElement;
+            const toggle = this.thinkingToggle?.querySelector('i');
+
+            if (content && toggle) {
+                content.style.display = 'none';
+                toggle.className = 'bx bx-chevron-down';
+                this.thinkingToggle?.classList.remove('expanded');
+            }
+
+            // Clear the text content
+            if (this.thinkingText) {
+                this.thinkingText.textContent = '';
+            }
+        }
+    }
+
+    /**
+     * Append to existing thinking content (for streaming updates)
+     */
+    private appendThinkingText(additionalText: string) {
+        if (this.thinkingText && additionalText) {
+            const currentText = this.thinkingText.textContent || '';
+            const newText = currentText + additionalText;
+            this.updateThinkingText(newText);
+        }
     }
 }

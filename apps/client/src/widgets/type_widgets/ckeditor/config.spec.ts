@@ -6,7 +6,7 @@ type ToolbarConfig = string | "|" | { items: ToolbarConfig[] };
 describe("CKEditor config", () => {
     it("has same toolbar items for fixed and floating", () => {
         function traverseItems(config: ToolbarConfig): string[] {
-            const result = [];
+            const result: (string | string[])[] = [];
             if (typeof config === "object") {
                 for (const item of config.items) {
                     result.push(traverseItems(item));

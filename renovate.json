@@ -5,5 +5,11 @@
   "labels": ["dependencies", "renovate"],
   "prHourlyLimit": 0,
   "prConcurrentLimit": 0,
-  "branchConcurrentLimit": 0
+  "branchConcurrentLimit": 0,
+  "packageRules": [
+    {
+      "matchPackageNames": "@fsegurai/codemirror-theme-**",
+      "groupName": "codemirror themes"
+    }
+  ]
 }

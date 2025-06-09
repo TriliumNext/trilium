@@ -198,6 +198,8 @@ export default class AttributeEditorWidget extends NoteContextAwareWidget implem
             ],
             selectMenuItemHandler: ({ command }) => this.handleAddNewAttributeCommand(command)
         });
+        // Prevent automatic hiding of the context menu due to the button being clicked.
+        e.stopPropagation();
     }
 
     // triggered from keyboard shortcut

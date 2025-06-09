@@ -14,16 +14,8 @@ if (!fs.existsSync(DB_INIT_DIR)) {
     process.exit(1);
 }
 
-const MIGRATIONS_DIR = path.resolve(DB_INIT_DIR, "migrations");
-
-if (!fs.existsSync(MIGRATIONS_DIR)) {
-    log.error(`Could not find migration directory: ${MIGRATIONS_DIR}`);
-    process.exit(1);
-}
-
 export default {
     RESOURCE_DIR,
-    MIGRATIONS_DIR,
     DB_INIT_DIR,
     ELECTRON_APP_ROOT_DIR
 };

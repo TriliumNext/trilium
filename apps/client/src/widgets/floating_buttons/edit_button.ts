@@ -6,6 +6,7 @@ import { t } from "../../services/i18n.js";
 import LoadResults from "../../services/load_results.js";
 import type { AttributeRow } from "../../services/load_results.js";
 import FNote from "../../entities/fnote.js";
+import options from "../../services/options.js";
 
 export default class EditButton extends OnClickButtonWidget {
     isEnabled(): boolean {
@@ -27,6 +28,10 @@ export default class EditButton extends OnClickButtonWidget {
     }
 
     async refreshWithNote(note: FNote): Promise<void> {
+        if (options.is("databaseReadonly")) {
+            this.toggleInt(false);
+            return;
+        }
         if (note.isProtected && !protectedSessionHolder.isProtectedSessionAvailable()) {
             this.toggleInt(false);
         } else {

@@ -207,8 +207,8 @@ export default class MindMapWidget extends TypeWidget {
             await this.#initLibrary(content?.direction);
         }
 
-        this.mind.refresh(content ?? this.MindElixir.new(NEW_TOPIC_NAME));
-        this.mind.toCenter();
+        this.mind!.refresh(content ?? this.MindElixir.new(NEW_TOPIC_NAME));
+        this.mind!.toCenter();
     }
 
     async #initLibrary(direction?: number) {
@@ -259,7 +259,7 @@ export default class MindMapWidget extends TypeWidget {
     }
 
     async renderSvg() {
-        return await this.mind.exportSvg().text();
+        return await this.mind!.exportSvg().text();
     }
 
     async entitiesReloadedEvent({ loadResults }: EventData<"entitiesReloaded">) {
@@ -286,4 +286,13 @@ export default class MindMapWidget extends TypeWidget {
         utils.downloadSvgAsPng(this.note.title, svg);
     }
 
+    async executeWithContentElementEvent({ resolve, ntxId }: EventData<"executeWithContentElement">) {
+        if (!this.isNoteContext(ntxId)) {
+            return;
+        }
+
+        await this.initialized;
+
+        resolve(this.$content.find('.main-node-container'));
+    }
 }

@@ -3,7 +3,6 @@ import utils from "../../services/utils.js";
 import server from "../../services/server.js";
 import toastService from "../../services/toast.js";
 import appContext from "../../components/app_context.js";
-import libraryLoader from "../../services/library_loader.js";
 import openService from "../../services/open.js";
 import protectedSessionHolder from "../../services/protected_session_holder.js";
 import BasicWidget from "../basic_widget.js";
@@ -12,6 +11,7 @@ import options from "../../services/options.js";
 import type FNote from "../../entities/fnote.js";
 import type { NoteType } from "../../entities/fnote.js";
 import { Dropdown, Modal } from "bootstrap";
+import { renderMathInElement } from "../../services/math.js";
 
 const TPL = /*html*/`
 <div class="revisions-dialog modal fade mx-auto" tabindex="-1" role="dialog">
@@ -315,8 +315,6 @@ export default class RevisionsDialog extends BasicWidget {
             this.$content.html(`<div class="ck-content">${fullRevision.content}</div>`);
 
             if (this.$content.find("span.math-tex").length > 0) {
-                await libraryLoader.requireLibrary(libraryLoader.KATEX);
-
                 renderMathInElement(this.$content[0], { trust: true });
             }
         } else if (revisionItem.type === "code") {

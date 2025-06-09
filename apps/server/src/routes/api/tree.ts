@@ -5,6 +5,7 @@ import log from "../../services/log.js";
 import NotFoundError from "../../errors/not_found_error.js";
 import type { Request } from "express";
 import type BNote from "../../becca/entities/bnote.js";
+import type { AttributeRow, BranchRow, NoteRow } from "@triliumnext/commons";
 
 function getNotesAndBranchesAndAttributes(_noteIds: string[] | Set<string>) {
     const noteIds = new Set(_noteIds);
@@ -53,7 +54,7 @@ function getNotesAndBranchesAndAttributes(_noteIds: string[] | Set<string>) {
         collectEntityIds(note);
     }
 
-    const notes = [];
+    const notes: NoteRow[] = [];
 
     for (const noteId of collectedNoteIds) {
         const note = becca.notes[noteId];
@@ -68,7 +69,7 @@ function getNotesAndBranchesAndAttributes(_noteIds: string[] | Set<string>) {
         });
     }
 
-    const branches = [];
+    const branches: BranchRow[] = [];
 
     if (noteIds.has("root")) {
         branches.push({
@@ -99,7 +100,7 @@ function getNotesAndBranchesAndAttributes(_noteIds: string[] | Set<string>) {
         });
     }
 
-    const attributes = [];
+    const attributes: AttributeRow[] = [];
 
     for (const attributeId of collectedAttributeIds) {
         const attribute = becca.attributes[attributeId];

@@ -39,76 +39,7 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v4
       - name: Check affected
-        run: pnpm nx affected -t build rebuild-deps
-
-  report-electron-size:
-    name: Report Electron size
-    runs-on: ubuntu-latest
-    needs:
-      - check-affected
-    steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-      - name: Set up node & dependencies
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'pnpm'
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run the build
-        uses: ./.github/actions/build-electron
-        with:
-          os: linux
-          arch: x64
-          shell: bash
-          forge_platform: linux
-
-      - name: Run the Electron size report
-        uses: ./.github/actions/report-size
-        with:
-          paths: 'upload/**/*'
-          onlyDiff: 'true'
-          branch: 'develop'
-          header: 'Electron size report'
-          unit: "MB"
-          ghToken: ${{ secrets.GITHUB_TOKEN }}
-  report-server-size:
-    name: Report server size
-    runs-on: ubuntu-latest
-    needs:
-      - check-affected
-    steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-      - name: Set up node & dependencies
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: "pnpm"
-
-      - run: pnpm install --frozen-lockfile
-
-      - name: Run the build
-        uses: ./.github/actions/build-server
-        with:
-          os: linux
-          arch: x64
-
-      - name: Run the server size report
-        uses: ./.github/actions/report-size
-        with:
-          paths: 'upload/**/*'
-          onlyDiff: 'true'
-          branch: 'develop'
-          header: 'Server size report'
-          unit: "MB"
-          ghToken: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm nx affected --verbose -t typecheck build rebuild-deps
 
   test_dev:
     name: Test development
@@ -128,7 +59,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Run the unit tests
-        run: pnpm run test
+        run: pnpm run test:all
 
   build_docker:
     name: Build Docker image
@@ -143,7 +74,14 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Update build info
         run: pnpm run chore:update-build-info
-      - name: Trigger build
+      - name: Trigger client build
+        run: pnpm nx run client:build
+      - name: Send client bundle stats to RelativeCI
+        uses: relative-ci/agent-action@v3
+        with:
+          webpackStatsFile: ./apps/client/dist/webpack-stats.json
+          key: ${{ secrets.RELATIVE_CI_CLIENT_KEY }}
+      - name: Trigger server build
         run: pnpm nx run server:build
       - uses: docker/setup-buildx-action@v3
       - uses: docker/build-push-action@v6

@@ -1,18 +1,19 @@
-import library_loader from "../../../services/library_loader.js";
 import { ALLOWED_PROTOCOLS } from "../../../services/link.js";
-import { MIME_TYPE_AUTO } from "../../../services/mime_type_definitions.js";
+import { MIME_TYPE_AUTO } from "@triliumnext/commons";
+import type { EditorConfig } from "@triliumnext/ckeditor5";
 import { getHighlightJsNameForMime } from "../../../services/mime_types.js";
 import options from "../../../services/options.js";
-import { isSyntaxHighlightEnabled } from "../../../services/syntax_highlight.js";
+import { ensureMimeTypesForHighlighting, isSyntaxHighlightEnabled } from "../../../services/syntax_highlight.js";
 import utils from "../../../services/utils.js";
-import emojiDefinitionsUrl from "@triliumnext/ckeditor5/emoji_definitions/en.json?external";
+import emojiDefinitionsUrl from "@triliumnext/ckeditor5/emoji_definitions/en.json?url";
+import { copyText } from "../../../services/clipboard.js";
 
 const TEXT_FORMATTING_GROUP = {
     label: "Text formatting",
     icon: "text"
 };
 
-export function buildConfig() {
+export function buildConfig(): EditorConfig {
     return {
         image: {
             styles: {
@@ -101,16 +102,21 @@ export function buildConfig() {
             allowedProtocols: ALLOWED_PROTOCOLS
         },
         emoji: {
-            definitionsUrl: emojiDefinitionsUrl
+            definitionsUrl: window.glob.isDev
+                ? new URL(import.meta.url).origin + emojiDefinitionsUrl
+                : emojiDefinitionsUrl
         },
         syntaxHighlighting: {
-            async loadHighlightJs() {
-                await library_loader.requireLibrary(library_loader.HIGHLIGHT_JS);
-                return hljs;
+            loadHighlightJs: async () => {
+                await ensureMimeTypesForHighlighting();
+                return await import("@triliumnext/highlightjs");
             },
             mapLanguageName: getHighlightJsNameForMime,
             defaultMimeType: MIME_TYPE_AUTO,
-            enabled: isSyntaxHighlightEnabled
+            enabled: isSyntaxHighlightEnabled()
+        },
+        clipboard: {
+            copy: copyText
         },
         // This value must be kept in sync with the language defined in webpack.config.js.
         language: "en"
@@ -130,7 +136,7 @@ export function buildToolbarConfig(isClassicToolbar: boolean) {
 
 export function buildMobileToolbar() {
     const classicConfig = buildClassicToolbar(false);
-    const items = [];
+    const items: string[] = [];
 
     for (const item of classicConfig.toolbar.items) {
         if (typeof item === "object" && "items" in item) {
@@ -185,7 +191,7 @@ export function buildClassicToolbar(multilineToolbar: boolean) {
                 {
                     label: "Insert",
                     icon: "plus",
-                    items: ["imageUpload", "|", "link", "bookmark", "internallink", "includeNote", "|", "specialCharacters", "emoji", "math", "mermaid", "horizontalLine", "pageBreak"]
+                    items: ["imageUpload", "|", "link", "bookmark", "internallink", "includeNote", "|", "specialCharacters", "emoji", "math", "mermaid", "horizontalLine", "pageBreak", "dateTime"]
                 },
                 "|",
                 "outdent",
@@ -240,7 +246,7 @@ export function buildFloatingToolbar() {
             {
                 label: "Insert",
                 icon: "plus",
-                items: ["internallink", "includeNote", "|", "math", "mermaid", "horizontalLine", "pageBreak"]
+                items: ["link", "bookmark", "internallink", "includeNote", "|", "math", "mermaid", "horizontalLine", "pageBreak", "dateTime"]
             },
             "|",
             "outdent",

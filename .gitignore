@@ -44,3 +44,5 @@ upload
 
 .rollup.cache
 *.tsbuildinfo
+
+/result

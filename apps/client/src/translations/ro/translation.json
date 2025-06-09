@@ -1581,11 +1581,14 @@
   },
   "highlighting": {
     "color-scheme": "Temă de culori",
-    "title": "Evidențiere de sintaxă pentru notițele de tip text",
+    "title": "",
     "description": "Controlează evidențierea de sintaxă pentru blocurile de cod în interiorul notițelor text, notițele de tip cod nu vor fi afectate de aceste setări."
   },
   "code_block": {
-    "word_wrapping": "Încadrare text"
+    "word_wrapping": "Încadrare text",
+    "theme_none": "Fără evidențiere de sintaxă",
+    "theme_group_dark": "Teme întunecate",
+    "theme_group_light": "Teme luminoase"
   },
   "classic_editor_toolbar": {
     "title": "Formatare"

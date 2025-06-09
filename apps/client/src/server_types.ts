@@ -8,7 +8,7 @@ interface Entity {
 export interface EntityChange {
     id?: number | null;
     noteId?: string;
-    entityName: EntityRowNames;
+    entityName: EntityType;
     entityId: string;
     entity?: Entity;
     positions?: Record<string, number>;
@@ -22,3 +22,5 @@ export interface EntityChange {
     changeId?: string | null;
     instanceId?: string | null;
 }
+
+export type EntityType = "notes" | "branches" | "attributes" | "note_reordering" | "revisions" | "options" | "attachments" | "blobs" | "etapi_tokens";

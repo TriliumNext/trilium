@@ -1,6 +1,7 @@
 import server from "../../../services/server.js";
 import AbstractCodeTypeWidget from "../abstract_code_type_widget.js";
 import type { EventData } from "../../../components/app_context.js";
+import type { EditorConfig } from "@triliumnext/codemirror";
 
 const TPL = /*html*/`<div style="height: 100%; display: flex; flex-direction: column;">
     <style>
@@ -21,9 +22,9 @@ export default class BackendLogWidget extends AbstractCodeTypeWidget {
     private $refreshBackendLog!: JQuery<HTMLElement>;
 
     doRender() {
-        super.doRender();
         this.$widget = $(TPL);
         this.$editor = this.$widget.find(".backend-log-editor");
+        super.doRender();
     }
 
     async refresh() {
@@ -38,9 +39,10 @@ export default class BackendLogWidget extends AbstractCodeTypeWidget {
         this.refresh();
     }
 
-    getExtraOpts(): Partial<CodeMirrorOpts> {
+    getExtraOpts(): Partial<EditorConfig> {
         return {
-            readOnly: true
+            readOnly: true,
+            preferPerformance: true
         };
     }
 

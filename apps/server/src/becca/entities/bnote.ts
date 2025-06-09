@@ -160,7 +160,7 @@ class BNote extends AbstractBeccaEntity<BNote> {
         return this;
     }
 
-    init() {
+    override init() {
         this.parentBranches = [];
         this.parents = [];
         this.children = [];
@@ -318,7 +318,7 @@ class BNote extends AbstractBeccaEntity<BNote> {
     }
 
     /** @returns true if the note has string content (not binary) */
-    hasStringContent() {
+    override hasStringContent() {
         return utils.isStringNote(this.type, this.mime);
     }
 
@@ -388,7 +388,7 @@ class BNote extends AbstractBeccaEntity<BNote> {
                 }
             }
 
-            const templateAttributes = [];
+            const templateAttributes: BAttribute[] = [];
 
             for (const ownedAttr of parentAttributes) {
                 // parentAttributes so we process also inherited templates
@@ -1557,7 +1557,7 @@ class BNote extends AbstractBeccaEntity<BNote> {
         return this.noteId.startsWith("_options");
     }
 
-    get isDeleted() {
+    override get isDeleted() {
         // isBeingDeleted is relevant only in the transition period when the deletion process has begun, but not yet
         // finished (note is still in becca)
         return !(this.noteId in this.becca.notes) || this.isBeingDeleted;
@@ -1672,7 +1672,7 @@ class BNote extends AbstractBeccaEntity<BNote> {
         return utils.formatDownloadTitle(this.title, this.type, this.mime);
     }
 
-    beforeSaving() {
+    override beforeSaving() {
         super.beforeSaving();
 
         this.becca.addNote(this.noteId, this);
@@ -1697,7 +1697,7 @@ class BNote extends AbstractBeccaEntity<BNote> {
         };
     }
 
-    getPojoToSave() {
+    override getPojoToSave() {
         const pojo = this.getPojo();
 
         if (pojo.isProtected) {

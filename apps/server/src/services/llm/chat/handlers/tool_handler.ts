@@ -3,7 +3,6 @@
  */
 import log from "../../../log.js";
 import type { Message } from "../../ai_interface.js";
-import SessionsStore from "../sessions_store.js";
 
 /**
  * Handles the execution of LLM tools
@@ -101,11 +100,6 @@ export class ToolHandler {
                         : JSON.stringify(result).substring(0, 100) + '...';
                     log.info(`Tool result: ${resultPreview}`);
 
-                    // Record tool execution in session if chatNoteId is provided
-                    if (chatNoteId) {
-                        SessionsStore.recordToolExecution(chatNoteId, toolCall, typeof result === 'string' ? result : JSON.stringify(result));
-                    }
-
                     // Format result as a proper message
                     return {
                         role: 'tool',
@@ -115,11 +109,6 @@ export class ToolHandler {
                     };
                 } catch (error: any) {
                     log.error(`Error executing tool ${toolCall.function.name}: ${error.message}`);
-
-                    // Record error in session if chatNoteId is provided
-                    if (chatNoteId) {
-                        SessionsStore.recordToolExecution(chatNoteId, toolCall, '', error.message);
-                    }
 
                     // Return error as tool result
                     return {

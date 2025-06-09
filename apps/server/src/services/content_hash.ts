@@ -7,6 +7,11 @@ import eraseService from "./erase.js";
 
 type SectorHash = Record<string, string>;
 
+interface FailedCheck {
+    entityName: string;
+    sector: string[1];
+}
+
 function getEntityHashes() {
     // blob erasure is not synced, we should check before each sync if there's some blob to erase
     eraseService.eraseUnusedBlobs();
@@ -56,7 +61,7 @@ function getEntityHashes() {
 
 function checkContentHashes(otherHashes: Record<string, SectorHash>) {
     const entityHashes = getEntityHashes();
-    const failedChecks = [];
+    const failedChecks: FailedCheck[] = [];
 
     for (const entityName in entityHashes) {
         const thisSectorHashes: SectorHash = entityHashes[entityName] || {};

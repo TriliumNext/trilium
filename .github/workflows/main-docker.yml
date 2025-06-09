@@ -53,7 +53,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
+        run: pnpx playwright install --with-deps
 
       - name: Run the TypeScript build
         run: pnpm run server:build
@@ -62,7 +62,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: apps/server
-          file: ${{ matrix.dockerfile }}
+          file: apps/server/${{ matrix.dockerfile }}
           load: true
           tags: ${{ env.TEST_TAG }}
           cache-from: type=gha
@@ -70,7 +70,7 @@ jobs:
 
       - name: Validate container run output
         run: |
-          CONTAINER_ID=$(docker run -d --log-driver=journald --rm --network=host -e TRILIUM_PORT=8082 --volume ./integration-tests/db:/home/node/trilium-data --name trilium_local ${{ env.TEST_TAG }})
+          CONTAINER_ID=$(docker run -d --log-driver=journald --rm --network=host -e TRILIUM_PORT=8082 --volume ./apps/server/spec/db:/home/node/trilium-data --name trilium_local ${{ env.TEST_TAG }})
           echo "Container ID: $CONTAINER_ID"
 
       - name: Wait for the healthchecks to pass
@@ -82,7 +82,7 @@ jobs:
           require-healthy: true
 
       - name: Run Playwright tests
-        run: TRILIUM_DOCKER=1 npx playwright test
+        run: TRILIUM_DOCKER=1 TRILIUM_PORT=8082 pnpx nx run server-e2e:e2e
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
@@ -111,6 +111,9 @@ jobs:
           - dockerfile: Dockerfile
             platform: linux/arm/v7
             image: ubuntu-24.04-arm
+          - dockerfile: Dockerfile
+            platform: linux/arm/v8
+            image: ubuntu-24.04-arm
     runs-on: ${{ matrix.image }}
     needs:
       - test_docker
@@ -129,7 +132,6 @@ jobs:
       - name: Set TEST_TAG to lowercase
         run: echo "TEST_TAG=${TEST_TAG,,}" >> $GITHUB_ENV
 
-
       - name: Checkout repository
         uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -141,6 +143,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Run the TypeScript build
+        run: pnpm run server:build
 
       - name: Update build info
         run: pnpm run chore:update-build-info
@@ -184,7 +189,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: apps/server
-          file: ${{ matrix.dockerfile }}
+          file: apps/server/${{ matrix.dockerfile }}
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.meta.outputs.labels }}
           outputs: type=image,name=${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true

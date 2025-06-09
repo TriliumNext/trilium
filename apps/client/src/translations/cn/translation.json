@@ -274,15 +274,15 @@
     "revision_last_edited": "此修订版本上次编辑于 {{date}}",
     "confirm_delete_all": "您是否要删除此笔记的所有修订版本？",
     "no_revisions": "此笔记暂无修订版本...",
-    "restore_button": "",
+    "restore_button": "恢复",
     "confirm_restore": "您是否要恢复此修订版本？这将使用此修订版本覆盖笔记的当前标题和内容。",
-    "delete_button": "",
+    "delete_button": "删除",
     "confirm_delete": "您是否要删除此修订版本？",
     "revisions_deleted": "笔记修订版本已删除。",
     "revision_restored": "笔记修订版本已恢复。",
     "revision_deleted": "笔记修订版本已删除。",
     "snapshot_interval": "笔记快照保存间隔: {{seconds}}秒。",
-    "maximum_revisions": "当前笔记的最历史数量: {{number}}。",
+    "maximum_revisions": "当前笔记的最大历史数量: {{number}}。",
     "settings": "笔记修订设置",
     "download_button": "下载",
     "mime": "MIME 类型：",
@@ -806,7 +806,7 @@
     "open_full": "展开显示",
     "collapse": "折叠到正常大小",
     "title": "笔记地图",
-    "fix-nodes": "修复节点",
+    "fix-nodes": "固定节点",
     "link-distance": "链接距离"
   },
   "note_paths": {
@@ -1213,7 +1213,7 @@
     "color": "字体颜色",
     "bg_color": "背景颜色",
     "visibility_title": "高亮列表可见性",
-    "visibility_description": "您可以通过添加 #hideHighlightWidget 标签来隐藏每个笔记的高亮小部件。",
+    "visibility_description": "您可以通过添加 #hideHighlightWidget 标签来隐藏单个笔记的高亮小部件。",
     "shortcut_info": "您可以在选项 -> 快捷键中为快速切换右侧面板（包括高亮列表）配置键盘快捷键（名称为 'toggleRightPane'）。"
   },
   "table_of_contents": {
@@ -1547,7 +1547,7 @@
     "close_other_tabs": "关闭其他标签页",
     "close_right_tabs": "关闭右侧标签页",
     "close_all_tabs": "关闭所有标签页",
-    "reopen_last_tab": "重新打开最后一个关闭的标签页",
+    "reopen_last_tab": "重新打开关闭的标签页",
     "move_tab_to_new_window": "将此标签页移动到新窗口",
     "copy_tab_to_new_window": "将此标签页复制到新窗口",
     "new_tab": "新标签页"
@@ -1616,29 +1616,32 @@
     "auto-detect-language": "自动检测"
   },
   "highlighting": {
-    "title": "文本笔记的代码语法高亮",
+    "title": "代码块",
     "description": "控制文本笔记中代码块的语法高亮，代码笔记不会受到影响。",
     "color-scheme": "颜色方案"
   },
   "code_block": {
-    "word_wrapping": "自动换行"
+    "word_wrapping": "自动换行",
+    "theme_none": "无语法高亮",
+    "theme_group_light": "浅色主题",
+    "theme_group_dark": "深色主题"
   },
   "classic_editor_toolbar": {
-    "title": "格式化"
+    "title": "格式"
   },
   "editor": {
     "title": "编辑器"
   },
   "editing": {
     "editor_type": {
-      "label": "格式化工具栏",
+      "label": "格式工具栏",
       "floating": {
         "title": "浮动",
         "description": "编辑工具出现在光标附近;"
       },
       "fixed": {
         "title": "固定",
-        "description": "编辑工具出现在 \"格式化\" 功能区标签中。"
+        "description": "编辑工具出现在 \"格式\" 功能区标签中。"
       },
       "multiline-toolbar": "如果工具栏无法完全显示，则分多行显示。"
     }

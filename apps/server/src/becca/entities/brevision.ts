@@ -75,7 +75,7 @@ class BRevision extends AbstractBeccaEntity<BRevision> {
     }
 
     /** @returns true if the note has string content (not binary) */
-    hasStringContent(): boolean {
+    override hasStringContent(): boolean {
         return utils.isStringNote(this.type, this.mime);
     }
 
@@ -179,7 +179,7 @@ class BRevision extends AbstractBeccaEntity<BRevision> {
         }
     }
 
-    beforeSaving() {
+    override beforeSaving() {
         super.beforeSaving();
 
         this.utcDateModified = dateUtils.utcNowDateTime();
@@ -204,7 +204,7 @@ class BRevision extends AbstractBeccaEntity<BRevision> {
         };
     }
 
-    getPojoToSave() {
+    override getPojoToSave() {
         const pojo = this.getPojo();
         delete pojo.content; // not getting persisted
         delete pojo.contentLength; // not getting persisted

@@ -58,8 +58,11 @@ async function getWithSilentNotFound<T>(url: string, componentId?: string) {
     return await call<T>("GET", url, componentId, { silentNotFound: true });
 }
 
-async function get<T>(url: string, componentId?: string) {
-    return await call<T>("GET", url, componentId);
+/**
+ * @param raw if `true`, the value will be returned as a string instead of a JavaScript object if JSON, XMLDocument if XML, etc.
+ */
+async function get<T>(url: string, componentId?: string, raw?: boolean) {
+    return await call<T>("GET", url, componentId, { raw });
 }
 
 async function post<T>(url: string, data?: unknown, componentId?: string) {
@@ -102,6 +105,8 @@ let maxKnownEntityChangeId = 0;
 interface CallOptions {
     data?: unknown;
     silentNotFound?: boolean;
+    // If `true`, the value will be returned as a string instead of a JavaScript object if JSON, XMLDocument if XML, etc.
+    raw?: boolean;
 }
 
 async function call<T>(method: string, url: string, componentId?: string, options: CallOptions = {}) {
@@ -132,7 +137,7 @@ async function call<T>(method: string, url: string, componentId?: string, option
             });
         })) as any;
     } else {
-        resp = await ajax(url, method, data, headers, !!options.silentNotFound);
+        resp = await ajax(url, method, data, headers, !!options.silentNotFound, options.raw);
     }
 
     const maxEntityChangeIdStr = resp.headers["trilium-max-entity-change-id"];
@@ -144,7 +149,10 @@ async function call<T>(method: string, url: string, componentId?: string, option
     return resp.body as T;
 }
 
-function ajax(url: string, method: string, data: unknown, headers: Headers, silentNotFound: boolean): Promise<Response> {
+/**
+ * @param raw if `true`, the value will be returned as a string instead of a JavaScript object if JSON, XMLDocument if XML, etc.
+ */
+function ajax(url: string, method: string, data: unknown, headers: Headers, silentNotFound: boolean, raw?: boolean): Promise<Response> {
     return new Promise((res, rej) => {
         const options: JQueryAjaxSettings = {
             url: window.glob.baseApiUrl + url,
@@ -185,6 +193,10 @@ function ajax(url: string, method: string, data: unknown, headers: Headers, sile
                 rej(jqXhr.responseText);
             }
         };
+
+        if (raw) {
+            options.dataType = "text";
+        }
 
         if (data) {
             try {

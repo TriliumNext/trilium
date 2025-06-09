@@ -12,6 +12,11 @@ interface Backlink {
     excerpts?: string[];
 }
 
+interface TreeLink {
+    sourceNoteId: string;
+    targetNoteId: string;
+}
+
 function buildDescendantCountMap(noteIdsToCount: string[]) {
     if (!Array.isArray(noteIdsToCount)) {
         throw new Error("noteIdsToCount: type error");
@@ -50,7 +55,7 @@ function getNeighbors(note: BNote, depth: number): string[] {
         return [];
     }
 
-    const retNoteIds = [];
+    const retNoteIds: string[] = [];
 
     function isIgnoredRelation(relation: BAttribute) {
         return ["relationMapLink", "template", "inherit", "image", "ancestor"].includes(relation.name);
@@ -116,7 +121,7 @@ function getLinkMap(req: Request) {
         }).notes;
     }
 
-    const noteIds = new Set(unfilteredNotes.filter((note) => ignoreExcludeFromNoteMap || !note.isLabelTruthy("excludeFromNoteMap")).map((note) => note.noteId));
+    const noteIds = new Set<string>(unfilteredNotes.filter((note) => ignoreExcludeFromNoteMap || !note.isLabelTruthy("excludeFromNoteMap")).map((note) => note.noteId));
 
     if (mapRootNote.type === "search") {
         noteIds.delete(mapRootNote.noteId);
@@ -196,7 +201,7 @@ function getTreeMap(req: Request) {
     const noteIds = new Set<string>();
     notes.forEach(([noteId]) => noteId && noteIds.add(noteId));
 
-    const links = [];
+    const links: TreeLink[] = [];
 
     for (const { parentNoteId, childNoteId } of subtree.relationships) {
         if (!noteIds.has(parentNoteId) || !noteIds.has(childNoteId)) {
@@ -246,7 +251,7 @@ function findExcerpts(sourceNote: BNote, referencedNoteId: string) {
     const html = sourceNote.getContent();
     const document = new JSDOM(html).window.document;
 
-    const excerpts = [];
+    const excerpts: string[] = [];
 
     removeImages(document);
 

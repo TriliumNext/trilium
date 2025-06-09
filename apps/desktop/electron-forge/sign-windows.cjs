@@ -1,12 +1,9 @@
 const child_process = require("child_process");
 const fs = require("fs");
-const { default: path } = require("path");
+const path = require("path");
 
 module.exports = function (filePath) {
     const { WINDOWS_SIGN_EXECUTABLE } = process.env;
-
-    const stats = fs.lstatSync(filePath);
-    console.log(filePath, stats);
 
     if (!WINDOWS_SIGN_EXECUTABLE) {
         console.warn("[Sign] Skip signing due to missing environment variable.");
@@ -19,11 +16,15 @@ module.exports = function (filePath) {
       fs.mkdirSync(outputDir);
     }
 
-    fs.copyFileSync(sourcePath, destPath);
-
     const command = `${WINDOWS_SIGN_EXECUTABLE} --executable "${filePath}"`;
-    console.log(`[Sign] ${command}`);
+    console.log(`[Sign] Running ${command}`);
 
-    const output = child_process.execSync(command);
-    console.log(`[Sign] ${output}`);
+    try {
+      child_process.execSync(command);
+    } catch (e) {
+      console.warn(`[Sign] Unable to sign ${filePath} due to:\n${e.stdout.toString("utf-8")})}`)
+      return;
+    }
+
+    console.log(`[Sign] Signed ${filePath} successfully.`);
 }

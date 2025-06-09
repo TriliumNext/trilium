@@ -21,7 +21,7 @@ interface RecentChangeRow {
 function getRecentChanges(req: Request) {
     const { ancestorNoteId } = req.params;
 
-    let recentChanges = [];
+    let recentChanges: RecentChangeRow[] = [];
 
     const revisionRows = sql.getRows<RecentChangeRow>(`
         SELECT

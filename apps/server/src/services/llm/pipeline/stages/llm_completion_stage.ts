@@ -104,7 +104,7 @@ export class LLMCompletionStage extends BasePipelineStage<LLMCompletionInput, { 
 
         // Use specific provider if available
         if (selectedProvider && aiServiceManager.isProviderAvailable(selectedProvider)) {
-            const service = aiServiceManager.getService(selectedProvider);
+            const service = await aiServiceManager.getService(selectedProvider);
             log.info(`[LLMCompletionStage] Using specific service for ${selectedProvider}`);
 
             // Generate completion and wrap with enhanced stream handling

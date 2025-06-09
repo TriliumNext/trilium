@@ -5,7 +5,7 @@ interface FileUploadOpts {
 }
 
 export default class FileUploadCommand extends Command {
-	refresh() {
+	override refresh() {
 		this.isEnabled = true;
 	}
 
@@ -16,7 +16,7 @@ export default class FileUploadCommand extends Command {
 	 * @param {Object} options Options for the executed command.
 	 * @param {File|Array.<File>} options.file The file or an array of files to upload.
 	 */
-	execute( options: FileUploadOpts ) {
+	override execute( options: FileUploadOpts ) {
 		const editor = this.editor;
 		const model = editor.model;
 

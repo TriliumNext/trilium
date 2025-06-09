@@ -103,7 +103,7 @@ class BAttachment extends AbstractBeccaEntity<BAttachment> {
     }
 
     /** @returns true if the note has string content (not binary) */
-    hasStringContent(): boolean {
+    override hasStringContent(): boolean {
         return utils.isStringNote(this.type, this.mime); // here was !== undefined && utils.isStringNote(this.type, this.mime); I dont know why we need !=undefined. But it filters out canvas libary items
     }
 
@@ -203,7 +203,7 @@ class BAttachment extends AbstractBeccaEntity<BAttachment> {
         return utils.formatDownloadTitle(this.title, type, this.mime);
     }
 
-    beforeSaving() {
+    override beforeSaving() {
         super.beforeSaving();
 
         if (this.position === undefined || this.position === null) {
@@ -239,7 +239,7 @@ class BAttachment extends AbstractBeccaEntity<BAttachment> {
         };
     }
 
-    getPojoToSave() {
+    override getPojoToSave() {
         const pojo = this.getPojo();
         delete pojo.contentLength;
 

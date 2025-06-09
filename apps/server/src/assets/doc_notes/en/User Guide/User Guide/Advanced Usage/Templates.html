@@ -40,7 +40,19 @@
   you can also mark templates with <code>#workspaceTemplate</code> to display
   them only in the workspace.</p>
 <p>Templates can also be added or changed after note creation by creating
-  a <code>~template</code> relation pointing to the desired template note.</p>
+  a <code>~template</code> relation pointing to the desired template note.&nbsp;</p>
+<p>To specify a template for child notes, you can use a <code>~child:template</code> relation
+  pointing to the appropriate template note. There is no limit to the depth
+  of the hierarchy — you can use <code>~child:child:template</code>, <code>~child:child:child:template</code>,
+  and so on.</p>
+<aside class="admonition important">
+  <p>Changing the template hierarchy after the parent note is created will
+    not retroactively apply to newly created child notes.
+    <br>For example, if you initially use <code>~child:template</code> and later
+    switch to <code>~child:child:template</code>, it will not automatically
+    apply the new template to the grandchild notes. Only the structure present
+    at the time of note creation is considered.</p>
+</aside>
 <h2>Additional Notes</h2>
 <p>From a visual perspective, templates can define <code>#iconClass</code> and <code>#cssClass</code> attributes,
   allowing all instance notes (e.g., books) to display a specific icon and

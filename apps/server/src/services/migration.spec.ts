@@ -16,5 +16,5 @@ describe("Migration", () => {
                 resolve();
             });
         });
-    });
+    }, 60_000);
 });

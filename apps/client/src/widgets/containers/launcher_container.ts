@@ -29,7 +29,7 @@ export default class LauncherContainer extends FlexContainer<LauncherWidget> {
             return;
         }
 
-        const newChildren = [];
+        const newChildren: LauncherWidget[] = [];
 
         for (const launcherNote of await visibleLaunchersRoot.getChildNotes()) {
             try {

@@ -1,6 +1,6 @@
 "use strict";
 
-import scriptService from "../../services/script.js";
+import scriptService, { type Bundle } from "../../services/script.js";
 import attributeService from "../../services/attributes.js";
 import becca from "../../becca/becca.js";
 import syncService from "../../services/sync.js";
@@ -54,7 +54,7 @@ function run(req: Request) {
 function getBundlesWithLabel(label: string, value?: string) {
     const notes = attributeService.getNotesWithLabel(label, value);
 
-    const bundles = [];
+    const bundles: Bundle[] = [];
 
     for (const note of notes) {
         const bundle = scriptService.getScriptBundleForFrontend(note);
@@ -97,7 +97,7 @@ function getRelationBundles(req: Request) {
     const targetNoteIds = filtered.map((relation) => relation.value);
     const uniqueNoteIds = Array.from(new Set(targetNoteIds));
 
-    const bundles = [];
+    const bundles: Bundle[] = [];
 
     for (const noteId of uniqueNoteIds) {
         const note = becca.getNoteOrThrow(noteId);

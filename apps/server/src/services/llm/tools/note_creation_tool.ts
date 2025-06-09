@@ -9,6 +9,7 @@ import log from '../../log.js';
 import becca from '../../../becca/becca.js';
 import notes from '../../notes.js';
 import attributes from '../../attributes.js';
+import type { BNote } from '../../backend_script_entrypoint.js';
 
 /**
  * Definition of the note creation tool
@@ -89,7 +90,7 @@ export class NoteCreationTool implements ToolHandler {
             log.info(`Executing create_note tool - Title: "${title}", Type: ${type}, ParentNoteId: ${parentNoteId || 'root'}`);
 
             // Validate parent note exists if specified
-            let parent = null;
+            let parent: BNote | null = null;
             if (parentNoteId) {
                 parent = becca.notes[parentNoteId];
                 if (!parent) {

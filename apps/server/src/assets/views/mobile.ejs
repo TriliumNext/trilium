@@ -10,9 +10,6 @@
     <title>TriliumNext Notes</title>
     <link rel="manifest" crossorigin="use-credentials" href="manifest.webmanifest">
 
-    <% // TriliumNextTODO: move the css file to ${assetPath}/stylesheets/  %>
-    <link rel="stylesheet" href="<%= appPath %>/mobile.css">
-
     <style>
         .lds-roller {
             display: inline-block;
@@ -111,26 +108,27 @@
 
 <%- include("./partials/windowGlobal.ejs", locals) %>
 
-<script src="<%= assetPath %>/node_modules/jquery/dist/jquery.min.js"></script>
-
-<script src="<%= assetPath %>/node_modules/autocomplete.js/dist/autocomplete.jquery.min.js"></script>
-
-<link href="<%= assetPath %>/stylesheets/tree.css" rel="stylesheet">
-<script src="<%= assetPath %>/node_modules/jquery.fancytree/dist/jquery.fancytree-all-deps.min.js"></script>
-
 <script src="<%= appPath %>/runtime.js" crossorigin type="module"></script>
 <script src="<%= appPath %>/mobile.js" crossorigin type="module"></script>
 
 <link href="api/fonts" rel="stylesheet">
+<link rel="stylesheet" href="<%= appPath %>/bootstrap.css">
 <link href="<%= assetPath %>/stylesheets/ckeditor-theme.css" rel="stylesheet">
 <link href="<%= assetPath %>/stylesheets/theme-light.css" rel="stylesheet">
 <% if (themeCssUrl) { %>
     <link href="<%= themeCssUrl %>" rel="stylesheet">
 <% } %>
+
+<% if (themeUseNextAsBase === "next") { %>
+  <link href="<%= assetPath %>/stylesheets/theme-next.css" rel="stylesheet">
+<% } else if (themeUseNextAsBase === "next-dark") { %>
+  <link href="<%= assetPath %>/stylesheets/theme-next-dark.css" rel="stylesheet">
+<% } else if (themeUseNextAsBase === "next-light") { %>
+  <link href="<%= assetPath %>/stylesheets/theme-next-light.css" rel="stylesheet">
+<% } %>
+
 <link href="<%= assetPath %>/stylesheets/style.css" rel="stylesheet">
 <link href="<%= assetPath %>/stylesheets/print.css" rel="stylesheet" media="print">
-
-<link rel="stylesheet" type="text/css" href="<%= assetPath %>/node_modules/boxicons/css/boxicons.min.css">
 
 </body>
 </html>

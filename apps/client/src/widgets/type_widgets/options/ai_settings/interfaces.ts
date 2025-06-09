@@ -11,43 +11,10 @@ export interface OllamaModelResponse {
     }>;
 }
 
-// Interface for embedding statistics
-export interface EmbeddingStats {
-    success: boolean;
-    stats: {
-        totalNotesCount: number;
-        embeddedNotesCount: number;
-        queuedNotesCount: number;
-        failedNotesCount: number;
-        lastProcessedDate: string | null;
-        percentComplete: number;
-    }
-}
-
-// Interface for failed embedding notes
-export interface FailedEmbeddingNotes {
-    success: boolean;
-    failedNotes: Array<{
-        noteId: string;
-        title?: string;
-        operation: string;
-        attempts: number;
-        lastAttempt: string;
-        error: string;
-        failureType: string;
-        chunks: number;
-        isPermanent: boolean;
-    }>;
-}
 
 export interface OpenAIModelResponse {
     success: boolean;
     chatModels: Array<{
-        id: string;
-        name: string;
-        type: string;
-    }>;
-    embeddingModels: Array<{
         id: string;
         name: string;
         type: string;
@@ -57,11 +24,6 @@ export interface OpenAIModelResponse {
 export interface AnthropicModelResponse {
     success: boolean;
     chatModels: Array<{
-        id: string;
-        name: string;
-        type: string;
-    }>;
-    embeddingModels: Array<{
         id: string;
         name: string;
         type: string;

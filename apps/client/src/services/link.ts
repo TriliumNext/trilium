@@ -48,6 +48,13 @@ export interface ViewScope {
     viewMode?: ViewMode;
     attachmentId?: string;
     readOnlyTemporarilyDisabled?: boolean;
+    /**
+     * If true, it indicates that the note in the view should be opened in read-only mode (for supported note types such as text or code).
+     *
+     * The reason why we store this information here is that a note can become read-only as the user types content in it, and we wouldn't want
+     * to immediately enter read-only mode.
+     */
+    isReadOnly?: boolean;
     highlightsListPreviousVisible?: boolean;
     highlightsListTemporarilyHidden?: boolean;
     tocTemporarilyHidden?: boolean;
@@ -58,6 +65,7 @@ export interface ViewScope {
      * toc will appear and then close immediately, because getToc(html) function will consume time
      */
     tocPreviousVisible?: boolean;
+    tocCollapsedHeadings?:  Set<string>;
 }
 
 interface CreateLinkOptions {
@@ -203,8 +211,14 @@ export function parseNavigationStateFromUrl(url: string | undefined) {
         return {};
     }
 
+    url = url.trim();
     const hashIdx = url.indexOf("#");
     if (hashIdx === -1) {
+        return {};
+    }
+
+    // Exclude external links that contain #
+    if (hashIdx !== 0 && !url.includes("/#root") && !url.includes("/#?searchString")) {
         return {};
     }
 
@@ -214,9 +228,9 @@ export function parseNavigationStateFromUrl(url: string | undefined) {
     const viewScope: ViewScope = {
         viewMode: "default"
     };
-    let ntxId = null;
-    let hoistedNoteId = null;
-    let searchString = null;
+    let ntxId: string | null = null;
+    let hoistedNoteId: string | null = null;
+    let searchString: string | null = null;
 
     if (paramString) {
         for (const pair of paramString.split("&")) {
@@ -271,8 +285,10 @@ function goToLinkExt(evt: MouseEvent | JQuery.ClickEvent | JQuery.MouseDownEvent
     evt.preventDefault();
     evt.stopPropagation();
 
-    if (hrefLink?.startsWith("#fn") && $link) {
-        return handleFootnote(hrefLink, $link);
+    if (hrefLink && hrefLink.startsWith("#") && !hrefLink.startsWith("#root/") && $link) {
+        if (handleAnchor(hrefLink, $link)) {
+            return true;
+        }
     }
 
     const { notePath, viewScope } = parseNavigationStateFromUrl(hrefLink);
@@ -334,18 +350,19 @@ function goToLinkExt(evt: MouseEvent | JQuery.ClickEvent | JQuery.MouseDownEvent
 }
 
 /**
- * Scrolls to either the footnote (if clicking on a reference such as `[1]`), or to the reference of a footnote (if clicking on the footnote `^` arrow).
+ * Scrolls to either the footnote (if clicking on a reference such as `[1]`), or to the reference of a footnote (if clicking on the footnote `^` arrow),
+ * or CKEditor bookmarks.
  *
  * @param hrefLink the URL of the link that was clicked (it should be in the form of `#fn` or `#fnref`).
  * @param $link the element of the link that was clicked.
- * @returns whether the event should be consumed or not.
+ * @returns `true` if the link was handled (i.e., the element was found and scrolled to), `false` otherwise.
  */
-function handleFootnote(hrefLink: string, $link: JQuery<HTMLElement>) {
+function handleAnchor(hrefLink: string, $link: JQuery<HTMLElement>) {
     const el = $link.closest(".ck-content").find(hrefLink)[0];
     if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "center" });
     }
-    return true;
+    return !!el;
 }
 
 function linkContextMenu(e: PointerEvent) {

@@ -1,17 +1,21 @@
+# Mark files as auto-generated to simplify reviews.
 package-lock.json linguist-generated=true
 **/package-lock.json linguist-generated=true
+apps/server/src/assets/doc_notes/en/User[[:space:]]Guide/** linguist-generated
 
-apps/server/src/assets/doc_notes/en/User[[:space:]]Guide/** linguist-generated=true 
+# Ignore from GitHub language stats.
 apps/server/src/assets/doc_notes/en/User[[:space:]]Guide/**/*.html eol=lf
+apps/server/src/assets/doc_notes/** linguist-vendored=true
+apps/edit-docs/demo/** linguist-vendored=true
+docs/** linguist-vendored=true
 
+# Normalize line endings.
 docs/**/*.md eol=lf
 docs/**/*.json eol=lf
-
 demo/**/*.html eol=lf
 demo/**/*.json eol=lf
 demo/**/*.svg eol=lf
 demo/**/*.txt eol=lf
 demo/**/*.js eol=lf
 demo/**/*.css eol=lf
-
-apps/client/src/libraries/** linguist-vendored
+*.sh eol=lf

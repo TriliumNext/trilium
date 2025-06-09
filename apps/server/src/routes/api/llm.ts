@@ -2,10 +2,7 @@ import type { Request, Response } from "express";
 import log from "../../services/log.js";
 import options from "../../services/options.js";
 
-// Import the index service for knowledge base management
-import indexService from "../../services/llm/index_service.js";
 import restChatService from "../../services/llm/rest_chat_service.js";
-import chatService from '../../services/llm/chat_service.js';
 import chatStorageService from '../../services/llm/chat_storage_service.js';
 
 // Define basic interfaces
@@ -190,23 +187,26 @@ async function getSession(req: Request, res: Response) {
  *     tags: ["llm"]
  */
 async function updateSession(req: Request, res: Response) {
-    // Get the chat using ChatService
+    // Get the chat using chatStorageService directly
     const chatNoteId = req.params.chatNoteId;
     const updates = req.body;
 
     try {
         // Get the chat
-        const session = await chatService.getOrCreateSession(chatNoteId);
+        const chat = await chatStorageService.getChat(chatNoteId);
+        if (!chat) {
+            throw new Error(`Chat with ID ${chatNoteId} not found`);
+        }
 
         // Update title if provided
         if (updates.title) {
-            await chatStorageService.updateChat(chatNoteId, session.messages, updates.title);
+            await chatStorageService.updateChat(chatNoteId, chat.messages, updates.title);
         }
 
         // Return the updated chat
         return {
             id: chatNoteId,
-            title: updates.title || session.title,
+            title: updates.title || chat.title,
             updatedAt: new Date()
         };
     } catch (error) {
@@ -248,18 +248,18 @@ async function updateSession(req: Request, res: Response) {
  *     tags: ["llm"]
  */
 async function listSessions(req: Request, res: Response) {
-    // Get all sessions using ChatService
+    // Get all sessions using chatStorageService directly
     try {
-        const sessions = await chatService.getAllSessions();
+        const chats = await chatStorageService.getAllChats();
 
         // Format the response
         return {
-            sessions: sessions.map(session => ({
-                id: session.id,
-                title: session.title,
-                createdAt: new Date(), // Since we don't have this in chat sessions
-                lastActive: new Date(), // Since we don't have this in chat sessions
-                messageCount: session.messages.length
+            sessions: chats.map(chat => ({
+                id: chat.id,
+                title: chat.title,
+                createdAt: chat.createdAt || new Date(),
+                lastActive: chat.updatedAt || new Date(),
+                messageCount: chat.messages.length
             }))
         };
     } catch (error) {
@@ -369,400 +369,13 @@ async function sendMessage(req: Request, res: Response) {
     return restChatService.handleSendMessage(req, res);
 }
 
-/**
- * @swagger
- * /api/llm/indexes/stats:
- *   get:
- *     summary: Get stats about the LLM knowledge base indexing status
- *     operationId: llm-index-stats
- *     responses:
- *       '200':
- *         description: Index stats successfully retrieved
- *     security:
- *       - session: []
- *     tags: ["llm"]
- */
-async function getIndexStats(req: Request, res: Response) {
-    try {
-        // Check if AI is enabled
-        const aiEnabled = await options.getOptionBool('aiEnabled');
-        if (!aiEnabled) {
-            return {
-                success: false,
-                message: "AI features are disabled"
-            };
-        }
 
-        // Return indexing stats
-        const stats = await indexService.getIndexingStats();
-        return {
-            success: true,
-            ...stats
-        };
-    } catch (error: any) {
-        log.error(`Error getting index stats: ${error.message || 'Unknown error'}`);
-        throw new Error(`Failed to get index stats: ${error.message || 'Unknown error'}`);
-    }
-}
 
-/**
- * @swagger
- * /api/llm/indexes:
- *   post:
- *     summary: Start or continue indexing the knowledge base
- *     operationId: llm-start-indexing
- *     requestBody:
- *       required: false
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               force:
- *                 type: boolean
- *                 description: Whether to force reindexing of all notes
- *     responses:
- *       '200':
- *         description: Indexing started successfully
- *     security:
- *       - session: []
- *     tags: ["llm"]
- */
-async function startIndexing(req: Request, res: Response) {
-    try {
-        // Check if AI is enabled
-        const aiEnabled = await options.getOptionBool('aiEnabled');
-        if (!aiEnabled) {
-            return {
-                success: false,
-                message: "AI features are disabled"
-            };
-        }
 
-        const { force = false } = req.body;
 
-        // Start indexing
-        await indexService.startFullIndexing(force);
 
-        return {
-            success: true,
-            message: "Indexing started"
-        };
-    } catch (error: any) {
-        log.error(`Error starting indexing: ${error.message || 'Unknown error'}`);
-        throw new Error(`Failed to start indexing: ${error.message || 'Unknown error'}`);
-    }
-}
 
-/**
- * @swagger
- * /api/llm/indexes/failed:
- *   get:
- *     summary: Get list of notes that failed to index
- *     operationId: llm-failed-indexes
- *     parameters:
- *       - name: limit
- *         in: query
- *         required: false
- *         schema:
- *           type: integer
- *           default: 100
- *     responses:
- *       '200':
- *         description: Failed indexes successfully retrieved
- *     security:
- *       - session: []
- *     tags: ["llm"]
- */
-async function getFailedIndexes(req: Request, res: Response) {
-    try {
-        // Check if AI is enabled
-        const aiEnabled = await options.getOptionBool('aiEnabled');
-        if (!aiEnabled) {
-            return {
-                success: false,
-                message: "AI features are disabled"
-            };
-        }
 
-        const limit = parseInt(req.query.limit as string || "100", 10);
-
-        // Get failed indexes
-        const failed = await indexService.getFailedIndexes(limit);
-
-        return {
-            success: true,
-            failed
-        };
-    } catch (error: any) {
-        log.error(`Error getting failed indexes: ${error.message || 'Unknown error'}`);
-        throw new Error(`Failed to get failed indexes: ${error.message || 'Unknown error'}`);
-    }
-}
-
-/**
- * @swagger
- * /api/llm/indexes/notes/{noteId}:
- *   put:
- *     summary: Retry indexing a specific note that previously failed
- *     operationId: llm-retry-index
- *     parameters:
- *       - name: noteId
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       '200':
- *         description: Index retry successfully initiated
- *     security:
- *       - session: []
- *     tags: ["llm"]
- */
-async function retryFailedIndex(req: Request, res: Response) {
-    try {
-        // Check if AI is enabled
-        const aiEnabled = await options.getOptionBool('aiEnabled');
-        if (!aiEnabled) {
-            return {
-                success: false,
-                message: "AI features are disabled"
-            };
-        }
-
-        const { noteId } = req.params;
-
-        // Retry indexing the note
-        const result = await indexService.retryFailedNote(noteId);
-
-        return {
-            success: true,
-            message: result ? "Note queued for indexing" : "Failed to queue note for indexing"
-        };
-    } catch (error: any) {
-        log.error(`Error retrying failed index: ${error.message || 'Unknown error'}`);
-        throw new Error(`Failed to retry index: ${error.message || 'Unknown error'}`);
-    }
-}
-
-/**
- * @swagger
- * /api/llm/indexes/failed:
- *   put:
- *     summary: Retry indexing all failed notes
- *     operationId: llm-retry-all-indexes
- *     responses:
- *       '200':
- *         description: Retry of all failed indexes successfully initiated
- *     security:
- *       - session: []
- *     tags: ["llm"]
- */
-async function retryAllFailedIndexes(req: Request, res: Response) {
-    try {
-        // Check if AI is enabled
-        const aiEnabled = await options.getOptionBool('aiEnabled');
-        if (!aiEnabled) {
-            return {
-                success: false,
-                message: "AI features are disabled"
-            };
-        }
-
-        // Retry all failed notes
-        const count = await indexService.retryAllFailedNotes();
-
-        return {
-            success: true,
-            message: `${count} notes queued for reprocessing`
-        };
-    } catch (error: any) {
-        log.error(`Error retrying all failed indexes: ${error.message || 'Unknown error'}`);
-        throw new Error(`Failed to retry all indexes: ${error.message || 'Unknown error'}`);
-    }
-}
-
-/**
- * @swagger
- * /api/llm/indexes/notes/similar:
- *   get:
- *     summary: Find notes similar to a query string
- *     operationId: llm-find-similar-notes
- *     parameters:
- *       - name: query
- *         in: query
- *         required: true
- *         schema:
- *           type: string
- *       - name: contextNoteId
- *         in: query
- *         required: false
- *         schema:
- *           type: string
- *       - name: limit
- *         in: query
- *         required: false
- *         schema:
- *           type: integer
- *           default: 5
- *     responses:
- *       '200':
- *         description: Similar notes found successfully
- *     security:
- *       - session: []
- *     tags: ["llm"]
- */
-async function findSimilarNotes(req: Request, res: Response) {
-    try {
-        // Check if AI is enabled
-        const aiEnabled = await options.getOptionBool('aiEnabled');
-        if (!aiEnabled) {
-            return {
-                success: false,
-                message: "AI features are disabled"
-            };
-        }
-
-        const query = req.query.query as string;
-        const contextNoteId = req.query.contextNoteId as string | undefined;
-        const limit = parseInt(req.query.limit as string || "5", 10);
-
-        if (!query) {
-            return {
-                success: false,
-                message: "Query is required"
-            };
-        }
-
-        // Find similar notes
-        const similar = await indexService.findSimilarNotes(query, contextNoteId, limit);
-
-        return {
-            success: true,
-            similar
-        };
-    } catch (error: any) {
-        log.error(`Error finding similar notes: ${error.message || 'Unknown error'}`);
-        throw new Error(`Failed to find similar notes: ${error.message || 'Unknown error'}`);
-    }
-}
-
-/**
- * @swagger
- * /api/llm/indexes/context:
- *   get:
- *     summary: Generate context for an LLM query based on the knowledge base
- *     operationId: llm-generate-context
- *     parameters:
- *       - name: query
- *         in: query
- *         required: true
- *         schema:
- *           type: string
- *       - name: contextNoteId
- *         in: query
- *         required: false
- *         schema:
- *           type: string
- *       - name: depth
- *         in: query
- *         required: false
- *         schema:
- *           type: integer
- *           default: 2
- *     responses:
- *       '200':
- *         description: Context generated successfully
- *     security:
- *       - session: []
- *     tags: ["llm"]
- */
-async function generateQueryContext(req: Request, res: Response) {
-    try {
-        // Check if AI is enabled
-        const aiEnabled = await options.getOptionBool('aiEnabled');
-        if (!aiEnabled) {
-            return {
-                success: false,
-                message: "AI features are disabled"
-            };
-        }
-
-        const query = req.query.query as string;
-        const contextNoteId = req.query.contextNoteId as string | undefined;
-        const depth = parseInt(req.query.depth as string || "2", 10);
-
-        if (!query) {
-            return {
-                success: false,
-                message: "Query is required"
-            };
-        }
-
-        // Generate context
-        const context = await indexService.generateQueryContext(query, contextNoteId, depth);
-
-        return {
-            success: true,
-            context
-        };
-    } catch (error: any) {
-        log.error(`Error generating query context: ${error.message || 'Unknown error'}`);
-        throw new Error(`Failed to generate query context: ${error.message || 'Unknown error'}`);
-    }
-}
-
-/**
- * @swagger
- * /api/llm/indexes/notes/{noteId}:
- *   post:
- *     summary: Index a specific note for LLM knowledge base
- *     operationId: llm-index-note
- *     parameters:
- *       - name: noteId
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       '200':
- *         description: Note indexed successfully
- *     security:
- *       - session: []
- *     tags: ["llm"]
- */
-async function indexNote(req: Request, res: Response) {
-    try {
-        // Check if AI is enabled
-        const aiEnabled = await options.getOptionBool('aiEnabled');
-        if (!aiEnabled) {
-            return {
-                success: false,
-                message: "AI features are disabled"
-            };
-        }
-
-        const { noteId } = req.params;
-
-        if (!noteId) {
-            return {
-                success: false,
-                message: "Note ID is required"
-            };
-        }
-
-        // Index the note
-        const result = await indexService.generateNoteIndex(noteId);
-
-        return {
-            success: true,
-            message: result ? "Note indexed successfully" : "Failed to index note"
-        };
-    } catch (error: any) {
-        log.error(`Error indexing note: ${error.message || 'Unknown error'}`);
-        throw new Error(`Failed to index note: ${error.message || 'Unknown error'}`);
-    }
-}
 
 /**
  * @swagger
@@ -808,117 +421,121 @@ async function streamMessage(req: Request, res: Response) {
     log.info("=== Starting streamMessage ===");
     try {
         const chatNoteId = req.params.chatNoteId;
-        const { content, useAdvancedContext, showThinking } = req.body;
+        const { content, useAdvancedContext, showThinking, mentions } = req.body;
 
         if (!content || typeof content !== 'string' || content.trim().length === 0) {
-            throw new Error('Content cannot be empty');
+            return res.status(400).json({
+                success: false,
+                error: 'Content cannot be empty'
+            });
         }
+        
+        // IMPORTANT: Immediately send a success response to the initial POST request
+        // The client is waiting for this to confirm streaming has been initiated
+        res.status(200).json({
+            success: true,
+            message: 'Streaming initiated successfully'
+        });
+        
+        // Mark response as handled to prevent apiResultHandler from processing it again
+        (res as any).triliumResponseHandled = true;
+        
+        
+        // Create a new response object for streaming through WebSocket only
+        // We won't use HTTP streaming since we've already sent the HTTP response
 
-        // Check if session exists
-        const session = restChatService.getSessions().get(chatNoteId);
-        if (!session) {
-            throw new Error('Chat not found');
+        // Get or create chat directly from storage (simplified approach)
+        let chat = await chatStorageService.getChat(chatNoteId);
+        if (!chat) {
+            // Create a new chat if it doesn't exist
+            chat = await chatStorageService.createChat('New Chat');
+            log.info(`Created new chat with ID: ${chat.id} for stream request`);
         }
-
-        // Update last active timestamp
-        session.lastActive = new Date();
-
-        // Add user message to the session
-        session.messages.push({
+        
+        // Add the user message to the chat immediately
+        chat.messages.push({
             role: 'user',
-            content,
-            timestamp: new Date()
+            content
         });
+        // Save the chat to ensure the user message is recorded
+        await chatStorageService.updateChat(chat.id, chat.messages, chat.title);
 
-        // Create request parameters for the pipeline
-        const requestParams = {
-            chatNoteId: chatNoteId,
-            content,
-            useAdvancedContext: useAdvancedContext === true,
-            showThinking: showThinking === true,
-            stream: true // Always stream for this endpoint
-        };
+        // Process mentions if provided
+        let enhancedContent = content;
+        if (mentions && Array.isArray(mentions) && mentions.length > 0) {
+            log.info(`Processing ${mentions.length} note mentions`);
 
-        // Create a fake request/response pair to pass to the handler
-        const fakeReq = {
-            ...req,
-            method: 'GET', // Set to GET to indicate streaming
-            query: {
-                stream: 'true', // Set stream param - don't use format: 'stream' to avoid confusion
-                useAdvancedContext: String(useAdvancedContext === true),
-                showThinking: String(showThinking === true)
-            },
-            params: {
-                chatNoteId: chatNoteId
-            },
-            // Make sure the original content is available to the handler
-            body: {
-                content,
-                useAdvancedContext: useAdvancedContext === true,
-                showThinking: showThinking === true
+            // Import note service to get note content
+            const becca = (await import('../../becca/becca.js')).default;
+            const mentionContexts: string[] = [];
+
+            for (const mention of mentions) {
+                try {
+                    const note = becca.getNote(mention.noteId);
+                    if (note && !note.isDeleted) {
+                        const noteContent = note.getContent();
+                        if (noteContent && typeof noteContent === 'string' && noteContent.trim()) {
+                            mentionContexts.push(`\n\n--- Content from "${mention.title}" (${mention.noteId}) ---\n${noteContent}\n--- End of "${mention.title}" ---`);
+                            log.info(`Added content from note "${mention.title}" (${mention.noteId})`);
+                        }
+                    } else {
+                        log.info(`Referenced note not found or deleted: ${mention.noteId}`);
+                    }
+                } catch (error) {
+                    log.error(`Error retrieving content for note ${mention.noteId}: ${error}`);
+                }
             }
-        } as unknown as Request;
 
-        // Log to verify correct parameters
-        log.info(`WebSocket stream settings - useAdvancedContext=${useAdvancedContext === true}, in query=${fakeReq.query.useAdvancedContext}, in body=${fakeReq.body.useAdvancedContext}`);
-        // Extra safety to ensure the parameters are passed correctly
-        if (useAdvancedContext === true) {
-            log.info(`Enhanced context IS enabled for this request`);
-        } else {
-            log.info(`Enhanced context is NOT enabled for this request`);
+            // Enhance the content with note references
+            if (mentionContexts.length > 0) {
+                enhancedContent = `${content}\n\n=== Referenced Notes ===\n${mentionContexts.join('\n')}`;
+                log.info(`Enhanced content with ${mentionContexts.length} note references`);
+            }
         }
 
-        // Process the request in the background
-        Promise.resolve().then(async () => {
-            try {
-                await restChatService.handleSendMessage(fakeReq, res);
-            } catch (error) {
-                log.error(`Background message processing error: ${error}`);
-
-                // Import the WebSocket service
-                const wsService = (await import('../../services/ws.js')).default;
-
-                // Define LLMStreamMessage interface
-                interface LLMStreamMessage {
-                    type: 'llm-stream';
-                    chatNoteId: string;
-                    content?: string;
-                    thinking?: string;
-                    toolExecution?: any;
-                    done?: boolean;
-                    error?: string;
-                    raw?: unknown;
-                }
-
-                // Send error to client via WebSocket
-                wsService.sendMessageToAllClients({
-                    type: 'llm-stream',
-                    chatNoteId: chatNoteId,
-                    error: `Error processing message: ${error}`,
-                    done: true
-                } as LLMStreamMessage);
-            }
-        });
-
-        // Import the WebSocket service
+        // Import the WebSocket service to send immediate feedback
         const wsService = (await import('../../services/ws.js')).default;
 
-        // Let the client know streaming has started via WebSocket (helps client confirm connection is working)
+        // Let the client know streaming has started
         wsService.sendMessageToAllClients({
             type: 'llm-stream',
             chatNoteId: chatNoteId,
-            thinking: 'Initializing streaming LLM response...'
+            thinking: showThinking ? 'Initializing streaming LLM response...' : undefined
         });
 
-        // Let the client know streaming has started via HTTP response
-        return {
-            success: true,
-            message: 'Streaming started',
-            chatNoteId: chatNoteId
-        };
+        // Process the LLM request using the existing service but with streaming setup
+        // Since we've already sent the initial HTTP response, we'll use the WebSocket for streaming
+        try {
+            // Call restChatService with streaming mode enabled
+            // The important part is setting method to GET to indicate streaming mode
+            await restChatService.handleSendMessage({
+                ...req,
+                method: 'GET', // Indicate streaming mode
+                query: {
+                    ...req.query,
+                    stream: 'true' // Add the required stream parameter
+                },
+                body: {
+                    content: enhancedContent,
+                    useAdvancedContext: useAdvancedContext === true,
+                    showThinking: showThinking === true
+                },
+                params: { chatNoteId }
+            } as unknown as Request, res);
+        } catch (streamError) {
+            log.error(`Error during WebSocket streaming: ${streamError}`);
+            
+            // Send error message through WebSocket
+            wsService.sendMessageToAllClients({
+                type: 'llm-stream',
+                chatNoteId: chatNoteId,
+                error: `Error during streaming: ${streamError}`,
+                done: true
+            });
+        }
     } catch (error: any) {
         log.error(`Error starting message stream: ${error.message}`);
-        throw error;
+        log.error(`Error starting message stream, can't communicate via WebSocket: ${error.message}`);
     }
 }
 
@@ -930,15 +547,5 @@ export default {
     listSessions,
     deleteSession,
     sendMessage,
-    streamMessage,
-
-    // Knowledge base index management
-    getIndexStats,
-    startIndexing,
-    getFailedIndexes,
-    retryFailedIndex,
-    retryAllFailedIndexes,
-    findSimilarNotes,
-    generateQueryContext,
-    indexNote
+    streamMessage
 };

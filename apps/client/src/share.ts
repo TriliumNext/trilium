@@ -1,4 +1,5 @@
-import "./stylesheets/bootstrap.scss";
+import "normalize.css";
+import "@triliumnext/ckeditor5/content.css";
 
 /**
  * Fetch note with given ID from backend

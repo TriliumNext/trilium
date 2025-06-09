@@ -1,11 +1,11 @@
 import AbstractTextTypeWidget from "./abstract_text_type_widget.js";
-import libraryLoader from "../../services/library_loader.js";
-import { applySyntaxHighlight } from "../../services/syntax_highlight.js";
+import { formatCodeBlocks } from "../../services/syntax_highlight.js";
 import type FNote from "../../entities/fnote.js";
 import type { CommandListenerData, EventData } from "../../components/app_context.js";
 import { getLocaleById } from "../../services/i18n.js";
 import appContext from "../../components/app_context.js";
 import { getMermaidConfig } from "../../services/mermaid.js";
+import { renderMathInElement } from "../../services/math.js";
 
 const TPL = /*html*/`
 <div class="note-detail-readonly-text note-detail-printable" tabindex="100">
@@ -121,13 +121,11 @@ export default class ReadOnlyTextTypeWidget extends AbstractTextTypeWidget {
         });
 
         if (this.$content.find("span.math-tex").length > 0) {
-            await libraryLoader.requireLibrary(libraryLoader.KATEX);
-
             renderMathInElement(this.$content[0], { trust: true });
         }
 
         await this.#applyInlineMermaid();
-        await applySyntaxHighlight(this.$content);
+        await formatCodeBlocks(this.$content);
     }
 
     async #applyInlineMermaid() {

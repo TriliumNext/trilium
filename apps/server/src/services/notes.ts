@@ -76,7 +76,7 @@ function deriveMime(type: string, mime?: string) {
 function copyChildAttributes(parentNote: BNote, childNote: BNote) {
     for (const attr of parentNote.getAttributes()) {
         if (attr.name.startsWith("child:")) {
-            const name = attr.name.substr(6);
+            const name = attr.name.substring(6);
             const hasAlreadyTemplate = childNote.hasRelation("template");
 
             if (hasAlreadyTemplate && attr.type === "relation" && name === "template") {
@@ -472,7 +472,7 @@ async function downloadImage(noteId: string, imageUrl: string) {
 
         if (imageUrl.toLowerCase().startsWith("file://")) {
             imageBuffer = await new Promise((res, rej) => {
-                const localFilePath = imageUrl.substr("file://".length);
+                const localFilePath = imageUrl.substring("file://".length);
 
                 return fs.readFile(localFilePath, (err, data) => {
                     if (err) {
@@ -521,14 +521,14 @@ function downloadImages(noteId: string, content: string) {
         const inlineImageMatch = /^data:image\/[a-z]+;base64,/.exec(url);
 
         if (inlineImageMatch) {
-            const imageBase64 = url.substr(inlineImageMatch[0].length);
+            const imageBase64 = url.substring(inlineImageMatch[0].length);
             const imageBuffer = Buffer.from(imageBase64, "base64");
 
             const attachment = imageService.saveImageToAttachment(noteId, imageBuffer, "inline image", true, true);
 
             const encodedTitle = encodeURIComponent(attachment.title);
 
-            content = `${content.substr(0, imageMatch.index)}<img src="api/attachments/${attachment.attachmentId}/image/${encodedTitle}"${content.substr(imageMatch.index + imageMatch[0].length)}`;
+            content = `${content.substring(0, imageMatch.index)}<img src="api/attachments/${attachment.attachmentId}/image/${encodedTitle}"${content.substring(imageMatch.index + imageMatch[0].length)}`;
         } else if (
             !url.includes("api/images/") &&
             !/api\/attachments\/.+\/image\/?.*/.test(url) &&
@@ -631,7 +631,7 @@ function saveAttachments(note: BNote, content: string) {
             content: buffer
         });
 
-        content = `${content.substr(0, attachmentMatch.index)}<a class="reference-link" href="#root/${note.noteId}?viewMode=attachments&attachmentId=${attachment.attachmentId}">${title}</a>${content.substr(attachmentMatch.index + attachmentMatch[0].length)}`;
+        content = `${content.substring(0, attachmentMatch.index)}<a class="reference-link" href="#root/${note.noteId}?viewMode=attachments&attachmentId=${attachment.attachmentId}">${title}</a>${content.substring(attachmentMatch.index + attachmentMatch[0].length)}`;
     }
 
     // removing absolute references to server to keep it working between instances,
@@ -755,7 +755,7 @@ function updateNoteData(noteId: string, content: string, attachments: Attachment
 function undeleteNote(noteId: string, taskContext: TaskContext) {
     const noteRow = sql.getRow<NoteRow>("SELECT * FROM notes WHERE noteId = ?", [noteId]);
 
-    if (!noteRow.isDeleted) {
+    if (!noteRow.isDeleted || !noteRow.deleteId) {
         log.error(`Note '${noteId}' is not deleted and thus cannot be undeleted.`);
         return;
     }

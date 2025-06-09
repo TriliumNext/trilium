@@ -188,9 +188,49 @@ second line 2</code></pre><ul><li>Hello</li><li>world</li></ul><ol><li>Hello</li
         expect(markdownService.renderToHtml(input, "Title")).toStrictEqual(expected);
     });
 
+    it("converts multiple inline math expressions into Mathtex format", () => {
+        const input = `Energy: $e=mc^{2}$, Force: $F=ma$.`;
+        const expected = /*html*/`<p>Energy: <span class="math-tex">\\(e=mc^{2}\\)</span>, Force: <span class="math-tex">\\(F=ma\\)</span>.</p>`;
+        expect(markdownService.renderToHtml(input, "Title")).toStrictEqual(expected);
+    });
+
+    it("converts multi-line display math expressions into Mathtex format", () => {
+        const input = `$$
+\\sqrt{x^{2}+1} \\
++ \\frac{1}{2}
+$$`;
+        const expected = /*html*/`<span class="math-tex">\\[
+\\sqrt{x^{2}+1} \\
++ \\frac{1}{2}
+\\]</span>`;
+        expect(markdownService.renderToHtml(input, "Title")).toStrictEqual(expected);
+    });
+
+    it("ignores math formulas inside code blocks and converts inline math expressions correctly", () => {
+        const result = markdownService.renderToHtml(trimIndentation`\
+            \`\`\`unknownlanguage
+            $$a+b$$
+            \`\`\`
+        `, "title");
+        expect(result).toBe(trimIndentation`\
+            <pre><code class="language-text-x-trilium-auto">$$a+b$$</code></pre>`);
+    });
+
+    it("converts specific inline math expression into Mathtex format", () => {
+        const input = `This is a formula: $\\mathcal{L}_{task} + \\mathcal{L}_{od}$ inside a sentence.`;
+        const expected = /*html*/`<p>This is a formula: <span class="math-tex">\\(\\mathcal{L}_{task} + \\mathcal{L}_{od}\\)</span> inside a sentence.</p>`;
+        expect(markdownService.renderToHtml(input, "Title")).toStrictEqual(expected);
+    });
+
+    it("converts math expressions inside list items into Mathtex format", () => {
+        const input = `- First item with formula: $E = mc^2$`;
+        const expected = /*html*/`<ul><li>First item with formula: <span class="math-tex">\\(E = mc^2\\)</span></li></ul>`;
+        expect(markdownService.renderToHtml(input, "Title")).toStrictEqual(expected);
+    });
+
     it("converts display math expressions into Mathtex format", () => {
         const input = `$$\sqrt{x^{2}+1}$$`;
-        const expected = /*html*/`<p><span class="math-tex">\\[\sqrt{x^{2}+1}\\]</span></p>`;
+        const expected = /*html*/`<span class="math-tex">\\[\sqrt{x^{2}+1}\\]</span>`;
         expect(markdownService.renderToHtml(input, "Title")).toStrictEqual(expected);
     });
 
@@ -234,7 +274,7 @@ second line 2</code></pre><ul><li>Hello</li><li>world</li></ul><ol><li>Hello</li
     });
 
     it("imports todo lists properly", () => {
-         const input = trimIndentation`\
+        const input = trimIndentation`\
             - [x] Hello
             - [ ] World`;
         const expected = `<ul class="todo-list"><li><label class="todo-list__label"><input type="checkbox" checked="checked" disabled="disabled"><span class="todo-list__label__description">Hello</span></label></li><li><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">World</span></label></li></ul>`;

@@ -54,7 +54,7 @@ export default class TouchBarComponent extends Component {
     #refreshTouchBar() {
         const { TouchBar } = this.remote;
         const parentComponent = this.lastFocusedComponent;
-        let touchBar = null;
+        let touchBar: Electron.CrossProcessExports.TouchBar | null = null;
 
         if (this.$activeModal?.length) {
             touchBar = this.#buildModalTouchBar();

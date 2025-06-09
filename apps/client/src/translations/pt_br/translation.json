@@ -1,5 +1,10 @@
 {
   "revisions": {
     "delete_button": ""
+  },
+  "code_block": {
+    "theme_none": "Sem destaque de sintaxe",
+    "theme_group_light": "Temas claros",
+    "theme_group_dark": "Temas escuros"
   }
 }

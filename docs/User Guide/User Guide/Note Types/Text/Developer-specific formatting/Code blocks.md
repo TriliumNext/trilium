@@ -13,7 +13,7 @@ Note that this feature is meant for generally small snippets of code. For larger
 *   Type ` ``` ` (as in Markdown).
     *   Note that it's not possible to specify the language, as it will default to the last selected language.
 
-## Syntax highlighting
+## Syntax highlighting & color schemes
 
 Since TriliumNext v0.90.12, Trilium will try to offer syntax highlighting to the code block. Note that the syntax highlighting mechanism is slightly different than the one in <a class="reference-link" href="../../Code.md">Code</a> notes as different technologies are involved.
 

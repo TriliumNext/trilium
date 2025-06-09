@@ -88,18 +88,18 @@
                             "mime": "text/html",
                             "attributes": [
                                 {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "BRhQZHgwaGyw",
+                                    "isInheritable": false,
+                                    "position": 10
+                                },
+                                {
                                     "type": "label",
                                     "name": "iconClass",
                                     "value": "bx bx-package",
                                     "isInheritable": false,
                                     "position": 10
-                                },
-                                {
-                                    "type": "relation",
-                                    "name": "internalLink",
-                                    "value": "BRhQZHgwaGyw",
-                                    "isInheritable": false,
-                                    "position": 20
                                 }
                             ],
                             "format": "markdown",

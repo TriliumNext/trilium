@@ -1,12 +1,5 @@
-import { MIME_TYPE_AUTO, MIME_TYPES_DICT, normalizeMimeTypeForCKEditor, type MimeTypeDefinition } from "./mime_type_definitions.js";
+import { normalizeMimeTypeForCKEditor, type MimeType, MIME_TYPE_AUTO, MIME_TYPES_DICT } from "@triliumnext/commons";
 import options from "./options.js";
-
-interface MimeType extends MimeTypeDefinition {
-    /**
-     * True if this mime type was enabled by the user in the "Available MIME types in the dropdown" option in the Code Notes settings.
-     */
-    enabled: boolean;
-}
 
 let mimeTypes: MimeType[] | null = null;
 
@@ -45,8 +38,8 @@ export function getHighlightJsNameForMime(mimeType: string) {
         for (const mimeType of mimeTypes) {
             // The mime stored by CKEditor is text-x-csrc instead of text/x-csrc so we keep this format for faster lookup.
             const normalizedMime = normalizeMimeTypeForCKEditor(mimeType.mime);
-            if (mimeType.highlightJs) {
-                mimeToHighlightJsMapping[normalizedMime] = mimeType.highlightJs;
+            if (mimeType.mdLanguageCode) {
+                mimeToHighlightJsMapping[normalizedMime] = mimeType.mdLanguageCode;
             }
         }
     }

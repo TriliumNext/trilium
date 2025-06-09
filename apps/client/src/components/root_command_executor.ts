@@ -78,15 +78,15 @@ export default class RootCommandExecutor extends Component {
     }
 
     hideLeftPaneCommand() {
-        options.save(`leftPaneVisible`, "false");
+        appContext.triggerEvent("setLeftPaneVisibility", { leftPaneVisible: false });
     }
 
     showLeftPaneCommand() {
-        options.save(`leftPaneVisible`, "true");
+        appContext.triggerEvent("setLeftPaneVisibility", { leftPaneVisible: true });
     }
 
     toggleLeftPaneCommand() {
-        options.toggle("leftPaneVisible");
+        appContext.triggerEvent("setLeftPaneVisibility", { leftPaneVisible: null });
     }
 
     async showBackendLogCommand() {

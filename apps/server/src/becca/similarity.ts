@@ -36,7 +36,7 @@ interface DateLimits {
     maxDate: string;
 }
 
-interface SimilarNote {
+export interface SimilarNote {
     score: number;
     notePath: string[];
     noteId: string;
@@ -254,7 +254,7 @@ function hasConnectingRelation(sourceNote: BNote, targetNote: BNote) {
 }
 
 async function findSimilarNotes(noteId: string): Promise<SimilarNote[] | undefined> {
-    const results = [];
+    const results: SimilarNote[] = [];
     let i = 0;
 
     const baseNote = becca.notes[noteId];

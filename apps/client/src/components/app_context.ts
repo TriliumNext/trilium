@@ -27,6 +27,7 @@ import type EditableTextTypeWidget from "../widgets/type_widgets/editable_text.j
 import type { NativeImage, TouchBar } from "electron";
 import TouchBarComponent from "./touch_bar.js";
 import type { CKTextEditor } from "@triliumnext/ckeditor5";
+import type CodeMirror from "@triliumnext/codemirror";
 
 interface Layout {
     getRootWidget: (appContext: AppContext) => RootWidget;
@@ -191,7 +192,7 @@ export type CommandMappings = {
     ExecuteCommandData<CKTextEditor> & {
         callback?: GetTextEditorCallback;
     };
-    executeWithCodeEditor: CommandData & ExecuteCommandData<CodeMirrorInstance>;
+    executeWithCodeEditor: CommandData & ExecuteCommandData<CodeMirror>;
     /**
      * Called upon when attempting to retrieve the content element of a {@link NoteContext}.
      * Generally should not be invoked manually, as it is used by {@link NoteContext.getContentElement}.
@@ -283,6 +284,9 @@ export type CommandMappings = {
 type EventMappings = {
     initialRenderComplete: {};
     frocaReloaded: {};
+    setLeftPaneVisibility: {
+        leftPaneVisible: boolean | null;
+    }
     protectedSessionStarted: {};
     notesReloaded: {
         noteIds: string[];

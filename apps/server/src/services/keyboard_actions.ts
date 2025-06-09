@@ -19,12 +19,14 @@ function getDefaultKeyboardActions() {
             actionName: "backInNoteHistory",
             // Mac has a different history navigation shortcuts - https://github.com/zadam/trilium/issues/376
             defaultShortcuts: isMac ? ["CommandOrControl+Left"] : ["Alt+Left"],
+            description: t("keyboard_actions.back-in-note-history"),
             scope: "window"
         },
         {
             actionName: "forwardInNoteHistory",
             // Mac has a different history navigation shortcuts - https://github.com/zadam/trilium/issues/376
             defaultShortcuts: isMac ? ["CommandOrControl+Right"] : ["Alt+Right"],
+            description: t("keyboard_actions.forward-in-note-history"),
             scope: "window"
         },
         {
@@ -36,11 +38,13 @@ function getDefaultKeyboardActions() {
         {
             actionName: "scrollToActiveNote",
             defaultShortcuts: ["CommandOrControl+."],
+            description: t("keyboard_actions.scroll-to-active-note"),
             scope: "window"
         },
         {
             actionName: "quickSearch",
             defaultShortcuts: ["CommandOrControl+S"],
+            description: t("keyboard_actions.quick-search"),
             scope: "window"
         },
         {
@@ -80,11 +84,13 @@ function getDefaultKeyboardActions() {
         {
             actionName: "createNoteAfter",
             defaultShortcuts: ["CommandOrControl+O"],
+            description: t("keyboard_actions.create-note-after"),
             scope: "window"
         },
         {
             actionName: "createNoteInto",
             defaultShortcuts: ["CommandOrControl+P"],
+            description: t("keyboard_actions.create-note-into"),
             scope: "window"
         },
         {
@@ -138,11 +144,13 @@ function getDefaultKeyboardActions() {
         {
             actionName: "cloneNotesTo",
             defaultShortcuts: ["CommandOrControl+Shift+C"],
+            description: t("keyboard_actions.clone-notes-to"),
             scope: "window"
         },
         {
             actionName: "moveNotesTo",
             defaultShortcuts: ["CommandOrControl+Shift+X"],
+            description: t("keyboard_actions.move-notes-to"),
             scope: "window"
         },
 
@@ -566,6 +574,7 @@ function getDefaultKeyboardActions() {
         {
             actionName: "findInText",
             defaultShortcuts: isElectron ? ["CommandOrControl+F"] : [],
+            description: t("keyboard_actions.find-in-text"),
             scope: "window"
         },
         {

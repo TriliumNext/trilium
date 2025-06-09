@@ -44,7 +44,7 @@ export function trimIndentation(strings: TemplateStringsArray, ...values: any[])
 
     // Trim the indentation of the first line in all the lines.
     const lines = str.split("\n");
-    const output = [];
+    const output: string[] = [];
     for (let i = 0; i < lines.length; i++) {
         let numSpacesLine = 0;
         while (str.charAt(numSpacesLine) == " " && numSpacesLine < str.length) {

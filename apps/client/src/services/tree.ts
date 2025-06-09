@@ -34,8 +34,8 @@ async function resolveNotePathToSegments(notePath: string, hoistedNoteId = "root
         path.push("root");
     }
 
-    const effectivePathSegments = [];
-    let childNoteId = null;
+    const effectivePathSegments: string[] = [];
+    let childNoteId: string | null = null;
     let i = 0;
 
     while (true) {
@@ -197,7 +197,7 @@ function getNotePath(node: Fancytree.FancytreeNode) {
         return "";
     }
 
-    const path = [];
+    const path: string[] = [];
 
     while (node) {
         if (node.data.noteId) {
@@ -236,7 +236,7 @@ async function getNoteTitle(noteId: string, parentNoteId: string | null = null) 
 }
 
 async function getNotePathTitleComponents(notePath: string) {
-    const titleComponents = [];
+    const titleComponents: string[] = [];
 
     if (notePath.startsWith("root/")) {
         notePath = notePath.substr(5);

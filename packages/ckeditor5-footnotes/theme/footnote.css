@@ -44,10 +44,9 @@
 	flex-grow: 1;
 }
 
-.ck .ck-widget.footnote-section .ck-widget__type-around__button_after {
-	display:none; /* hides the 'insert after' button from the ckeditor widget */
+.ck .ck-widget.footnote-section > .ck-reset_all.ck-widget__type-around > .ck-widget__type-around__button_after {
+	display: none; /* hides the 'insert after' button from the ckeditor widget, but displays the button inside the footnote content. */
 }
-
 .placeholder {
 	padding: 2px 2px;
 	outline-offset: -2px;

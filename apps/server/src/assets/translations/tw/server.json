@@ -185,11 +185,6 @@
   "special_notes": {
     "search_prefix": "搜尋："
   },
-  "code_block": {
-    "theme_none": "無格式高亮",
-    "theme_group_light": "淺色主題",
-    "theme_group_dark": "深色主題"
-  },
   "test_sync": {
     "not-configured": "並未設定同步伺服器主機，請先設定同步",
     "successful": "成功與同步伺服器握手，現在開始同步"

@@ -54,9 +54,7 @@ function updateEntity(remoteEC: EntityChange, remoteEntityRow: EntityRow | undef
 
     const updated = remoteEC.entityName === "note_reordering"
         ? updateNoteReordering(remoteEC, remoteEntityRow, instanceId)
-        : (remoteEC.entityName === "note_embeddings"
-            ? updateNoteEmbedding(remoteEC, remoteEntityRow, instanceId, updateContext)
-            : updateNormalEntity(remoteEC, remoteEntityRow, instanceId, updateContext));
+        : updateNormalEntity(remoteEC, remoteEntityRow, instanceId, updateContext);
 
     if (updated) {
         if (remoteEntityRow?.isDeleted) {
@@ -145,78 +143,11 @@ function updateNoteReordering(remoteEC: EntityChange, remoteEntityRow: EntityRow
     return true;
 }
 
-function updateNoteEmbedding(remoteEC: EntityChange, remoteEntityRow: EntityRow | undefined, instanceId: string, updateContext: UpdateContext) {
-    if (remoteEC.isErased) {
-        eraseEntity(remoteEC);
-        updateContext.erased++;
-        return true;
-    }
-
-    if (!remoteEntityRow) {
-        log.error(`Entity ${remoteEC.entityName} ${remoteEC.entityId} not found in sync update.`);
-        return false;
-    }
-
-    interface NoteEmbeddingRow {
-        embedId: string;
-        noteId: string;
-        providerId: string;
-        modelId: string;
-        dimension: number;
-        embedding: Buffer;
-        version: number;
-        dateCreated: string;
-        utcDateCreated: string;
-        dateModified: string;
-        utcDateModified: string;
-    }
-
-    // Cast remoteEntityRow to include required embedding properties
-    const typedRemoteEntityRow = remoteEntityRow as unknown as NoteEmbeddingRow;
-
-    // Convert embedding from base64 string to Buffer if needed
-    if (typedRemoteEntityRow.embedding && typeof typedRemoteEntityRow.embedding === "string") {
-        typedRemoteEntityRow.embedding = Buffer.from(typedRemoteEntityRow.embedding, "base64");
-    }
-
-    const localEntityRow = sql.getRow<NoteEmbeddingRow>(`SELECT * FROM note_embeddings WHERE embedId = ?`, [remoteEC.entityId]);
-
-    if (localEntityRow) {
-        // We already have this embedding, check if we need to update it
-        if (localEntityRow.utcDateModified >= typedRemoteEntityRow.utcDateModified) {
-            // Local is newer or same, no need to update
-            entityChangesService.putEntityChangeWithInstanceId(remoteEC, instanceId);
-            return true;
-        } else {
-            // Remote is newer, update local
-            sql.replace("note_embeddings", remoteEntityRow);
-
-            if (!updateContext.updated[remoteEC.entityName]) {
-                updateContext.updated[remoteEC.entityName] = [];
-            }
-            updateContext.updated[remoteEC.entityName].push(remoteEC.entityId);
-
-            entityChangesService.putEntityChangeWithInstanceId(remoteEC, instanceId);
-            return true;
-        }
-    } else {
-        // We don't have this embedding, insert it
-        sql.replace("note_embeddings", remoteEntityRow);
-
-        if (!updateContext.updated[remoteEC.entityName]) {
-            updateContext.updated[remoteEC.entityName] = [];
-        }
-        updateContext.updated[remoteEC.entityName].push(remoteEC.entityId);
-
-        entityChangesService.putEntityChangeWithInstanceId(remoteEC, instanceId);
-        return true;
-    }
-}
 
 function eraseEntity(entityChange: EntityChange) {
     const { entityName, entityId } = entityChange;
 
-    const entityNames = ["notes", "branches", "attributes", "revisions", "attachments", "blobs", "note_embeddings"];
+    const entityNames = ["notes", "branches", "attributes", "revisions", "attachments", "blobs"];
 
     if (!entityNames.includes(entityName)) {
         log.error(`Cannot erase ${entityName} '${entityId}'.`);

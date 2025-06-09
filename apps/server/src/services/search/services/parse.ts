@@ -294,11 +294,11 @@ function getExpression(tokens: TokenData[], searchContext: SearchContext, level 
             valueExtractor: ValueExtractor;
             direction: string;
         }[] = [];
-        let limit;
+        let limit: number | undefined = undefined;
 
         if (tokens[i].token === "orderby") {
             do {
-                const propertyPath = [];
+                const propertyPath: string[] = [];
                 let direction = "asc";
 
                 do {

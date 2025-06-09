@@ -1,7 +1,7 @@
-import { BrowserWindow, Menu, Tray, ipcMain, nativeTheme } from "electron";
+import electron from "electron";
+import type { BrowserWindow, Tray } from "electron";
 import { default as i18next, t } from "i18next";
 import path from "path";
-import { fileURLToPath } from "url";
 
 import becca from "../becca/becca.js";
 import becca_service from "../becca/becca_service.js";
@@ -33,7 +33,7 @@ function getTrayIconPath() {
 }
 
 function getIconPath(name: string) {
-    const suffix = !isMac && nativeTheme.shouldUseDarkColors ? "-inverted" : "";
+    const suffix = !isMac && electron.nativeTheme.shouldUseDarkColors ? "-inverted" : "";
     return path.resolve(path.join(getResourceDir(), "assets", "images", "tray", `${name}Template${suffix}.png`));
 }
 
@@ -216,7 +216,7 @@ function updateTrayMenu() {
     }
 
 
-    const contextMenu = Menu.buildFromTemplate([
+    const contextMenu = electron.Menu.buildFromTemplate([
         ...windowVisibilityMenuItems,
         { type: "separator" },
         {
@@ -255,7 +255,7 @@ function updateTrayMenu() {
             type: "normal",
             icon: getIconPath("close"),
             click: () => {
-                const windows = BrowserWindow.getAllWindows();
+                const windows = electron.BrowserWindow.getAllWindows();
                 windows.forEach(window => {
                     window.close();
                 });
@@ -287,7 +287,7 @@ function createTray() {
         return;
     }
 
-    tray = new Tray(getTrayIconPath());
+    tray = new electron.Tray(getTrayIconPath());
     tray.setToolTip(t("tray.tooltip"));
     // Restore focus
     tray.on("click", changeVisibility);
@@ -295,9 +295,9 @@ function createTray() {
 
     if (!isMac) {
         // macOS uses template icons which work great on dark & light themes.
-        nativeTheme.on("updated", updateTrayMenu);
+        electron.nativeTheme.on("updated", updateTrayMenu);
     }
-    ipcMain.on("reload-tray", updateTrayMenu);
+    electron.ipcMain.on("reload-tray", updateTrayMenu);
     i18next.on("languageChanged", updateTrayMenu);
 }
 

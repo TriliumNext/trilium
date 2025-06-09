@@ -1,5 +1,5 @@
 # Configuration (config.ini or environment variables)
-Trilium supports configuration via a file named `config.ini` and environment variables. Please review the file named [config-sample.ini](https://github.com/TriliumNext/Notes/blob/develop/config-sample.ini) in the [Notes](https://github.com/TriliumNext/Notes) repository to see what values are supported.
+Trilium supports configuration via a file named `config.ini` and environment variables. Please review the file named [config-sample.ini](https://github.com/TriliumNext/Notes/blob/develop/apps/server/src/assets/config-sample.ini) in the [Notes](https://github.com/TriliumNext/Notes) repository to see what values are supported.
 
 You can provide the same values via environment variables instead of the `config.ini` file, and these environment variables use the following format:
 

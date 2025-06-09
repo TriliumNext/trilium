@@ -53,10 +53,6 @@ const TPL = /*html*/`
         pointer-events: none;
     }
 
-    .update-to-latest-version-button {
-        display: none;
-    }
-
     .global-menu .zoom-container {
         display: flex;
         flex-direction: row;
@@ -235,7 +231,7 @@ const TPL = /*html*/`
             ${t("global_menu.about")}
         </li>
 
-        <li class="dropdown-item update-to-latest-version-button" data-trigger-command="downloadLatestVersion">
+        <li class="dropdown-item update-to-latest-version-button" style="display: none;" data-trigger-command="downloadLatestVersion">
             <span class="bx bx-sync"></span>
 
             <span class="version-text"></span>
