@@ -1,5 +1,6 @@
 const path = require("path");
 const fs = require("fs-extra");
+const { LOCALES } = require("@triliumnext/commons");
 
 const ELECTRON_FORGE_DIR = __dirname;
 
@@ -141,6 +142,35 @@ module.exports = {
         }
     ],
     hooks: {
+        // Remove unused locales from the packaged app to save some space.
+        postPackage(_, packageResult) {
+            const localesToKeep = LOCALES
+                .filter(locale => !locale.contentOnly)
+                .map(locale => locale.electronLocale.replace("_", "-"));
+
+            for (const outputPath of packageResult.outputPaths) {
+                const localesDir = path.join(outputPath, 'locales');
+
+                if (!fs.existsSync(localesDir)) {
+                    console.log('No locales directory found. Skipping cleanup.');
+                    return;
+                }
+
+                const files = fs.readdirSync(localesDir);
+
+                for (const file of files) {
+                    const localeName = path.basename(file, ".pak");
+                    if (localesToKeep.includes(localeName)) {
+                        continue;
+                    }
+
+                    console.log(`Removing unused locale file: ${file}`);                    
+                    const filePath = path.join(localesDir, file);
+                    fs.unlinkSync(filePath);
+                }
+            }
+        },
+        // Gather all the artifacts produced by the makers and copy them to a common upload directory.
         postMake(_, makeResults) {
             const outputDir = path.join(__dirname, "..", "upload");
             fs.mkdirpSync(outputDir);

@@ -135,7 +135,8 @@ body.electron:not(.native-titlebar) {
 <h2>Custom fonts</h2>
 <p>Currently the only way to include a custom font is to use&nbsp;<a href="#root/_help_d3fAXQ2diepH">Custom resource providers</a>.
   Basically import a font into Trilium and assign it <code>#customResourceProvider=fonts/myfont.ttf</code> and
-  then import the font in CSS via <code>/custom/fonts/myfont.ttf</code>.</p>
+  then import the font in CSS via <code>/custom/fonts/myfont.ttf</code>. Use <code>../../../custom/fonts/myfont.ttf</code> if
+  you run your Trilium server on a different path than <code>/</code>.</p>
 <h2>Dark and light themes</h2>
 <p>A light theme needs to have the following CSS:</p><pre><code class="language-text-css">:root {
 	--theme-style: light;

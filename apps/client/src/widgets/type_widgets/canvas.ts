@@ -1,16 +1,11 @@
 import TypeWidget from "./type_widget.js";
-import utils from "../../services/utils.js";
-import linkService from "../../services/link.js";
 import server from "../../services/server.js";
 import type FNote from "../../entities/fnote.js";
 import options from "../../services/options.js";
-import type { ExcalidrawElement, Theme } from "@excalidraw/excalidraw/element/types";
-import type { AppState, BinaryFileData, ExcalidrawImperativeAPI, ExcalidrawProps, LibraryItem, SceneData } from "@excalidraw/excalidraw/types";
-import type { JSX } from "react";
-import type React from "react";
-import type { Root } from "react-dom/client";
-import "@excalidraw/excalidraw/index.css";
-import asset_path from "../../asset_path.js";
+import type { LibraryItem } from "@excalidraw/excalidraw/types";
+import type { Theme } from "@excalidraw/excalidraw/element/types";
+import type Canvas from "./canvas_el.js";
+import { CanvasContent } from "./canvas_el.js";
 
 const TPL = /*html*/`
     <div class="canvas-widget note-detail-canvas note-detail-printable note-detail">
@@ -28,6 +23,7 @@ const TPL = /*html*/`
 
         .excalidraw-wrapper {
             height: 100%;
+        }
 
         :root[dir="ltr"]
         .excalidraw
@@ -51,11 +47,7 @@ const TPL = /*html*/`
     </div>
 `;
 
-interface CanvasContent {
-    elements: ExcalidrawElement[];
-    files: BinaryFileData[];
-    appState: Partial<AppState>;
-}
+
 
 interface AttachmentMetadata {
     title: string;
@@ -107,37 +99,22 @@ interface AttachmentMetadata {
  */
 export default class ExcalidrawTypeWidget extends TypeWidget {
 
-    private readonly SCENE_VERSION_INITIAL: number;
-    private readonly SCENE_VERSION_ERROR: number;
-
     private currentNoteId: string;
-    private currentSceneVersion: number;
+
     private libraryChanged: boolean;
     private librarycache: LibraryItem[];
     private attachmentMetadata: AttachmentMetadata[];
     private themeStyle!: Theme;
-    private excalidrawLib!: typeof import("@excalidraw/excalidraw");
-    private excalidrawApi!: ExcalidrawImperativeAPI;
-    private excalidrawWrapperRef!: React.RefObject<HTMLElement | null>;
 
     private $render!: JQuery<HTMLElement>;
-    private root?: Root;
     private reactHandlers!: JQuery<HTMLElement>;
+    private canvasInstance!: Canvas;
 
     constructor() {
         super();
 
-        // constants
-        this.SCENE_VERSION_INITIAL = -1; // -1 indicates that it is fresh. excalidraw scene version is always >0
-        this.SCENE_VERSION_ERROR = -2; // -2 indicates error
-
-        // currently required by excalidraw, in order to allows self-hosting fonts locally.
-        // this avoids making excalidraw load the fonts from an external CDN.
-        (window as any).EXCALIDRAW_ASSET_PATH = `${window.location.pathname}/node_modules/@excalidraw/excalidraw/dist/prod`;
-
         // temporary vars
         this.currentNoteId = "";
-        this.currentSceneVersion = this.SCENE_VERSION_INITIAL;
 
         // will be overwritten
         this.$render;
@@ -182,34 +159,48 @@ export default class ExcalidrawTypeWidget extends TypeWidget {
             throw new Error("Unable to find element to render.");
         }
 
-        // See https://github.com/excalidraw/excalidraw/issues/7899.
-        if (!window.process) {
-            (window.process as any) = {};
-        }
-        if (!window.process.env) {
-            window.process.env = {};
-        }
-        (window.process.env as any).PREACT = false;
+        const Canvas = (await import("./canvas_el.js")).default;
+        this.canvasInstance = new Canvas({
+            // this makes sure that 1) manual theme switch button is hidden 2) theme stays as it should after opening menu
+            theme: this.themeStyle,
+            onChange: () => this.onChangeHandler(),
+            viewModeEnabled: options.is("databaseReadonly"),
+            zenModeEnabled: false,
+            gridModeEnabled: false,
+            isCollaborating: false,
+            detectScroll: false,
+            handleKeyboardGlobally: false,
+            autoFocus: false,
+            UIOptions: {
+                canvasActions: {
+                    saveToActiveFile: false,
+                    export: false
+                }
+            },
+            onLibraryChange: () => {
+                this.libraryChanged = true;
 
-        const excalidraw = await import("@excalidraw/excalidraw");
-        this.excalidrawLib = excalidraw;
+                this.saveData();
+            },
+        });
 
-        const { createRoot } = await import("react-dom/client");
-        const React = (await import("react")).default;
-        this.root?.unmount();
-        this.root = createRoot(renderElement);
-        this.root.render(React.createElement(() => this.createExcalidrawReactApp(React, excalidraw.Excalidraw)));
+        await setupFonts();
+        this.canvasInstance.renderCanvas(renderElement);
     }
 
     /**
      * called to populate the widget container with the note content
      */
     async doRefresh(note: FNote) {
+        if (!this.canvasInstance) {
+            await this.#init();
+        }
+
         // see if the note changed, since we do not get a new class for a new note
         const noteChanged = this.currentNoteId !== note.noteId;
         if (noteChanged) {
             // reset the scene to omit unnecessary onchange handler
-            this.currentSceneVersion = this.SCENE_VERSION_INITIAL;
+            this.canvasInstance.resetSceneVersion();
         }
         this.currentNoteId = note.noteId;
 
@@ -217,10 +208,7 @@ export default class ExcalidrawTypeWidget extends TypeWidget {
         const blob = await note.getBlob();
 
         // before we load content into excalidraw, make sure excalidraw has loaded
-        while (!this.excalidrawApi) {
-            console.log("excalidrawApi not yet loaded, sleep 200ms...");
-            await utils.sleep(200);
-        }
+        await this.canvasInstance.waitForApiToBecomeAvailable();
 
         /**
          * new and empty note - make sure that canvas is empty.
@@ -229,15 +217,7 @@ export default class ExcalidrawTypeWidget extends TypeWidget {
          * newly instantiated?
          */
         if (!blob?.content?.trim()) {
-            const sceneData: SceneData = {
-                elements: [],
-                appState: {
-                    theme: this.themeStyle
-                }
-            };
-
-            // TODO: Props mismatch.
-            this.excalidrawApi.updateScene(sceneData as any);
+            this.canvasInstance.resetScene(this.themeStyle);
         } else if (blob.content) {
             let content: CanvasContent;
 
@@ -254,36 +234,7 @@ export default class ExcalidrawTypeWidget extends TypeWidget {
                 };
             }
 
-            const { elements, files } = content;
-            const appState: Partial<AppState> = content.appState ?? {};
-
-            appState.theme = this.themeStyle;
-
-            if (this.excalidrawWrapperRef.current) {
-                const boundingClientRect = this.excalidrawWrapperRef.current.getBoundingClientRect();
-                appState.width = boundingClientRect.width;
-                appState.height = boundingClientRect.height;
-                appState.offsetLeft = boundingClientRect.left;
-                appState.offsetTop = boundingClientRect.top;
-            }
-
-            const sceneData: SceneData = {
-                elements,
-                appState
-            };
-
-            // files are expected in an array when loading. they are stored as a key-index object
-            // see example for loading here:
-            // https://github.com/excalidraw/excalidraw/blob/c5a7723185f6ca05e0ceb0b0d45c4e3fbcb81b2a/src/packages/excalidraw/example/App.js#L68
-            const fileArray: BinaryFileData[] = [];
-            for (const fileId in files) {
-                const file = files[fileId];
-                // TODO: dataURL is replaceable with a trilium image url
-                //       maybe we can save normal images (pasted) with base64 data url, and trilium images
-                //       with their respective url! nice
-                // file.dataURL = "http://localhost:8080/api/images/ltjOiU8nwoZx/start.png";
-                fileArray.push(file);
-            }
+            this.canvasInstance.loadData(content, this.themeStyle);
 
             Promise.all(
                 (await note.getAttachmentsByRole("canvasLibraryItem")).map(async (attachment) => {
@@ -310,23 +261,19 @@ export default class ExcalidrawTypeWidget extends TypeWidget {
                 const metadata = results.map((result) => result.metadata);
 
                 // Update the library and save to independent variables
-                this.excalidrawApi.updateLibrary({ libraryItems, merge: false });
+                this.canvasInstance.updateLibrary(libraryItems);
 
                 // save state of library to compare it to the new state later.
                 this.librarycache = libraryItems;
                 this.attachmentMetadata = metadata;
             });
 
-            // Update the scene
-            // TODO: Fix type of sceneData
-            this.excalidrawApi.updateScene(sceneData as any);
-            this.excalidrawApi.addFiles(fileArray);
-            this.excalidrawApi.history.clear();
+
         }
 
         // set initial scene version
-        if (this.currentSceneVersion === this.SCENE_VERSION_INITIAL) {
-            this.currentSceneVersion = this.getSceneVersion();
+        if (this.canvasInstance.isInitialScene()) {
+            this.canvasInstance.updateSceneVersion();
         }
     }
 
@@ -335,56 +282,14 @@ export default class ExcalidrawTypeWidget extends TypeWidget {
      * this is automatically called after this.saveData();
      */
     async getData() {
-        const elements = this.excalidrawApi.getSceneElements();
-        const appState = this.excalidrawApi.getAppState();
-
-        /**
-         * A file is not deleted, even though removed from canvas. Therefore, we only keep
-         * files that are referenced by an element. Maybe this will change with a new excalidraw version?
-         */
-        const files = this.excalidrawApi.getFiles();
-
-        // parallel svg export to combat bitrot and enable rendering image for note inclusion, preview, and share
-        const svg = await this.excalidrawLib.exportToSvg({
-            elements,
-            appState,
-            exportPadding: 5, // 5 px padding
-            files
-        });
-        const svgString = svg.outerHTML;
-
-        const activeFiles: Record<string, BinaryFileData> = {};
-        // TODO: Used any where upstream typings appear to be broken.
-        elements.forEach((element: any) => {
-            if ("fileId" in element && element.fileId) {
-                activeFiles[element.fileId] = files[element.fileId];
-            }
-        });
-
-        const content = {
-            type: "excalidraw",
-            version: 2,
-            elements,
-            files: activeFiles,
-            appState: {
-                scrollX: appState.scrollX,
-                scrollY: appState.scrollY,
-                zoom: appState.zoom
-            }
-        };
-
-        const attachments = [{ role: "image", title: "canvas-export.svg", mime: "image/svg+xml", content: svgString, position: 0 }];
+        const { content, svg } = await this.canvasInstance.getData();
+        const attachments = [{ role: "image", title: "canvas-export.svg", mime: "image/svg+xml", content: svg, position: 0 }];
 
         if (this.libraryChanged) {
             // this.libraryChanged is unset in dataSaved()
 
             // there's no separate method to get library items, so have to abuse this one
-            const libraryItems = await this.excalidrawApi.updateLibrary({
-                libraryItems() {
-                    return [];
-                },
-                merge: true
-            });
+            const libraryItems = await this.canvasInstance.getLibraryItems();
 
             // excalidraw saves the library as a own state. the items are saved to libraryItems. then we compare the library right now with a libraryitemcache. The cache is filled when we first load the Library into the note.
             //We need the cache to delete old attachments later in the server.
@@ -453,146 +358,39 @@ export default class ExcalidrawTypeWidget extends TypeWidget {
         }
         // changeHandler is called upon any tiny change in excalidraw. button clicked, hover, etc.
         // make sure only when a new element is added, we actually save something.
-        const isNewSceneVersion = this.isNewSceneVersion();
+        const isNewSceneVersion = this.canvasInstance.isNewSceneVersion();
         /**
          * FIXME: however, we might want to make an exception, if viewport changed, since viewport
          *        is desired to save? (add) and appState background, and some things
          */
 
         // upon updateScene, onchange is called, even though "nothing really changed" that is worth saving
-        const isNotInitialScene = this.currentSceneVersion !== this.SCENE_VERSION_INITIAL;
-
+        const isNotInitialScene = !this.canvasInstance.isInitialScene();
         const shouldSave = isNewSceneVersion && isNotInitialScene;
 
         if (shouldSave) {
-            this.updateSceneVersion();
+            this.canvasInstance.updateSceneVersion();
             this.saveData();
         }
     }
 
-    createExcalidrawReactApp(react: typeof React, excalidrawComponent: React.MemoExoticComponent<(props: ExcalidrawProps) => JSX.Element>) {
-        const excalidrawWrapperRef = react.useRef<HTMLElement>(null);
-        this.excalidrawWrapperRef = excalidrawWrapperRef;
-        const [dimensions, setDimensions] = react.useState<{ width?: number; height?: number }>({
-            width: undefined,
-            height: undefined
-        });
+}
 
-        react.useEffect(() => {
-            if (excalidrawWrapperRef.current) {
-                const dimensions = {
-                    width: excalidrawWrapperRef.current.getBoundingClientRect().width,
-                    height: excalidrawWrapperRef.current.getBoundingClientRect().height
-                };
-                setDimensions(dimensions);
-            }
-
-            const onResize = () => {
-                if (this.note?.type !== "canvas") {
-                    return;
-                }
-
-                if (excalidrawWrapperRef.current) {
-                    const dimensions = {
-                        width: excalidrawWrapperRef.current.getBoundingClientRect().width,
-                        height: excalidrawWrapperRef.current.getBoundingClientRect().height
-                    };
-                    setDimensions(dimensions);
-                }
-            };
-
-            window.addEventListener("resize", onResize);
-
-            return () => window.removeEventListener("resize", onResize);
-        }, [excalidrawWrapperRef]);
-
-        const onLinkOpen = react.useCallback<NonNullable<ExcalidrawProps["onLinkOpen"]>>((element, event) => {
-            let link = element.link;
-            if (!link) {
-                return false;
-            }
-
-            if (link.startsWith("root/")) {
-                link = "#" + link;
-            }
-
-            const { nativeEvent } = event.detail;
-
-            event.preventDefault();
-
-            return linkService.goToLinkExt(nativeEvent, link, null);
-        }, []);
-
-        return react.createElement(
-            react.Fragment,
-            null,
-            react.createElement(
-                "div",
-                {
-                    className: "excalidraw-wrapper",
-                    ref: excalidrawWrapperRef
-                },
-                react.createElement(excalidrawComponent, {
-                    // this makes sure that 1) manual theme switch button is hidden 2) theme stays as it should after opening menu
-                    theme: this.themeStyle,
-                    excalidrawAPI: (api: ExcalidrawImperativeAPI) => {
-                        this.excalidrawApi = api;
-                    },
-                    onLibraryChange: () => {
-                        this.libraryChanged = true;
-
-                        this.saveData();
-                    },
-                    onChange: () => this.onChangeHandler(),
-                    viewModeEnabled: options.is("databaseReadonly"),
-                    zenModeEnabled: false,
-                    gridModeEnabled: false,
-                    isCollaborating: false,
-                    detectScroll: false,
-                    handleKeyboardGlobally: false,
-                    autoFocus: false,
-                    onLinkOpen,
-                    UIOptions: {
-                        canvasActions: {
-                            saveToActiveFile: false,
-                            export: false
-                        }
-                    }
-                })
-            )
-        );
+async function setupFonts() {
+    if (window.EXCALIDRAW_ASSET_PATH) {
+        return;
     }
 
-    /**
-     * needed to ensure, that multipleOnChangeHandler calls do not trigger a save.
-     * we compare the scene version as suggested in:
-     * https://github.com/excalidraw/excalidraw/issues/3014#issuecomment-778115329
-     *
-     * info: sceneVersions are not incrementing. it seems to be a pseudo-random number
-     */
-    isNewSceneVersion() {
-        if (options.is("databaseReadonly")) {
-            return false;
-        }
-
-        const sceneVersion = this.getSceneVersion();
-
-        return (
-            this.currentSceneVersion === this.SCENE_VERSION_INITIAL || // initial scene version update
-            this.currentSceneVersion !== sceneVersion
-        ); // ensure scene changed
+    // currently required by excalidraw, in order to allows self-hosting fonts locally.
+    // this avoids making excalidraw load the fonts from an external CDN.
+    let path: string;
+    if (!glob.isDev) {
+        path = `${window.location.pathname}/node_modules/@excalidraw/excalidraw/dist/prod`;
+    } else {
+        path = (await import("../../../node_modules/@excalidraw/excalidraw/dist/prod/fonts/Excalifont/Excalifont-Regular-a88b72a24fb54c9f94e3b5fdaa7481c9.woff2?url")).default;
+        let pathComponents = path.split("/");
+        path = pathComponents.slice(0, pathComponents.length - 2).join("/");
     }
 
-    getSceneVersion() {
-        if (this.excalidrawApi) {
-            const elements = this.excalidrawApi.getSceneElements();
-            return this.excalidrawLib.getSceneVersion(elements);
-        } else {
-            return this.SCENE_VERSION_ERROR;
-        }
-    }
-
-    updateSceneVersion() {
-        this.currentSceneVersion = this.getSceneVersion();
-    }
+    window.EXCALIDRAW_ASSET_PATH = path;
 }

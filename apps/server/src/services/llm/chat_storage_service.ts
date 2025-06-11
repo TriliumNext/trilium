@@ -6,7 +6,7 @@ import type { ToolCall } from './tools/tool_interfaces.js';
 import { t } from 'i18next';
 import log from '../log.js';
 
-interface StoredChat {
+export interface StoredChat {
     id: string;
     title: string;
     messages: Message[];

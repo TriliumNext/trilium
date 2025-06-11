@@ -14,33 +14,6 @@ a {
     flex-direction: row-reverse;
 }
 
-#menu {
-    padding: 25px;
-    flex-basis: 0;
-    flex-grow: 1;
-    overflow: auto;
-}
-
-#menu p {
-    margin: 0;
-}
-
-#menu > p {
-    font-weight: bold;
-    font-size: 110%;
-}
-
-#menu ul {
-    padding-left: 20px;
-}
-
-#main {
-    flex-basis: 0;
-    flex-grow: 3;
-    overflow: auto;
-    padding: 10px 20px 20px 20px;
-}
-
 #parentLink {
     float: right;
     margin-top: 20px;
@@ -78,48 +51,6 @@ iframe.pdf-view {
     height: auto;
     color: black;
     cursor: pointer;
-}
-
-#childLinks.grid ul {
-    list-style-type: none;
-    display: flex;
-    flex-wrap: wrap;
-    padding: 0;
-}
-
-#childLinks.grid ul li {
-    width: 180px;
-    height: 140px;
-    padding: 10px;
-}
-
-#childLinks.grid ul li a {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    width: 100%;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    justify-content: center;
-    align-content: center;
-    text-align: center;
-    font-size: large;
-}
-
-#childLinks.grid ul li a:hover {
-    background: #eee;
-}
-
-#childLinks.list ul {
-    list-style-type: none;
-    display: inline-flex;
-    flex-wrap: wrap;
-    padding: 0;
-    margin-top: 5px;
-}
-
-#childLinks.list ul li {
-    margin-right: 20px;
 }
 
 #noteClippedFrom {

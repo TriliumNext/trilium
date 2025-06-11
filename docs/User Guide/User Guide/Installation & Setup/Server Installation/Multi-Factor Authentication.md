@@ -34,9 +34,6 @@ MFA can only be set up on a server instance.
 
 ### OpenID
 
-> [!NOTE]
-> Currently only compatible with Google. Other services like Authentik and Auth0 are planned on being added.
-
 In order to setup OpenID, you will need to setup a authentication provider. This requires a bit of extra setup. Follow [these instructions](https://developers.google.com/identity/openid-connect/openid-connect) to setup an OpenID service through google.
 
 1.  Set the `oauthBaseUrl`, `oauthClientId` and `oauthClientSecret` in the `config.ini` file (check <a class="reference-link" href="../../Advanced%20Usage/Configuration%20(config.ini%20or%20e.md">Configuration (config.ini or environment variables)</a> for more information).
@@ -46,3 +43,6 @@ In order to setup OpenID, you will need to setup a authentication provider. This
 4.  Click the “Enable Multi-Factor Authentication” checkbox if not checked
 5.  Choose “OAuth/OpenID” under MFA Method
 6.  Refresh the page and login through OpenID provider
+
+> [!NOTE]
+> The default OAuth issuer is Google. To use other services such as Authentik or Auth0, you can configure the settings via `oauthIssuerBaseUrl`, `oauthIssuerName`, and `oauthIssuerIcon` in the `config.ini` file. Alternatively, these values can be set using environment variables: `TRILIUM_OAUTH_ISSUER_BASE_URL`, `TRILIUM_OAUTH_ISSUER_NAME`, and `TRILIUM_OAUTH_ISSUER_ICON`. `oauthIssuerName` and `oauthIssuerIcon` are required for displaying correct issuer information at the Login page.

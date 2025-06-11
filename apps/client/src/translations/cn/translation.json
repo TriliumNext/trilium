@@ -1333,7 +1333,7 @@
     "recovery_keys_used": "已使用: {{date}}",
     "recovery_keys_unused": "恢复代码 {{index}} 未使用",
     "oauth_title": "OAuth/OpenID 认证",
-    "oauth_description": "OpenID 是一种标准化方式，允许您使用其他服务（如 Google）的账户登录网站，以验证您的身份。请参阅这些 <a href=\"https://developers.google.com/identity/openid-connect/openid-connect\">指南</a> 通过 Google 设置 OpenID 服务。",
+    "oauth_description": "OpenID 是一种标准化方式，允许您使用其他服务（如 Google）的账号登录网站来验证您的身份。默认的身份提供者是 Google，但您可以更改为任何其他 OpenID 提供者。点击<a href=\"#root/_hidden/_help/_help_Otzi9La2YAUX/_help_WOcw2SLH6tbX/_help_7DAiwaf8Z7Rz\">这里</a>了解更多信息。请参阅这些 <a href=\"https://developers.google.com/identity/openid-connect/openid-connect\">指南</a> 通过 Google 设置 OpenID 服务。",
     "oauth_description_warning": "要启用 OAuth/OpenID，您需要设置 config.ini 文件中的 OAuth/OpenID 基础 URL、客户端 ID 和客户端密钥，并重新启动应用程序。如果要从环境变量设置，请设置 TRILIUM_OAUTH_BASE_URL、TRILIUM_OAUTH_CLIENT_ID 和 TRILIUM_OAUTH_CLIENT_SECRET 环境变量。",
     "oauth_missing_vars": "缺少以下设置项: {{missingVars}}",
     "oauth_user_account": "用户账号：",

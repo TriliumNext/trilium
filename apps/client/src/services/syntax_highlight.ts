@@ -2,7 +2,9 @@ import { ensureMimeTypes, highlight, highlightAuto, loadTheme, Themes, type Auto
 import mime_types from "./mime_types.js";
 import options from "./options.js";
 import { t } from "./i18n.js";
-import { copyText } from "./clipboard.js";
+import { copyText, copyTextWithToast } from "./clipboard_ext.js";
+import { isShare } from "./utils.js";
+import { MimeType } from "@triliumnext/commons";
 
 let highlightingLoaded = false;
 
@@ -14,9 +16,6 @@ let highlightingLoaded = false;
  */
 export async function formatCodeBlocks($container: JQuery<HTMLElement>) {
     const syntaxHighlightingEnabled = isSyntaxHighlightEnabled();
-    if (syntaxHighlightingEnabled) {
-        await ensureMimeTypesForHighlighting();
-    }
 
     const codeBlocks = $container.find("pre code");
     for (const codeBlock of codeBlocks) {
@@ -37,7 +36,13 @@ export function applyCopyToClipboardButton($codeBlock: JQuery<HTMLElement>) {
     const $copyButton = $("<button>")
         .addClass("bx component icon-action tn-tool-button bx-copy copy-button")
         .attr("title", t("code_block.copy_title"))
-        .on("click", () => copyText($codeBlock.text()));
+        .on("click", () => {
+            if (!isShare) {
+                copyTextWithToast($codeBlock.text());
+            } else {
+                copyText($codeBlock.text());
+            }
+        });
     $codeBlock.parent().append($copyButton);
 }
 
@@ -49,11 +54,11 @@ export async function applySingleBlockSyntaxHighlight($codeBlock: JQuery<HTMLEle
     const text = $codeBlock.text();
 
     let highlightedText: HighlightResult | AutoHighlightResult | null = null;
-    if (normalizedMimeType === mime_types.MIME_TYPE_AUTO) {
+    if (normalizedMimeType === mime_types.MIME_TYPE_AUTO && !isShare) {
         await ensureMimeTypesForHighlighting();
         highlightedText = highlightAuto(text);
     } else if (normalizedMimeType) {
-        await ensureMimeTypesForHighlighting();
+        await ensureMimeTypesForHighlighting(normalizedMimeType);
         highlightedText = highlight(text, { language: normalizedMimeType });
     }
 
@@ -62,7 +67,7 @@ export async function applySingleBlockSyntaxHighlight($codeBlock: JQuery<HTMLEle
     }
 }
 
-export async function ensureMimeTypesForHighlighting() {
+export async function ensureMimeTypesForHighlighting(mimeTypeHint?: string) {
     if (highlightingLoaded) {
         return;
     }
@@ -72,7 +77,20 @@ export async function ensureMimeTypesForHighlighting() {
     loadHighlightingTheme(currentThemeName);
 
     // Load mime types.
-    const mimeTypes = mime_types.getMimeTypes();
+    let mimeTypes: MimeType[];
+
+    if (mimeTypeHint) {
+        mimeTypes = [
+            {
+                title: mimeTypeHint,
+                enabled: true,
+                mime: mimeTypeHint.replace("-", "/")
+            }
+        ]
+    } else {
+        mimeTypes = mime_types.getMimeTypes();
+    }
+
     await ensureMimeTypes(mimeTypes);
 
     highlightingLoaded = true;
@@ -96,8 +114,12 @@ export function loadHighlightingTheme(themeName: string) {
  * @returns whether syntax highlighting should be enabled for code blocks.
  */
 export function isSyntaxHighlightEnabled() {
-    const theme = options.get("codeBlockTheme");
-    return !!theme && theme !== "none";
+    if (!isShare) {
+        const theme = options.get("codeBlockTheme");
+        return !!theme && theme !== "none";
+    } else {
+        return true;
+    }
 }
 
 /**

@@ -9,6 +9,7 @@ import type SAttachment from "./sattachment.js";
 import type SAttribute from "./sattribute.js";
 import type SBranch from "./sbranch.js";
 import type { SNoteRow } from "./rows.js";
+import { NOTE_TYPE_ICONS } from "../../../becca/entities/bnote.js";
 
 const LABEL = "label";
 const RELATION = "relation";
@@ -529,6 +530,33 @@ class SNote extends AbstractShacaEntity {
             parentNoteIds: this.parents.map((parentNote) => parentNote.noteId),
             childNoteIds: this.children.map((child) => child.noteId)
         };
+    }
+
+    getIcon() {
+        const iconClassLabels = this.getLabels("iconClass");
+
+        if (iconClassLabels && iconClassLabels.length > 0) {
+            return iconClassLabels[0].value;
+        } else if (this.noteId === "root") {
+            return "bx bx-home-alt-2";
+        }
+        if (this.noteId === "_share") {
+            return "bx bx-share-alt";
+        } else if (this.type === "text") {
+            if (this.isFolder()) {
+                return "bx bx-folder";
+            } else {
+                return "bx bx-note";
+            }
+        } else if (this.type === "code" && this.mime.startsWith("text/x-sql")) {
+            return "bx bx-data";
+        } else {
+            return NOTE_TYPE_ICONS[this.type];
+        }
+    }
+
+    isFolder() {
+        return this.getChildBranches().length > 0;
     }
 }
 

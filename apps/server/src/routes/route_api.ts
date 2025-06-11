@@ -158,6 +158,11 @@ function handleException(e: unknown | Error, method: HttpMethod, path: string, r
 
     log.error(`${method} ${path} threw exception: '${errMessage}', stack: ${errStack}`);
 
+    // Skip sending response if it's already been handled by the route handler
+    if ((res as unknown as { triliumResponseHandled?: boolean }).triliumResponseHandled || res.headersSent) {
+        return;
+    }
+
     const resStatusCode = (e instanceof ValidationError || e instanceof NotFoundError) ? e.statusCode : 500;
 
     res.status(resStatusCode).json({

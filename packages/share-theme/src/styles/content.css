@@ -1,0 +1,42 @@
+.ck-content code,
+.ck-content pre {
+    color: var(--text-primary);
+    background-color: var(--background-secondary);
+    border: 1px solid var(--background-active);
+    border-radius: 6px;
+    white-space: pre;
+}
+
+.ck-content code {
+    padding: 2px 5px;
+}
+
+.ck-content pre code {
+    border: 0;
+}
+
+.ck-content pre {
+    overflow: auto;
+    position: relative;
+}
+
+.ck-content pre .copy-button {
+    position: absolute;
+    top: 0.5em;
+    right: 0.5em;
+}
+
+#content h1,
+#content h2,
+#content h3,
+#content h4,
+#content h5,
+#content h6 {
+    color: var(--text-heading);
+    border-bottom: 1px solid var(--background-highlight);
+    padding-bottom: 5px;
+}
+
+#content img {
+    max-width: 100%;
+}

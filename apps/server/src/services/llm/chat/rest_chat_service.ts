@@ -325,13 +325,13 @@ class RestChatService {
 
             const chat = await chatStorageService.getChat(sessionId);
             if (!chat) {
-                res.status(404).json({
+                // Return error in Express route format [statusCode, response]
+                return [404, {
                     error: true,
                     message: `Session with ID ${sessionId} not found`,
                     code: 'session_not_found',
                     sessionId
-                });
-                return null;
+                }];
             }
 
             return {
@@ -344,7 +344,7 @@ class RestChatService {
             };
         } catch (error: any) {
             log.error(`Error getting chat session: ${error.message || 'Unknown error'}`);
-            throw new Error(`Failed to get session: ${error.message || 'Unknown error'}`);
+            return [500, { error: `Failed to get session: ${error.message || 'Unknown error'}` }];
         }
     }
 

@@ -1,0 +1,38 @@
+{
+  "name": "@triliumnext/share-theme",
+  "version": "1.0.3",
+  "description": "Adaptation of the trilium.rocks share theme",
+  "main": "index.js",
+  "scripts": {
+    "build": "esrun scripts/build.ts",
+    "build-scripts": "esrun scripts/build.ts -- --module=scripts",
+    "build-styles": "esrun scripts/build.ts -- --module=styles",
+    "dist": "esrun scripts/build.ts -- --minify",
+    "test": "esrun src/scripts/test.ts"
+  },
+  "exports": {
+    "./templates/*": "./src/templates/*",
+    "./styles/*": "./src/styles/*",
+    "./scripts/*": "./src/scripts/*",
+    "./*": "./dist/*"
+  },
+  "author": "Elian Doran <contact@eliandoran.me>",
+  "contributors": [
+    "Zerebos <me@zerebos.com>"
+  ],
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@digitak/esrun": "^3.2.24",
+    "@types/swagger-ui": "^5.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "dotenv": "^16.3.1",
+    "esbuild": "^0.25.0",
+    "eslint": "^9.0.0",
+    "highlight.js": "^11.8.0",
+    "typescript": "^5.2.2"
+  },
+  "nx": {
+    "name": "share-theme"
+  }
+}

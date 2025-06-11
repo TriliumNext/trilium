@@ -294,5 +294,14 @@
   },
   "modals": {
     "error_title": "Error"
+  },
+  "share_theme": {
+    "site-theme": "Site Theme",
+    "search_placeholder": "Search...",
+    "image_alt": "Article Image",
+    "last-updated": "Last updated on {{- date}}",
+    "subpages": "Subpages:",
+    "on-this-page": "On This Page",
+    "expand": "Expand"
   }
 }

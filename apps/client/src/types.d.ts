@@ -57,6 +57,8 @@ declare global {
 
         process?: ElectronProcess;
         glob?: CustomGlobals;
+
+        EXCALIDRAW_ASSET_PATH?: string;
     }
 
     interface AutoCompleteConfig {

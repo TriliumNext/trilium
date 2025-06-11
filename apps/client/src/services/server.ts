@@ -1,4 +1,4 @@
-import utils from "./utils.js";
+import utils, { isShare } from "./utils.js";
 import ValidationError from "./validation_error.js";
 
 type Headers = Record<string, string | null | undefined>;
@@ -28,6 +28,10 @@ export interface StandardResponse {
 }
 
 async function getHeaders(headers?: Headers) {
+    if (isShare) {
+        return {};
+    }
+
     const appContext = (await import("../components/app_context.js")).default;
     const activeNoteContext = appContext.tabManager ? appContext.tabManager.getActiveContext() : null;
 

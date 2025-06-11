@@ -1,0 +1,32 @@
+#split-pane {
+    display: flex;
+    flex-direction: row;
+    gap: 50px;
+}
+
+#left-pane {
+    display: flex;
+    width: calc((100vw - 900px) / 2);
+    min-width: fit-content;
+    height: calc(100vh);
+    background: var(--background-secondary);
+    border-right: 5px solid var(--background-highlight);
+    justify-content: flex-end;
+    position: sticky;
+    top: 0;
+    overflow-y: auto;
+}
+
+#right-pane {
+    display: flex;
+    margin: 0 auto;
+    gap: 40px;
+    flex: 1;
+    padding-right: 50px;
+}
+
+#main {
+    order: 2;
+    max-width: 900px;
+    flex: 1;
+}

@@ -27,7 +27,7 @@ When “Remember me” is unchecked, the behavior is different. At client/browse
 
 The login sessions are now stored in the same <a class="reference-link" href="../../Advanced%20Usage/Database.md">Database</a> as the user data. In order to view which sessions are active, open the <a class="reference-link" href="../../Advanced%20Usage/Database/Manually%20altering%20the%20database/SQL%20Console.md">SQL Console</a> and run the following query:
 
-```trilium
+```
 SELECT * FROM sessions
 ```
 

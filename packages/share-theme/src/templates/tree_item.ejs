@@ -1,0 +1,29 @@
+<%
+const linkClass = `type-${note.type}` + (activeNote.noteId === note.noteId ? " active" : "");
+const isExternalLink = note.hasLabel("shareExternal");
+const linkHref = isExternalLink ? note.getLabelValue("shareExternal") : `./${note.shareId}`;
+const target = isExternalLink ? ` target="_blank" rel="noopener noreferrer"` : "";
+%>
+
+    <% if (note.noteId !== subRoot.note.noteId) { %>
+    <a class="<%= linkClass %>" href="<%= linkHref %>"<%= target %>>
+        <% if (note.hasVisibleChildren()) { %><button class="collapse-button" aria-label="<%= t("share_theme.expand") %>"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-icon right-triangle"><path d="M3 8L12 17L21 8"></path></svg></button><% } %>
+        <span><i class="<%= note.getIcon() %>"></i> <%= note.title %></span>
+    </a>
+<% } %>
+
+
+<% if (note.hasVisibleChildren()) { %>
+<ul>
+    <% note.getVisibleChildNotes().forEach(function (childNote) { %>
+    <%
+        const hasChildren = childNote.hasVisibleChildren();
+        const isAncestorOfActive = ancestors.some(p => p === childNote.noteId);
+        const expandedClass = childNote.noteId === activeNote.noteId || isAncestorOfActive ? " expanded" : "";
+    %>
+        <li class="<% if (hasChildren) { %>submenu-<% } %>item<%= expandedClass %>">
+            <%- include('tree_item', {note: childNote, subRoot: subRoot}) %>
+        </li>
+    <% }) %>
+</ul>
+<% } %>

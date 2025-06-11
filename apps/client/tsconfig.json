@@ -4,13 +4,16 @@
   "include": [],
   "references": [
     {
+      "path": "../../packages/share-theme"
+    },
+    {
       "path": "../../packages/highlightjs"
     },
     {
-      "path": "../../packages/codemirror"
+      "path": "../../packages/commons"
     },
     {
-      "path": "../../packages/commons"
+      "path": "../../packages/codemirror"
     },
     {
       "path": "../../packages/ckeditor5"

@@ -1,6 +1,5 @@
-import type FNote from "../../../entities/fnote";
-import type { OptionPages } from "../content_widget";
-import OptionsWidget from "./options_widget";
+import type { OptionPages } from "../../content_widget";
+import OptionsWidget from "../options_widget";
 
 const TPL = `\
 <div class="options-section">

@@ -4,6 +4,8 @@ import type { ViewScope } from "./link.js";
 
 const SVG_MIME = "image/svg+xml";
 
+export const isShare = !window.glob;
+
 function reloadFrontendApp(reason?: string) {
     if (reason) {
         logInfo(`Frontend app reload: ${reason}`);

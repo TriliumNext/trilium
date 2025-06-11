@@ -109,39 +109,6 @@ function isClipboardEmpty() {
     return clipboardBranchIds.length === 0;
 }
 
-export function copyText(text: string) {
-    if (!text) {
-        return;
-    }
-
-    let succeeded = false;
-
-    try {
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(text);
-            succeeded = true;
-        } else {
-            // Fallback method: https://stackoverflow.com/a/72239825
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            succeeded = document.execCommand('copy');
-            document.body.removeChild(textArea);
-        }
-    } catch (e) {
-        console.warn(e);
-        succeeded = false;
-    }
-
-    if (succeeded) {
-        toast.showMessage(t("clipboard.copy_success"));
-    } else {
-        toast.showError(t("clipboard.copy_failed"));
-    }
-}
-
 export default {
     pasteAfter,
     pasteInto,

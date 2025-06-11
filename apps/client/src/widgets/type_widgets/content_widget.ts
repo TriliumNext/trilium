@@ -45,7 +45,7 @@ import { t } from "../../services/i18n.js";
 import LanguageOptions from "./options/i18n/language.js";
 import type BasicWidget from "../basic_widget.js";
 import CodeTheme from "./options/code_notes/code_theme.js";
-import RelatedSettings from "./options/related_settings.js";
+import RelatedSettings from "./options/appearance/related_settings.js";
 
 const TPL = /*html*/`<div class="note-detail-content-widget note-detail-printable">
     <style>

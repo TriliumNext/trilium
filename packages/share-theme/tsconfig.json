@@ -1,0 +1,16 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "noImplicitAny": true,
+        "noImplicitThis": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
+        "strictNullChecks": true,
+        "moduleResolution": "Node16",
+        "target": "ES2022",
+        "rootDir": "src",
+        "module": "Node16"
+    },
+    "include": ["src/**/*"]
+}

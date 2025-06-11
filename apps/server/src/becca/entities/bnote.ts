@@ -28,7 +28,7 @@ const LABEL = "label";
 const RELATION = "relation";
 
 // TODO: Deduplicate with fnote
-const NOTE_TYPE_ICONS = {
+export const NOTE_TYPE_ICONS = {
     file: "bx bx-file",
     image: "bx bx-image",
     code: "bx bx-code",

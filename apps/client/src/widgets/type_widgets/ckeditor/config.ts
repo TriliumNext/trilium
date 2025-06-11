@@ -6,7 +6,7 @@ import options from "../../../services/options.js";
 import { ensureMimeTypesForHighlighting, isSyntaxHighlightEnabled } from "../../../services/syntax_highlight.js";
 import utils from "../../../services/utils.js";
 import emojiDefinitionsUrl from "@triliumnext/ckeditor5/emoji_definitions/en.json?url";
-import { copyText } from "../../../services/clipboard.js";
+import { copyTextWithToast } from "../../../services/clipboard_ext.js";
 
 const TEXT_FORMATTING_GROUP = {
     label: "Text formatting",
@@ -97,6 +97,9 @@ export function buildConfig(): EditorConfig {
                 reversed: true
             }
         },
+        alignment: {
+            options: [ "left", "right", "center", "justify"]
+        },
         link: {
             defaultProtocol: "https://",
             allowedProtocols: ALLOWED_PROTOCOLS
@@ -116,7 +119,7 @@ export function buildConfig(): EditorConfig {
             enabled: isSyntaxHighlightEnabled()
         },
         clipboard: {
-            copy: copyText
+            copy: copyTextWithToast
         },
         // This value must be kept in sync with the language defined in webpack.config.js.
         language: "en"
@@ -194,6 +197,7 @@ export function buildClassicToolbar(multilineToolbar: boolean) {
                     items: ["imageUpload", "|", "link", "bookmark", "internallink", "includeNote", "|", "specialCharacters", "emoji", "math", "mermaid", "horizontalLine", "pageBreak", "dateTime"]
                 },
                 "|",
+                "alignment",
                 "outdent",
                 "indent",
                 "|",
@@ -249,6 +253,7 @@ export function buildFloatingToolbar() {
                 items: ["link", "bookmark", "internallink", "includeNote", "|", "math", "mermaid", "horizontalLine", "pageBreak", "dateTime"]
             },
             "|",
+            "alignment",
             "outdent",
             "indent",
             "|",
