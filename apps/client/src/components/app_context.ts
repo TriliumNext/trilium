@@ -28,6 +28,7 @@ import type { NativeImage, TouchBar } from "electron";
 import TouchBarComponent from "./touch_bar.js";
 import type { CKTextEditor } from "@triliumnext/ckeditor5";
 import type CodeMirror from "@triliumnext/codemirror";
+import { StartupChecks } from "./startup_checks.js";
 
 interface Layout {
     getRootWidget: (appContext: AppContext) => RootWidget;
@@ -128,6 +129,7 @@ export type CommandMappings = {
     openAboutDialog: CommandData;
     hideFloatingButtons: {};
     hideLeftPane: CommandData;
+    showCpuArchWarning: CommandData;
     showLeftPane: CommandData;
     hoistNote: CommandData & { noteId: string };
     leaveProtectedSession: CommandData;
@@ -473,7 +475,14 @@ export class AppContext extends Component {
     initComponents() {
         this.tabManager = new TabManager();
 
-        this.components = [this.tabManager, new RootCommandExecutor(), new Entrypoints(), new MainTreeExecutors(), new ShortcutComponent()];
+        this.components = [
+            this.tabManager,
+            new RootCommandExecutor(),
+            new Entrypoints(),
+            new MainTreeExecutors(),
+            new ShortcutComponent(),
+            new StartupChecks()
+        ];
 
         if (utils.isMobile()) {
             this.components.push(new MobileScreenSwitcherExecutor());

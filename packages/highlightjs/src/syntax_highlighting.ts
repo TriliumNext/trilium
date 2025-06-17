@@ -64,6 +64,7 @@ const byMimeType: MimeRecord = {
     "text/x-ebnf": () => import("highlight.js/lib/languages/ebnf"),
     "text/x-ecl": null,
     "text/x-eiffel": null,
+    "text/x-elixir": () => import("highlight.js/lib/languages/elixir"),
     "text/x-elm": () => import("highlight.js/lib/languages/elm"),
     "text/x-erlang": () => import("highlight.js/lib/languages/erlang"),
     "text/x-esper": null,

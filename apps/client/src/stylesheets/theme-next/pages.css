@@ -142,6 +142,12 @@ div.note-detail-empty {
     border: unset;
 }
 
+/* NOTE ATTACHMENTS */
+
+.attachment-list div.links-wrapper {
+    font-size: unset;
+}
+
 /*
  * OPTIONS PAGES
  */

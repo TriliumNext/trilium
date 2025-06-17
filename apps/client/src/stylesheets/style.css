@@ -391,7 +391,7 @@ body.desktop .dropdown-menu {
 }
 
 body.desktop .dropdown-menu:not(#context-menu-container) .dropdown-item,
-body.desktop #context-menu-container .dropdown-item > span {
+body #context-menu-container .dropdown-item > span {
     display: flex;
     align-items: center;
 }

@@ -58,6 +58,7 @@ import ollamaRoute from "./api/ollama.js";
 import openaiRoute from "./api/openai.js";
 import anthropicRoute from "./api/anthropic.js";
 import llmRoute from "./api/llm.js";
+import systemInfoRoute from "./api/system_info.js";
 
 import etapiAuthRoutes from "../etapi/auth.js";
 import etapiAppInfoRoutes from "../etapi/app_info.js";
@@ -239,6 +240,7 @@ function register(app: express.Application) {
     apiRoute(PST, "/api/recent-notes", recentNotesRoute.addRecentNote);
     apiRoute(GET, "/api/app-info", appInfoRoute.getAppInfo);
     apiRoute(GET, "/api/metrics", metricsRoute.getMetrics);
+    apiRoute(GET, "/api/system-checks", systemInfoRoute.systemChecks);
 
     // docker health check
     route(GET, "/api/health-check", [], () => ({ status: "ok" }), apiResultHandler);

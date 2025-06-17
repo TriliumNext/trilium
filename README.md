@@ -22,7 +22,7 @@ See [screenshots](https://triliumnext.github.io/Docs/Wiki/screenshot-tour) for q
 * Seamless [note versioning](https://triliumnext.github.io/Docs/Wiki/note-revisions)
 * Note [attributes](https://triliumnext.github.io/Docs/Wiki/attributes) can be used for note organization, querying and advanced [scripting](https://triliumnext.github.io/Docs/Wiki/scripts)
 * UI available in English, German, Spanish, French, Romanian, and Chinese (simplified and traditional)
-* Direct [OpenID and TOTP integration](.docs/User%20Guide/User%20Guide/Installation%20%26%20Setup/Server%20Installation/Multi-Factor%20Authentication.md") for more secure login
+* Direct [OpenID and TOTP integration](./docs/User%20Guide/User%20Guide/Installation%20%26%20Setup/Server%20Installation/Multi-Factor%20Authentication.md) for more secure login
 * [Synchronization](https://triliumnext.github.io/Docs/Wiki/synchronization) with self-hosted sync server
   * there's a [3rd party service for hosting synchronisation server](https://trilium.cc/paid-hosting)
 * [Sharing](https://triliumnext.github.io/Docs/Wiki/sharing) (publishing) notes to public internet

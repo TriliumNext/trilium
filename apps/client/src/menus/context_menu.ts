@@ -194,14 +194,15 @@ class ContextMenu {
                         return false;
                     });
 
-                if (!this.isMobile) {
-                    $item.on("mouseup", (e) =>{
+                $item.on("mouseup", (e) => {
+                    // Prevent submenu from failing to expand on mobile
+                    if (!this.isMobile || !("items" in item && item.items)) {
                         e.stopPropagation();
                         // Hide the content menu on mouse up to prevent the mouse event from propagating to the elements below.
                         this.hide();
                         return false;
-                    });
-                }
+                    }
+                });
 
                 if ("enabled" in item && item.enabled !== undefined && !item.enabled) {
                     $item.addClass("disabled");

@@ -1,6 +1,6 @@
 {
   "name": "@triliumnext/server",
-  "version": "0.94.1",
+  "version": "0.95.0",
   "description": "The server-side component of TriliumNext, which exposes the client via the web, allows for sync and provides a REST API for both internal and external use.",
   "private": true,
   "dependencies": {
@@ -39,14 +39,14 @@
     "@types/ws": "8.18.1",
     "@types/xml2js": "0.4.14",
     "express-http-proxy": "2.1.1",
-    "@anthropic-ai/sdk": "0.53.0",
+    "@anthropic-ai/sdk": "0.54.0",
     "@braintree/sanitize-url": "7.1.1",
     "@triliumnext/commons": "workspace:*",
     "@triliumnext/express-partial-content": "workspace:*",
     "@triliumnext/turndown-plugin-gfm": "workspace:*",
     "archiver": "7.0.1",
     "async-mutex": "0.5.0",
-    "axios": "1.9.0",
+    "axios": "1.10.0",
     "bindings": "1.5.0",
     "chardet": "2.1.0",
     "cheerio": "1.1.0",
@@ -245,18 +245,19 @@
           },
           "declarationRootDir": "apps/server/src",
           "minify": false,
-            "assets": [
-              {
-                "glob": "**/*",
-                "input": "apps/server/src/assets",
-                "output": "assets"
-              },
-              {
-                "glob": "**/*",
-                "input": "packages/share-theme/src/templates",
-                "output": "share-theme/templates"
-              }
-            ]
+          "sourcemap": true,
+          "assets": [
+            {
+              "glob": "**/*",
+              "input": "apps/server/src/assets",
+              "output": "assets"
+            },
+            {
+              "glob": "**/*",
+              "input": "packages/share-theme/src/templates",
+              "output": "share-theme/templates"
+            }
+          ]
         }
       },
       "build": {
@@ -268,6 +269,17 @@
           "^build",
           "client:build"
         ],
+        "defaultConfiguration": "production",
+        "configurations": {
+          "production": {
+            "minify": true,
+            "sourcemap": false
+          },
+          "development": {
+            "minify": false,
+            "sourcemap": true
+          }
+        },
         "options": {
           "main": "apps/server/src/main.ts",
           "outputPath": "apps/server/dist",
@@ -283,10 +295,8 @@
             "cjs"
           ],
           "declarationRootDir": "apps/server/src",
-          "minify": true,
           "thirdParty": true,
           "declaration": false,
-          "sourcemap": true,
           "esbuildOptions": {
             "splitting": false,
             "loader": {
@@ -338,6 +348,12 @@
             }
           ]
         }
+      },
+      "test-build": {
+        "dependsOn": [
+          "build"
+        ],
+        "command": "vitest --config {projectRoot}/vitest.build.config.mts"
       }
     }
   },

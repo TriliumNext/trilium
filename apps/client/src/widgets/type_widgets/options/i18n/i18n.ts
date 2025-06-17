@@ -63,7 +63,7 @@ const TPL = /*html*/`
             </select>
         </div>
 
-        <p class="form-text">${t("i18n.first-week-info")}</p>
+        <p class="form-text use-tn-links">${t("i18n.first-week-info")}</p>
 
         <div class="admonition warning" role="alert">
             ${t("i18n.first-week-warning")}

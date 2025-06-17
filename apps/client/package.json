@@ -1,6 +1,6 @@
 {
   "name": "@triliumnext/client",
-  "version": "0.94.1",
+  "version": "0.95.0",
   "description": "JQuery-based client for TriliumNext, used for both web and desktop (via Electron)",
   "private": true,
   "license": "AGPL-3.0-only",
@@ -10,7 +10,7 @@
     "url": "https://github.com/TriliumNext/Notes"
   },
   "dependencies": {
-    "@eslint/js": "9.28.0",
+    "@eslint/js": "9.29.0",
     "@excalidraw/excalidraw": "0.18.0",
     "@fullcalendar/core": "6.1.17",
     "@fullcalendar/daygrid": "6.1.17",
@@ -51,7 +51,7 @@
     "mind-elixir": "4.6.0",
     "normalize.css": "8.0.1",
     "panzoom": "9.4.3",
-    "preact": "10.26.8",
+    "preact": "10.26.9",
     "split.js": "1.6.5",
     "svg-pan-zoom": "3.6.2",
     "vanilla-js-wheel-zoom": "9.0.4"
@@ -66,7 +66,7 @@
     "copy-webpack-plugin": "13.0.0",
     "happy-dom": "18.0.1",
     "script-loader": "0.7.2",
-    "vite-plugin-static-copy": "3.0.0"
+    "vite-plugin-static-copy": "3.0.2"
   },
   "nx": {
     "name": "client",

@@ -69,6 +69,7 @@ export default class MarkdownImportDialog extends BasicWidget {
         const modelFragment = textEditor.data.toModel(viewFragment);
 
         textEditor.model.insertContent(modelFragment, textEditor.model.document.selection);
+        textEditor.editing.view.focus();
 
         toastService.showMessage(t("markdown_import.import_success"));
     }

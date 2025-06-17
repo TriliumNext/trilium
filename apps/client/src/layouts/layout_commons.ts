@@ -21,6 +21,7 @@ import ConfirmDialog from "../widgets/dialogs/confirm.js";
 import RevisionsDialog from "../widgets/dialogs/revisions.js";
 import DeleteNotesDialog from "../widgets/dialogs/delete_notes.js";
 import InfoDialog from "../widgets/dialogs/info.js";
+import IncorrectCpuArchDialog from "../widgets/dialogs/incorrect_cpu_arch.js";
 
 export function applyModals(rootContainer: RootContainer) {
     rootContainer
@@ -45,4 +46,5 @@ export function applyModals(rootContainer: RootContainer) {
         .child(new InfoDialog())
         .child(new ConfirmDialog())
         .child(new PromptDialog())
+        .child(new IncorrectCpuArchDialog())
 }

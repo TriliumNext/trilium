@@ -1926,5 +1926,14 @@
     "title": "Appearance",
     "word_wrapping": "Word wrapping",
     "color-scheme": "Color scheme"
+  },
+  "cpu_arch_warning": {
+    "title": "Please download the ARM64 version",
+    "message_macos": "TriliumNext is currently running under Rosetta 2 translation, which means you're using the Intel (x64) version on Apple Silicon Mac. This will significantly impact performance and battery life.",
+    "message_windows": "TriliumNext is currently running emulation, which means you're using the Intel (x64) version on a Windows on ARM device. This will significantly impact performance and battery life.",
+    "recommendation": "For the best experience, please download the native ARM64 version of TriliumNext from our releases page.",
+    "download_link": "Download Native Version",
+    "continue_anyway": "Continue Anyway",
+    "dont_show_again": "Don't show this warning again"
   }
 }

@@ -84,6 +84,7 @@ const byMimeType: Record<string, (() => Promise<StreamParser<unknown> | Language
     "text/x-ebnf": async () => (await import('@codemirror/legacy-modes/mode/ebnf')).ebnf,
     "text/x-ecl": async () => (await import('@codemirror/legacy-modes/mode/ecl')).ecl,
     "text/x-eiffel": async () => (await import('@codemirror/legacy-modes/mode/eiffel')).eiffel,
+    "text/x-elixir": async () => (await import('codemirror-lang-elixir')).elixir(),
     "text/x-elm": async () => (await import('@codemirror/legacy-modes/mode/elm')).elm,
     "text/x-erlang": async () => (await import('@codemirror/legacy-modes/mode/erlang')).erlang,
     "text/x-esper": async () => (await import('@codemirror/legacy-modes/mode/sql')).esper,

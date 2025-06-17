@@ -73,7 +73,7 @@ function error(message: string | Error | unknown) {
     log(`ERROR: ${message}`);
 }
 
-const requestBlacklist = ["/libraries", "/app", "/images", "/stylesheets", "/api/recent-notes"];
+const requestBlacklist = ["/app", "/images", "/stylesheets", "/api/recent-notes"];
 
 function request(req: Request, res: Response, timeMs: number, responseLength: number | string = "?") {
     for (const bl of requestBlacklist) {

@@ -267,7 +267,7 @@ input::selection,
 }
 
 .input-group button:focus-visible,
-.input-group a:focus-visible {
+.input-group a:focus-visible:not(.dropdown-item) {
     box-shadow: unset;
     outline: transparent;
     border: transparent;
@@ -349,7 +349,7 @@ select:hover,
 select.form-select:hover,
 select.form-control:hover,
 .select-button.dropdown-toggle.btn:hover {
-    background: var(--input-hover-background) var(--dropdown-arrow);
+    background: var(--input-hover-background) var(--dropdown-arrow,);
     color: var(--input-hover-color);
 }
 

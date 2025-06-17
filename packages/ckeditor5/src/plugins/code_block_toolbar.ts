@@ -1,4 +1,4 @@
-import { CodeBlock, Plugin, ViewDocumentFragment, WidgetToolbarRepository, type ViewNode } from "ckeditor5";
+import { BalloonToolbarShowEvent, CodeBlock, Plugin, ViewDocumentFragment, WidgetToolbarRepository, type ViewNode } from "ckeditor5";
 import CodeBlockLanguageDropdown from "./code_block_language_dropdown";
 import CopyToClipboardButton from "./copy_to_clipboard_button";
 
@@ -37,6 +37,18 @@ export default class CodeBlockToolbar extends Plugin {
                 return null;
             }
         });
+
+        // Hide balloon toolbar when in a code block
+        if (editor.plugins.has("BalloonToolbar")) {
+            editor.listenTo(editor.plugins.get('BalloonToolbar'), 'show', (evt) => {
+                const firstPosition = editor.model.document.selection.getFirstPosition();
+                const isInCodeBlock = firstPosition?.findAncestor('codeBlock');
+
+                if (isInCodeBlock) {
+                    evt.stop(); // Prevent the balloon toolbar from showing
+                }
+            }, { priority: 'high' });
+        }
     }
 
 }

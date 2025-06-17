@@ -9,7 +9,7 @@ const TPL = /*html*/`
 <div class="options-section">
     <h4>${t("custom_date_time_format.title")}</h4>
 
-    <p class="description">
+    <p class="description use-tn-links">
         ${t("custom_date_time_format.description")}
     </p>
 

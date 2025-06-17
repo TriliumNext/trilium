@@ -1,6 +1,6 @@
 {
   "name": "@triliumnext/source",
-  "version": "0.94.1",
+  "version": "0.95.0",
   "description": "Build your personal knowledge base with TriliumNext Notes",
   "directories": {
     "doc": "docs"
@@ -20,23 +20,23 @@
     "chore:update-build-info": "tsx ./scripts/update-build-info.ts",
     "chore:update-version": "tsx ./scripts/update-version.ts",
     "test:all": "pnpm test:parallel && pnpm test:sequential",
-    "test:parallel": "pnpm nx run-many -t test --all --exclude=ckeditor5-mermaid,ckeditor5-math --parallel",
-    "test:sequential": "pnpm nx run-many -t test --projects=ckeditor5-mermaid,ckeditor5-math --parallel=1",
+    "test:parallel": "pnpm nx run-many -t test --all --exclude=server,ckeditor5-mermaid,ckeditor5-math --parallel",
+    "test:sequential": "pnpm nx run-many -t test --projects=server,ckeditor5-mermaid,ckeditor5-math --parallel=1",
     "coverage": "pnpm nx run-many -t coverage"
   },
   "private": true,
   "devDependencies": {
     "@electron/rebuild": "4.0.1",
-    "@nx/devkit": "21.1.3",
-    "@nx/esbuild": "21.1.3",
-    "@nx/eslint": "21.1.3",
-    "@nx/eslint-plugin": "21.1.3",
-    "@nx/express": "21.1.3",
-    "@nx/js": "21.1.3",
-    "@nx/node": "21.1.3",
-    "@nx/playwright": "21.1.3",
-    "@nx/vite": "21.1.3",
-    "@nx/web": "21.1.3",
+    "@nx/devkit": "21.2.0",
+    "@nx/esbuild": "21.2.0",
+    "@nx/eslint": "21.2.0",
+    "@nx/eslint-plugin": "21.2.0",
+    "@nx/express": "21.2.0",
+    "@nx/js": "21.2.0",
+    "@nx/node": "21.2.0",
+    "@nx/playwright": "21.2.0",
+    "@nx/vite": "21.2.0",
+    "@nx/web": "21.2.0",
     "@playwright/test": "^1.36.0",
     "@triliumnext/server": "workspace:*",
     "@types/express": "^5.0.0",
@@ -53,11 +53,11 @@
     "jiti": "2.4.2",
     "jsdom": "~26.1.0",
     "jsonc-eslint-parser": "^2.1.0",
-    "nx": "21.1.3",
+    "nx": "21.2.0",
     "react-refresh": "^0.17.0",
     "rollup-plugin-webpack-stats": "2.0.7",
     "tslib": "^2.3.0",
-    "tsx": "4.19.4",
+    "tsx": "4.20.3",
     "typescript": "~5.8.0",
     "typescript-eslint": "^8.19.0",
     "upath": "2.0.1",
@@ -79,21 +79,18 @@
     "url": "https://github.com/TriliumNext/Notes/issues"
   },
   "homepage": "https://github.com/TriliumNext/Notes#readme",
-  "dependencies": {
-    "axios": "^1.6.0",
-    "express": "^5.0.0"
-  },
   "packageManager": "pnpm@10.12.1+sha512.f0dda8580f0ee9481c5c79a1d927b9164f2c478e90992ad268bbb2465a736984391d6333d2c327913578b2804af33474ca554ba29c04a8b13060a717675ae3ac",
   "pnpm": {
     "patchedDependencies": {
       "@ckeditor/ckeditor5-mention": "patches/@ckeditor__ckeditor5-mention.patch",
       "@ckeditor/ckeditor5-code-block": "patches/@ckeditor__ckeditor5-code-block.patch",
-      "ckeditor5": "patches/ckeditor5.patch"
+      "ckeditor5": "patches/ckeditor5.patch",
+      "@nx/js": "patches/@nx__js.patch"
     },
     "overrides": {
       "node-abi": "4.9.0",
       "mermaid": "11.6.0",
-      "preact": "10.26.8",
+      "preact": "10.26.9",
       "roughjs": "4.6.6",
       "@types/express-serve-static-core": "5.0.6",
       "flat@<5.0.1": ">=5.0.1",
@@ -102,7 +99,24 @@
       "nanoid@>=4.0.0 <5.0.9": ">=5.0.9",
       "dompurify@<3.2.4": ">=3.2.4",
       "esbuild@<=0.24.2": ">=0.25.0"
-    }
+    },
+    "ignoredBuiltDependencies": [
+      "sqlite3"
+    ],
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "@scarf/scarf",
+      "better-sqlite3",
+      "bufferutil",
+      "core-js-pure",
+      "electron",
+      "electron-winstaller",
+      "esbuild",
+      "fs-xattr",
+      "macos-alias",
+      "nx",
+      "utf-8-validate"
+    ]
   },
   "nx": {
     "name": "triliumnext"

@@ -144,29 +144,70 @@ module.exports = {
     hooks: {
         // Remove unused locales from the packaged app to save some space.
         postPackage(_, packageResult) {
-            const localesToKeep = LOCALES
+            const isMac = (process.platform === "darwin");
+            let localesToKeep = LOCALES
                 .filter(locale => !locale.contentOnly)
-                .map(locale => locale.electronLocale.replace("_", "-"));
+                .map(locale => locale.electronLocale);
+            if (!isMac) {
+                localesToKeep = localesToKeep.map(locale => locale.replace("_", "-"))
+            }
+
+            const keptLocales = new Set();
+            const removedLocales =  [];
+            const extension = (isMac ? ".lproj" : ".pak");
 
             for (const outputPath of packageResult.outputPaths) {
-                const localesDir = path.join(outputPath, 'locales');
+                const localeDirs = isMac
+                    ? [
+                        path.join(outputPath, "TriliumNext Notes.app/Contents/Resources"),
+                        path.join(outputPath, "TriliumNext Notes.app/Contents/Frameworks/Electron Framework.framework/Resources")
+                    ]
+                    : [ path.join(outputPath, 'locales') ];
 
-                if (!fs.existsSync(localesDir)) {
-                    console.log('No locales directory found. Skipping cleanup.');
-                    return;
-                }
-
-                const files = fs.readdirSync(localesDir);
-
-                for (const file of files) {
-                    const localeName = path.basename(file, ".pak");
-                    if (localesToKeep.includes(localeName)) {
-                        continue;
+                for (const localeDir of localeDirs) {
+                    if (!fs.existsSync(localeDir)) {
+                        console.log(`No locales directory found in '${localeDir}'.`);
+                        process.exit(2);
                     }
+    
+                    const files = fs.readdirSync(localeDir);
+    
+                    for (const file of files) {
+                        if (!file.endsWith(extension)) {
+                            continue;
+                        }
+    
+                        let localeName = path.basename(file, extension);
+                        if (localeName === "en-US" && !isMac) {
+                            // If the locale is "en-US" on Windows, we treat it as "en".
+                            // This is because the Windows version of Electron uses "en-US.pak" instead of "en.pak".
+                            localeName = "en";
+                        }
+    
+                        if (localesToKeep.includes(localeName)) {
+                            keptLocales.add(localeName);
+                            continue;
+                        }
+    
+                        const filePath = path.join(localeDir, file);
+                        if (isMac) {
+                            fs.rm(filePath, { recursive: true });
+                        } else {
+                            fs.unlinkSync(filePath);
+                        }
+    
+                        removedLocales.push(file);
+                    }
+                }
+            }
 
-                    console.log(`Removing unused locale file: ${file}`);                    
-                    const filePath = path.join(localesDir, file);
-                    fs.unlinkSync(filePath);
+            console.log(`Removed unused locale files: ${removedLocales.join(", ")}`);                    
+
+            // Ensure all locales that should be kept are actually present.
+            for (const locale of localesToKeep) {
+                if (!keptLocales.has(locale)) {
+                    console.error(`Locale ${locale} was not found in the packaged app.`);
+                    process.exit(1);
                 }
             }
         },

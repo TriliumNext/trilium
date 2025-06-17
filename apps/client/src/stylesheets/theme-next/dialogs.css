@@ -396,3 +396,19 @@ div.tn-tool-dialog {
     font-weight: normal;
     white-space: nowrap;
 }
+
+/*
+ * NOTE TYPE CHOOSER DIALOG
+ */
+
+.note-type-chooser-dialog div.note-type-dropdown {
+    /* Disable the active item highlighting since there is no use for it here */
+    --active-item-text-color: initial;
+    --active-item-background-color: initial;
+
+    font-size: unset;
+}
+
+.note-type-chooser-dialog div.note-type-dropdown .dropdown-item span.bx {
+    margin-right: .25em;
+}

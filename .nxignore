@@ -1,7 +1,2 @@
 _regroup
 _regroup_monorepo
-
-# Asset copying respects .gitignore / .nxignore for some reason.
-# See https://github.com/nrwl/nx/issues/20309 
-!dist
-!node_modules

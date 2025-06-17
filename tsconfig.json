@@ -59,6 +59,9 @@
     },
     {
       "path": "./packages/share-theme"
+    },
+    {
+      "path": "./apps/website"
     }
   ]
 }

@@ -6,10 +6,26 @@
   "prHourlyLimit": 0,
   "prConcurrentLimit": 0,
   "branchConcurrentLimit": 0,
+  "ignorePaths": [
+    "**/node_modules/**",
+    "apps/edit-docs/demo/**",
+    "apps/server/src/assets/doc_notes/**",
+    "docs/**"
+  ],
+  "html": {
+    "enabled": false
+  },
+  "bun": {
+    "enabled": false
+  },
   "packageRules": [
     {
       "matchPackageNames": "@fsegurai/codemirror-theme-**",
       "groupName": "codemirror themes"
+    },
+    {
+      "matchPackageNames": "**-config-ckeditor5",
+      "groupName": "ckeditor5 config packages"
     }
   ]
 }

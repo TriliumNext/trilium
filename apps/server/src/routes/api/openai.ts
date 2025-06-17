@@ -48,7 +48,7 @@ import OpenAI from "openai";
  */
 async function listModels(req: Request, res: Response) {
     try {
-        const { baseUrl } = req.body;
+        const { baseUrl } = req.body ?? {};
 
         // Use provided base URL or default from options
         const openaiBaseUrl = baseUrl || await options.getOption('openaiBaseUrl') || 'https://api.openai.com/v1';

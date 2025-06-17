@@ -1507,6 +1507,12 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
             );
 
             this.toggleHiddenNode(true); // hoisting will handle hidden note visibility
+
+            // Automatically expand the hoisted note by default
+            const node = this.getActiveNode();
+            if (node.data.noteId === this.noteContext.hoistedNoteId){
+                this.setExpanded(node.data.branchId, true);
+            }
         }
     }
 

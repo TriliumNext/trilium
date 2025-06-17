@@ -5,7 +5,7 @@ import { viteStaticCopy } from 'vite-plugin-static-copy'
 import asset_path from './src/asset_path';
 import webpackStatsPlugin from 'rollup-plugin-webpack-stats';
 
-const assets = [ "assets", "stylesheets", "libraries", "fonts", "translations" ];
+const assets = [ "assets", "stylesheets", "fonts", "translations" ];
 
 export default defineConfig(() => ({
     root: __dirname,
@@ -70,7 +70,7 @@ export default defineConfig(() => ({
         outDir: './dist',
         emptyOutDir: true,
         reportCompressedSize: true,
-        sourcemap: process.env.NODE_ENV === "production",
+        sourcemap: false,
         rollupOptions: {
             input: {
                 desktop: join(__dirname, "src", "desktop.ts"),
@@ -84,7 +84,10 @@ export default defineConfig(() => ({
             output: {
                 entryFileNames: "src/[name].js",
                 chunkFileNames: "src/[name].js",
-                assetFileNames: "src/[name].[ext]"
+                assetFileNames: "src/[name].[ext]",
+                manualChunks: {
+                    "ckeditor5": [ "@triliumnext/ckeditor5" ]
+                },
             },
             onwarn(warning, rollupWarn) {
                 if (warning.code === "MODULE_LEVEL_DIRECTIVE") {

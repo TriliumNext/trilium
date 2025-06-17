@@ -39,7 +39,7 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v4
       - name: Check affected
-        run: pnpm nx affected --verbose -t typecheck build rebuild-deps
+        run: pnpm nx affected --verbose -t typecheck build rebuild-deps test-build
 
   test_dev:
     name: Test development

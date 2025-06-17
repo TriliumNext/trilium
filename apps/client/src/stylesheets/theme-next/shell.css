@@ -354,7 +354,7 @@ body.layout-horizontal > .horizontal {
 }
 
 .calendar-dropdown-widget .calendar-header .calendar-month-selector .select-button {
-    --select-arrow-svg: ""; /* Disable the dropdown arrow */
+    --select-arrow-svg: initial; /* Disable the dropdown arrow */
 }
 
 @media (max-width: 992px) {
@@ -1145,12 +1145,18 @@ body.mobile .note-title {
 
 /* The "Change note icon" button */
 
-.note-icon-widget .note-icon {
+:root .note-icon-widget button.note-icon,
+:root .note-icon-widget button.note-icon:hover {
     border: none;
     border-radius: 8px;
 }
 
-.note-icon-widget .note-icon:hover {
+/* Dropdown open */
+:root .note-icon-widget button.note-icon.show {
+    background: var(--ck-editor-toolbar-dropdown-button-open-background);
+}
+
+:root .note-icon-widget button.note-icon:not(:disabled):hover {
     background: var(--icon-button-hover-background);
     color: var(--icon-button-hover-color);
 }

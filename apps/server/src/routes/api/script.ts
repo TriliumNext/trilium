@@ -118,7 +118,7 @@ function getRelationBundles(req: Request) {
 
 function getBundle(req: Request) {
     const note = becca.getNoteOrThrow(req.params.noteId);
-    const { script, params } = req.body;
+    const { script, params } = req.body ?? {};
 
     return scriptService.getScriptBundleForFrontend(note, script, params);
 }

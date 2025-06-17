@@ -36,7 +36,6 @@ async function register(app: express.Application) {
 
         app.use(`/${assetUrlFragment}/src`, persistentCacheStatic(path.join(publicDir, "src")));
         app.use(`/${assetUrlFragment}/stylesheets`, persistentCacheStatic(path.join(publicDir, "stylesheets")));
-        app.use(`/${assetUrlFragment}/libraries`, persistentCacheStatic(path.join(publicDir, "libraries")));
         app.use(`/${assetUrlFragment}/fonts`, persistentCacheStatic(path.join(publicDir, "fonts")));
         app.use(`/${assetUrlFragment}/translations/`, persistentCacheStatic(path.join(publicDir, "translations")));
         app.use(`/node_modules/`, persistentCacheStatic(path.join(publicDir, "node_modules")));
@@ -46,8 +45,6 @@ async function register(app: express.Application) {
     app.use(`/assets/vX/fonts`, express.static(path.join(srcRoot, "public/fonts")));
     app.use(`/assets/vX/images`, express.static(path.join(srcRoot, "..", "images")));
     app.use(`/assets/vX/stylesheets`, express.static(path.join(srcRoot, "public/stylesheets")));
-    app.use(`/${assetUrlFragment}/libraries`, persistentCacheStatic(path.join(srcRoot, "public/libraries")));
-    app.use(`/assets/vX/libraries`, express.static(path.join(srcRoot, "..", "libraries")));
 }
 
 export default {

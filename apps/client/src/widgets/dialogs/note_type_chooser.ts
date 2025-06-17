@@ -37,7 +37,7 @@ const TPL = /*html*/`
                             data-bs-toggle="dropdown" data-bs-display="static">
                     </button>
 
-                    <div class="note-type-dropdown dropdown-menu"></div>
+                    <div class="note-type-dropdown dropdown-menu static"></div>
                 </div>
             </div>
         </div>

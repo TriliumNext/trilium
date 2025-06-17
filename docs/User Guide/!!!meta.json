@@ -9190,6 +9190,90 @@
                                     "value": "bx bx-share-alt",
                                     "isInheritable": false,
                                     "position": 30
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "iPIMuisry3hd",
+                                    "isInheritable": false,
+                                    "position": 60
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "m523cpzocqaD",
+                                    "isInheritable": false,
+                                    "position": 70
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "iRwzGnHPzonm",
+                                    "isInheritable": false,
+                                    "position": 80
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "bdUJEHsAPYQR",
+                                    "isInheritable": false,
+                                    "position": 90
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "HcABDtFCkbFN",
+                                    "isInheritable": false,
+                                    "position": 100
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "GTwFsgaA0lCt",
+                                    "isInheritable": false,
+                                    "position": 110
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "s1aBHPd79XYj",
+                                    "isInheritable": false,
+                                    "position": 120
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "grjYqerjn243",
+                                    "isInheritable": false,
+                                    "position": 130
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "1vHRoWCEjj0L",
+                                    "isInheritable": false,
+                                    "position": 140
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "gBbsAeiuUxI5",
+                                    "isInheritable": false,
+                                    "position": 150
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "81SGnPGMk7Xc",
+                                    "isInheritable": false,
+                                    "position": 160
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "W8vYD3Q1zjCR",
+                                    "isInheritable": false,
+                                    "position": 170
                                 }
                             ],
                             "format": "markdown",
@@ -9204,20 +9288,12 @@
                                     "dataFileName": "Sharing_shared-list.png"
                                 },
                                 {
-                                    "attachmentId": "DFUCyGDOpqOt",
-                                    "title": "share-multiple-notes-web.png",
+                                    "attachmentId": "ibqWQUOCMhIE",
+                                    "title": "image.png",
                                     "role": "image",
                                     "mime": "image/png",
                                     "position": 10,
-                                    "dataFileName": "Sharing_share-multiple-not.png"
-                                },
-                                {
-                                    "attachmentId": "Il8udowRLald",
-                                    "title": "share-single-note-web.png",
-                                    "role": "image",
-                                    "mime": "image/png",
-                                    "position": 10,
-                                    "dataFileName": "Sharing_share-single-note-.png"
+                                    "dataFileName": "Sharing_image.png"
                                 },
                                 {
                                     "attachmentId": "ShhsPSZVMQKx",
@@ -9258,10 +9334,10 @@
                                             "dataFileName": "Serving directly the conte.png"
                                         },
                                         {
-                                            "attachmentId": "xicVjsf2Kmaz",
+                                            "attachmentId": "ixkXFTSSkdpL",
                                             "title": "image.png",
                                             "role": "image",
-                                            "mime": "image/jpg",
+                                            "mime": "image/png",
                                             "position": 10,
                                             "dataFileName": "1_Serving directly the conte.png"
                                         }

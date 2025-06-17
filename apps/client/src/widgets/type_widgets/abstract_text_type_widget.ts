@@ -17,6 +17,7 @@ export default class AbstractTextTypeWidget extends TypeWidget {
         this.$widget.on("dblclick", "img", (e) => this.openImageInCurrentTab($(e.target)));
 
         this.$widget.on("click", "img", (e) => {
+            e.stopPropagation();
             const isLeftClick = e.which === 1;
             const isMiddleClick = e.which === 2;
             const ctrlKey = utils.isCtrlKey(e);

@@ -2,22 +2,5 @@ packages:
 - packages/*
 - apps/*
 
-ignoredBuiltDependencies:
-- sqlite3
-
-onlyBuiltDependencies:
-- '@parcel/watcher'
-- '@scarf/scarf'
-- bufferutil
-- core-js-pure
-- esbuild
-- nx
-- utf-8-validate
-- better-sqlite3
-- electron
-- electron-winstaller
-- fs-xattr
-- macos-alias
-
 shamefullyHoist: true
 nodeLinker: isolated

@@ -5,7 +5,7 @@ const TPL = `\
 <div class="options-section">
     <h4>Related settings</h4>
 
-    <nav class="related-settings">
+    <nav class="related-settings use-tn-links">
         <li>Color scheme for code blocks in text notes</li>
         <li>Color scheme for code notes</li>
     </nav>
