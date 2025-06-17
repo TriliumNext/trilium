@@ -201,6 +201,11 @@
     color: var(--menu-item-icon-color);
 }
 
+/* Slash commands */
+.ck.ck-slash-command-button__text-part .ck.ck-button__label {
+    font-weight: bold;
+}
+
 /* Separator */
 :root .ck .ck-list__separator {
     margin: .5em 0;

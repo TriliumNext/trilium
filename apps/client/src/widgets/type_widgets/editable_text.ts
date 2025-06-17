@@ -18,8 +18,7 @@ import { getMermaidConfig } from "../../services/mermaid.js";
 import { PopupEditor, ClassicEditor, EditorWatchdog, type CKTextEditor, type MentionFeed, type WatchdogConfig } from "@triliumnext/ckeditor5";
 import "@triliumnext/ckeditor5/index.css";
 import { normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
-
-const ENABLE_INSPECTOR = false;
+import { updateTemplateCache } from "./ckeditor/snippets.js";
 
 const mentionSetup: MentionFeed[] = [
     {
@@ -195,7 +194,7 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
 
             const finalConfig = {
                 ...editorConfig,
-                ...buildConfig(),
+                ...(await buildConfig()),
                 ...buildToolbarConfig(isClassicEditor),
                 htmlSupport: {
                     allow: JSON.parse(options.get("allowedHtmlTags")),
@@ -203,7 +202,7 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
                     classes: true,
                     attributes: true
                 },
-                licenseKey: "GPL"
+                licenseKey: getLicenseKey()
             };
 
             const contentLanguage = this.note?.getLabelValue("language");
@@ -278,7 +277,7 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
 
             editor.model.document.on("change:data", () => this.spacedUpdate.scheduleUpdate());
 
-            if (glob.isDev && ENABLE_INSPECTOR) {
+            if (import.meta.env.VITE_CKEDITOR_ENABLE_INSPECTOR === "true") {
                 const CKEditorInspector = (await import("@ckeditor/ckeditor5-inspector")).default;
                 CKEditorInspector.attach(editor);
             }
@@ -328,7 +327,7 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
             const data = blob?.content || "";
             const newContentLanguage = this.note?.getLabelValue("language");
             if (this.contentLanguage !== newContentLanguage) {
-                await this.reinitialize(data);
+                await this.reinitializeWithData(data);
             } else {
                 this.watchdog.editor?.setData(data);
             }
@@ -564,7 +563,7 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
         this.refreshIncludedNote(this.$editor, noteId);
     }
 
-    async reinitialize(data: string) {
+    async reinitializeWithData(data: string) {
         if (!this.watchdog) {
             return;
         }
@@ -574,9 +573,25 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
         this.watchdog.editor?.setData(data);
     }
 
-    async onLanguageChanged() {
+    async reinitialize() {
         const data = this.watchdog.editor?.getData();
-        await this.reinitialize(data ?? "");
+        await this.reinitializeWithData(data ?? "");
+    }
+
+    async reloadTextEditorEvent() {
+        await this.reinitialize();
+    }
+
+    async onLanguageChanged() {
+        await this.reinitialize();
+    }
+
+    async entitiesReloadedEvent(e: EventData<"entitiesReloaded">) {
+        await super.entitiesReloadedEvent(e);
+
+        if (updateTemplateCache(e.loadResults)) {
+            await this.reinitialize();
+        }
     }
 
     buildTouchBarCommand(data: CommandListenerData<"buildTouchBar">) {
@@ -639,4 +654,14 @@ export default class EditableTextTypeWidget extends AbstractTextTypeWidget {
         ];
     }
 
+}
+
+function getLicenseKey() {
+    const premiumLicenseKey = import.meta.env.VITE_CKEDITOR_KEY;
+    if (!premiumLicenseKey) {
+        logError("CKEditor license key is not set, premium features will not be available.");
+        return "GPL";
+    }
+
+    return premiumLicenseKey;
 }

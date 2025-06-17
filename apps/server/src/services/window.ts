@@ -257,7 +257,7 @@ async function configureWebContents(webContents: WebContents, spellcheckEnabled:
 }
 
 function getIcon() {
-    return path.join(RESOURCE_DIR, "images/app-icons/png/256x256" + (isDev ? "-dev" : "") + ".png");
+    return path.join(RESOURCE_DIR, "../public/assets/icon.png");
 }
 
 async function createSetupWindow() {

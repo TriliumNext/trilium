@@ -25,6 +25,7 @@
     --bs-body-font-weight: var(--main-font-weight) !important;
     --bs-body-color: var(--main-text-color) !important;
     --bs-body-bg: var(--main-background-color) !important;    
+    --ck-mention-list-max-height: 500px;
 }
 
 .table {
@@ -1271,6 +1272,29 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
 .ck.ck-mentions > .ck-list__item .ck-button {
     /* wrap text for very long note path title */
     white-space: normal !important;
+}
+
+/* Slash commands */
+
+.ck.ck-slash-command-button {
+    padding: 0.5em 1em !important;
+}
+
+.ck.ck-slash-command-button__text-part,
+.ck.ck-template-form__text-part {
+    margin-left: 0.5em;
+    line-height: 1.2em !important;
+}
+
+.ck.ck-slash-command-button__text-part > span,
+.ck.ck-template-form__text-part > span {
+    line-height: inherit !important;
+}
+
+.ck.ck-slash-command-button__text-part .ck.ck-slash-command-button__description,
+.ck.ck-template-form__text-part .ck-template-form__description {
+    display: block;
+    opacity: 0.8;
 }
 
 .area-expander {

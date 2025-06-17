@@ -111,7 +111,7 @@ export default class AddLinkDialog extends BasicWidget {
 
         this.updateTitleSettingsVisibility();
 
-        utils.openDialog(this.$widget);
+        await utils.openDialog(this.$widget);
 
         this.$autoComplete.val("");
         this.$linkTitle.val("");

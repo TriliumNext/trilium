@@ -332,8 +332,6 @@ async function openDialog($dialog: JQuery<HTMLElement>, closeActDialog = true) {
         }
     });
 
-    // TODO: Fix once keyboard_actions is ported.
-    // @ts-ignore
     const keyboardActionsService = (await import("./keyboard_actions.js")).default;
     keyboardActionsService.updateDisplayedShortcuts($dialog);
 

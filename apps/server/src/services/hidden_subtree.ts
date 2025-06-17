@@ -8,6 +8,7 @@ import migrationService from "./migration.js";
 import { t } from "i18next";
 import { cleanUpHelp, getHelpHiddenSubtreeData } from "./in_app_help.js";
 import buildLaunchBarConfig from "./hidden_subtree_launcherbar.js";
+import buildHiddenSubtreeTemplates from "./hidden_subtree_templates.js";
 
 const LBTPL_ROOT = "_lbTplRoot";
 const LBTPL_BASE = "_lbTplBase";
@@ -257,7 +258,8 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
                 icon: "bx-help-circle",
                 children: helpSubtree,
                 isExpanded: true
-            }
+            },
+            buildHiddenSubtreeTemplates()
         ]
     };
 }

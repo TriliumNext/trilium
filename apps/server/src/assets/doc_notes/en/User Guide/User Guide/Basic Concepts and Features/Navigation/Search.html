@@ -146,6 +146,8 @@
   <li><code>#publicationYear %= '19[0-9]{2}'</code>: Use the '%=' operator to
     match a regular expression (regex). This feature has been available since
     Trilium 0.52.</li>
+  <li><code>note.content %= '\\d{2}:\\d{2} (PM|AM)'</code>: Find notes that
+    mention a time. Backslashes in a regex must be escaped.</li>
 </ul>
 <h3>Advanced Use Cases</h3>
 <ul>

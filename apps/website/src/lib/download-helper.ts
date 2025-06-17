@@ -41,6 +41,14 @@ export const downloadMatrix: DownloadMatrix = {
                 },
                 zip: {
                     name: "Portable (.zip)"
+                },
+                scoop: {
+                    name: "Scoop",
+                    url: "https://scoop.sh/#/apps?q=triliumnext"
+                },
+                winget: {
+                    name: "Winget",
+                    url: "https://github.com/microsoft/winget-pkgs/tree/master/manifests/t/TriliumNext/Notes/"
                 }
             }
         },
@@ -66,6 +74,14 @@ export const downloadMatrix: DownloadMatrix = {
                 },
                 zip: {
                     name: "Portable (.zip)"
+                },
+                nixpkgs: {
+                    name: "nixpkgs",
+                    url: "https://search.nixos.org/packages?query=trilium-next"
+                },
+                aur: {
+                    name: "AUR",
+                    url: "https://aur.archlinux.org/packages/triliumnext-bin"
                 }
             }
         },
@@ -107,6 +123,10 @@ export const downloadMatrix: DownloadMatrix = {
                     name: "ARM (.tar.xz)",
                     url: `https://github.com/TriliumNext/Notes/releases/download/v${version}/TriliumNextNotes-Server-v${version}-linux-arm64.tar.xz`
                 },
+                nixos: {
+                    name: "NixOS module",
+                    url: "https://search.nixos.org/options?query=trilium-server"
+                }
             }
         },
         pikapod: {
@@ -129,7 +149,8 @@ export const downloadMatrix: DownloadMatrix = {
 
 export function buildDownloadUrl(app: App, platform: Platform, format: string, architecture: Architecture): string {
     if (app === "desktop") {
-        return `https://github.com/TriliumNext/Notes/releases/download/v${version}/TriliumNextNotes-v${version}-${platform}-${architecture}.${format}`;
+        return downloadMatrix.desktop[platform]?.downloads[format].url ??
+            `https://github.com/TriliumNext/Notes/releases/download/v${version}/TriliumNextNotes-v${version}-${platform}-${architecture}.${format}`;
     } else if (app === "server") {
         return downloadMatrix.server[platform]?.downloads[format].url ?? "#";
     } else {

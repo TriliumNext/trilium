@@ -2,7 +2,7 @@
     import DownloadNow from "./download-now.svelte";
 
 </script>
-<header class="header bg-white sticky top-0 z-50 shadow">
+<header class="header bg-white dark:bg-gray-900 sticky dark:text-white top-0 z-50 shadow">
     <div class="container mx-auto flex items-center py-4">
         <a href="/" class="flex items-center gap-x-2 w-100">
             <img src="icon-color.svg" alt="Trilium Notes Logo" class="w-12 h-12">

@@ -1,4 +1,5 @@
 import { Autoformat, AutoLink, BlockQuote, BlockToolbar, Bold, CKFinderUploadAdapter, Clipboard, Code, CodeBlock, Enter, FindAndReplace, Font, FontBackgroundColor, FontColor, GeneralHtmlSupport, Heading, HeadingButtonsUI, HorizontalLine, Image, ImageCaption, ImageInline, ImageResize, ImageStyle, ImageToolbar, ImageUpload, Alignment, Indent, IndentBlock, Italic, Link, List, ListProperties, Mention, PageBreak, Paragraph, ParagraphButtonUI, PasteFromOffice, PictureEditing, RemoveFormat, SelectAll, ShiftEnter, SpecialCharacters, SpecialCharactersEssentials, Strikethrough, Style, Subscript, Superscript, Table, TableCaption, TableCellProperties, TableColumnResize, TableProperties, TableSelection, TableToolbar, TextPartLanguage, TextTransformation, TodoList, Typing, Underline, Undo, Bookmark, Emoji } from "ckeditor5";
+import { SlashCommand, Template } from "ckeditor5-premium-features";
 import type { Plugin } from "ckeditor5";
 import CutToNotePlugin from "./plugins/cuttonote.js";
 import UploadimagePlugin from "./plugins/uploadimage.js";
@@ -78,6 +79,14 @@ export const CORE_PLUGINS: typeof Plugin[] = [
 ];
 
 /**
+ * Plugins that require a premium CKEditor license key to work.
+ */
+export const PREMIUM_PLUGINS: typeof Plugin[] = [
+    SlashCommand,
+    Template
+];
+
+/**
  * The set of plugins that are required for the editor to work. This is used in normal text editors (floating or fixed toolbar) but not in the attribute editor.
  */
 export const COMMON_PLUGINS: typeof Plugin[] = [
@@ -139,7 +148,8 @@ export const COMMON_PLUGINS: typeof Plugin[] = [
     Emoji,
 
     ...TRILIUM_PLUGINS,
-    ...EXTERNAL_PLUGINS
+    ...EXTERNAL_PLUGINS,
+    ...PREMIUM_PLUGINS
 ];
 
 /**

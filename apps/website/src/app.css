@@ -1,2 +1,10 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
+
+main a {
+    text-decoration: revert;
+}
+
+a.rounded-full, a.rounded-xl {
+    text-decoration: none;
+}

@@ -1,6 +1,8 @@
 import { ButtonView, Command, Plugin, toWidget, Widget, type Editor, type Observable } from 'ckeditor5';
 import noteIcon from '../icons/note.svg?raw';
 
+export const COMMAND_NAME = 'insertIncludeNote';
+
 export default class IncludeNote extends Plugin {
 	static get requires() {
 		return [ IncludeNoteEditing, IncludeNoteUI ];
@@ -16,7 +18,7 @@ class IncludeNoteUI extends Plugin {
 		// to be displayed in the toolbar.
 		editor.ui.componentFactory.add( 'includeNote', locale => {
 			// The state of the button will be bound to the widget command.
-			const command = editor.commands.get( 'insertIncludeNote' );
+			const command = editor.commands.get( COMMAND_NAME );
 
 			// The button will be an instance of ButtonView.
 			const buttonView = new ButtonView( locale );
@@ -35,7 +37,7 @@ class IncludeNoteUI extends Plugin {
             }
 
 			// Execute the command when the button is clicked (executed).
-			this.listenTo( buttonView, 'execute', () => editor.execute( 'insertIncludeNote' ) );
+			this.listenTo( buttonView, 'execute', () => editor.execute( COMMAND_NAME ) );
 
 			return buttonView;
 		} );
@@ -51,7 +53,7 @@ class IncludeNoteEditing extends Plugin {
 		this._defineSchema();
 		this._defineConverters();
 
-		this.editor.commands.add( 'insertIncludeNote', new InsertIncludeNoteCommand( this.editor ) );
+		this.editor.commands.add( COMMAND_NAME, new InsertIncludeNoteCommand( this.editor ) );
 	}
 
 	_defineSchema() {

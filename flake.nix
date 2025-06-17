@@ -21,7 +21,7 @@
       system:
       let
         pkgs = import nixpkgs { inherit system; };
-        electron = pkgs.electron_35;
+        electron = pkgs."electron_${lib.versions.major packageJsonDesktop.devDependencies.electron}";
         nodejs = pkgs.nodejs_22;
         pnpm = pkgs.pnpm_10;
         inherit (pkgs)
@@ -30,6 +30,7 @@
           lib
           makeBinaryWrapper
           makeDesktopItem
+          makeShellWrapper
           moreutils
           removeReferencesTo
           stdenv
@@ -40,13 +41,13 @@
         fullCleanSourceFilter =
           name: type:
           (lib.cleanSourceFilter name type)
-          || (
+          && (
             let
               baseName = baseNameOf (toString name);
             in
             # No need to copy the flake.
             # Don't copy local development instance of NX cache.
-            baseName == "flake.nix" || baseName == "flake.lock" || baseName == ".nx"
+            baseName != "flake.nix" && baseName != "flake.lock" && baseName != ".nx"
           );
         fullCleanSource =
           src:
@@ -55,6 +56,7 @@
             src = src;
           };
         packageJson = builtins.fromJSON (builtins.readFile ./package.json);
+        packageJsonDesktop = builtins.fromJSON (builtins.readFile ./apps/desktop/package.json);
 
         makeApp =
           {
@@ -101,14 +103,19 @@
 
             extraNativeBuildInputs =
               [
-                makeBinaryWrapper
                 moreutils # sponge
                 nodejs.python
                 removeReferencesTo
               ]
               ++ lib.optionals (app == "desktop") [
                 copyDesktopItems
+                # required for NIXOS_OZONE_WL expansion
+                # https://github.com/NixOS/nixpkgs/issues/172583
+                makeShellWrapper
                 wrapGAppsHook3
+              ]
+              ++ lib.optionals (app == "server") [
+                makeBinaryWrapper
               ]
               ++ lib.optionals stdenv.hostPlatform.isDarwin [
                 xcodebuild
@@ -162,7 +169,9 @@
                 comment = meta.description;
                 desktopName = "TriliumNext Notes";
                 categories = [ "Office" ];
-                startupWMClass = "Trilium Notes Next";
+                # TODO: electron-forge build has this set to PRODUCT_NAME (forge.config.cjs)
+                # But the plain build doesn't set this (or the app icon).
+                startupWMClass = "TriliumNext Notes";
               })
             ];
 
@@ -184,9 +193,11 @@
             mkdir -p $out/{bin,share/icons/hicolor/512x512/apps,opt/trilium}
             cp --archive apps/desktop/dist/* $out/opt/trilium
             cp apps/client/src/assets/icon.png $out/share/icons/hicolor/512x512/apps/trilium.png
-            makeWrapper ${lib.getExe electron} $out/bin/trilium \
+            makeShellWrapper ${lib.getExe electron} $out/bin/trilium \
               "''${gappsWrapperArgs[@]}" \
+              --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations --enable-wayland-ime=true}}" \
               --set-default ELECTRON_IS_DEV 0 \
+              --set TRILIUM_RESOURCE_DIR $out/opt/trilium \
               --add-flags $out/opt/trilium/main.cjs
           '';
         };

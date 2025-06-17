@@ -23,17 +23,20 @@
     "name": "ckeditor5",
     "targets": {
       "typecheck": {
-        "dependsOn": [ "^build" ]
+        "dependsOn": [
+          "^build"
+        ]
       }
     }
   },
   "dependencies": {
-    "ckeditor5": "45.2.0",
-    "@triliumnext/ckeditor5-keyboard-marker": "workspace:*",
-    "@triliumnext/ckeditor5-mermaid": "workspace:*",
     "@triliumnext/ckeditor5-admonition": "workspace:*",
     "@triliumnext/ckeditor5-footnotes": "workspace:*",
-    "@triliumnext/ckeditor5-math": "workspace:*"
+    "@triliumnext/ckeditor5-keyboard-marker": "workspace:*",
+    "@triliumnext/ckeditor5-math": "workspace:*",
+    "@triliumnext/ckeditor5-mermaid": "workspace:*",
+    "ckeditor5": "45.2.0",
+    "ckeditor5-premium-features": "45.2.0"
   },
   "devDependencies": {
     "@types/jquery": "3.5.32"

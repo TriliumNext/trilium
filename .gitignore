@@ -1,11 +1,5 @@
 # See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
-# Workaround for Nx bug: parent .gitignore files with '*' can cause
-# `nx show projects` to return nothing by ignoring subprojects.
-# See: https://github.com/nrwl/nx/issues/27368
-# Unignore everything to ensure Nx detects all projects
-!*
-
 # compiled output
 dist
 tmp

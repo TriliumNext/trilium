@@ -69,6 +69,7 @@ The options available are:
 *   `#dateNote >= TODAY-30`: A "smart search" to find notes with the "dateNote" label within the last 30 days. Supported smart values include NOW +- seconds, TODAY +- days, MONTH +- months, YEAR +- years.
 *   `~author.title *=* Tolkien`: Find notes related to an author whose title contains "Tolkien".
 *   `#publicationYear %= '19[0-9]{2}'`: Use the '%=' operator to match a regular expression (regex). This feature has been available since Trilium 0.52.
+*   `note.content %= '\\d{2}:\\d{2} (PM|AM)'`: Find notes that mention a time. Backslashes in a regex must be escaped.
 
 ### Advanced Use Cases
 

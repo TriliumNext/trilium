@@ -281,6 +281,7 @@ export type CommandMappings = {
         buildIcon(name: string): NativeImage;
     };
     refreshTouchBar: CommandData;
+    reloadTextEditor: CommandData;
 };
 
 type EventMappings = {

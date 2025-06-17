@@ -1,19 +1,20 @@
 import { ALLOWED_PROTOCOLS } from "../../../services/link.js";
 import { MIME_TYPE_AUTO } from "@triliumnext/commons";
-import type { EditorConfig } from "@triliumnext/ckeditor5";
+import { buildExtraCommands, type EditorConfig } from "@triliumnext/ckeditor5";
 import { getHighlightJsNameForMime } from "../../../services/mime_types.js";
 import options from "../../../services/options.js";
 import { ensureMimeTypesForHighlighting, isSyntaxHighlightEnabled } from "../../../services/syntax_highlight.js";
 import utils from "../../../services/utils.js";
 import emojiDefinitionsUrl from "@triliumnext/ckeditor5/emoji_definitions/en.json?url";
 import { copyTextWithToast } from "../../../services/clipboard_ext.js";
+import getTemplates from "./snippets.js";
 
 const TEXT_FORMATTING_GROUP = {
     label: "Text formatting",
     icon: "text"
 };
 
-export function buildConfig(): EditorConfig {
+export async function buildConfig(): Promise<EditorConfig> {
     return {
         image: {
             styles: {
@@ -121,6 +122,14 @@ export function buildConfig(): EditorConfig {
         clipboard: {
             copy: copyTextWithToast
         },
+        slashCommand: {
+            removeCommands: [],
+            dropdownLimit: Number.MAX_SAFE_INTEGER,
+            extraCommands: buildExtraCommands()
+        },
+        template: {
+            definitions: await getTemplates()
+        },
         // This value must be kept in sync with the language defined in webpack.config.js.
         language: "en"
     };
@@ -201,6 +210,7 @@ export function buildClassicToolbar(multilineToolbar: boolean) {
                 "outdent",
                 "indent",
                 "|",
+                "insertTemplate",
                 "markdownImport",
                 "cuttonote",
                 "findAndReplace"
@@ -257,6 +267,7 @@ export function buildFloatingToolbar() {
             "outdent",
             "indent",
             "|",
+            "insertTemplate",
             "imageUpload",
             "markdownImport",
             "specialCharacters",
