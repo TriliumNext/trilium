@@ -2,6 +2,7 @@ import "ckeditor5/ckeditor5.css";
 import "./theme/code_block_toolbar.css";
 import { COMMON_PLUGINS, CORE_PLUGINS, POPUP_EDITOR_PLUGINS } from "./plugins";
 import { BalloonEditor, DecoupledEditor, FindAndReplaceEditing, FindCommand } from "ckeditor5";
+import "./translation_overrides.js";
 export { EditorWatchdog } from "ckeditor5";
 export type { EditorConfig, MentionFeed, MentionFeedObjectItem, Node, Position, Element, WatchdogConfig } from "ckeditor5";
 export type { TemplateDefinition } from "ckeditor5-premium-features";

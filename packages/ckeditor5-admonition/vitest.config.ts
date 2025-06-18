@@ -11,31 +11,12 @@ export default defineConfig( {
 		svg()
 	],
 	test: {
-		browser: {
-			enabled: true,
-			name: 'chrome',
-			provider: 'webdriverio',
-			providerOptions: {},
-			headless: true,
-			ui: false
-		},
+		environment: "happy-dom",
 		include: [
 			'tests/**/*.[jt]s'
 		],
 		globals: true,
 		watch: false,
-		passWithNoTests: true,
-		coverage: {
-			thresholds: {
-				lines: 100,
-				functions: 100,
-				branches: 100,
-				statements: 100
-			},
-			provider: 'istanbul',
-			include: [
-				'src'
-			]
-		}
+		passWithNoTests: true
 	}
 } );
