@@ -1,8 +1,8 @@
 import OptionsWidget from "../options_widget.js";
-import options from "../../../../services/options.js";
 import { t } from "../../../../services/i18n.js";
-import type { OptionMap, OptionNames } from "@triliumnext/commons";
+import type { OptionMap } from "@triliumnext/commons";
 import searchService from "../../../../services/search.js";
+import { normalizeSharePathInput } from "./share_path_utils.js";
 
 const TPL = /*html*/`
 <div class="options-section">
@@ -83,7 +83,7 @@ export default class ShareSettingsOptions extends OptionsWidget {
             // instead of
             // http://localhost:8080/sharePath/test/assets/v0.93.0/node_modules/normalize.css/normalize.css
             // alternatively/better approach: fix this behaviour :-)
-            const normalizedSharePath = this.normalizeSharePathInput(sharePathInput);
+            const normalizedSharePath = normalizeSharePathInput(sharePathInput);
             const optionValue = (!sharePathInput || !normalizedSharePath || normalizedSharePath === "/")
                 ? DEFAULT_SHAREPATH
                 : normalizedSharePath;
@@ -92,22 +92,6 @@ export default class ShareSettingsOptions extends OptionsWidget {
         });
 
         this.$widget.find(".check-share-root").on("click", () => this.checkShareRoot());
-    }
-
-    // Ensure sharePath always starts with a single slash and does not end with (one or multiple) trailing slashes
-    normalizeSharePathInput(sharePathInput: string) {
-
-        const REGEXP_STARTING_SLASH = /^\/+/g;
-        const REGEXP_TRAILING_SLASH = /\b\/+$/g;
-
-        const normalizedSharePath = (!sharePathInput.startsWith("/")
-            ? `/${sharePathInput}`
-            : sharePathInput)
-            .replaceAll(REGEXP_TRAILING_SLASH, "")
-            .replaceAll(REGEXP_STARTING_SLASH, "/");
-
-        return normalizedSharePath;
-
     }
 
     async optionsLoaded(options: OptionMap) {
@@ -124,9 +108,9 @@ export default class ShareSettingsOptions extends OptionsWidget {
 
         const setCheckShareRootStyle = (removeClassName: string, addClassName: string, text: string) => {
             this.$shareRootStatus
-            .removeClass(removeClassName)
-            .addClass(addClassName)
-            .text(text);
+                .removeClass(removeClassName)
+                .addClass(addClassName)
+                .text(text);
 
             this.$shareRootCheck.prop("disabled", false);
         };
@@ -168,8 +152,7 @@ export default class ShareSettingsOptions extends OptionsWidget {
             return setCheckShareRootStyle("text-danger", "text-success",
                 t("share.share_root_found", { noteTitle: sharedShareRootNotes[0].title })
             );
-
-        } catch(err) {
+        } catch (err) {
             console.error(err);
             return setCheckShareRootStyle("text-success", "text-danger",
                 t("share.check_share_root_error",)

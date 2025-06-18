@@ -1,19 +1,5 @@
 import { describe, it, expect } from "vitest";
-
-// describe.skip("ShareSettingsOptions", () => { })
-
-
-//     Test currently fails during import:
-
-//  FAIL   app  widgets / type_widgets / options / other / share_settings.spec.ts[src / public / app / widgets / type_widgets / options / other / share_settings.spec.ts]
-// TypeError: Class extends value undefined is not a constructor or null
-//  ❯ widgets / right_panel_widget.ts: 20: 32
-// 20 | class RightPanelWidget extends NoteContextAwareWidget {
-//     21| private $bodyWrapper!: JQuery<HTMLElement>;
-// 22 | $body!: JQuery<HTMLElement>;
-
-
-import ShareSettingsOptions from "./share_settings.js";
+import { normalizeSharePathInput } from "./share_path_utils.js";
 
 type TestCase<T extends (...args: any) => any> = [
     desc: string,
@@ -21,13 +7,11 @@ type TestCase<T extends (...args: any) => any> = [
     expected: ReturnType<T>
 ];
 
-
-
 describe("ShareSettingsOptions", () => {
 
     describe("#normalizeSharePathInput", () => {
 
-        const testCases: TestCase<ShareSettingsOptions["normalizeSharePathInput"]>[] = [
+        const testCases: TestCase<typeof normalizeSharePathInput>[] = [
             [
                 "should handle multiple trailing '/' and remove them completely",
                 ["/trailingtest////"],
@@ -62,9 +46,8 @@ describe("ShareSettingsOptions", () => {
 
         testCases.forEach((testCase) => {
             const [desc, fnParams, expected] = testCase;
-            return it(desc, () => {
-                const shareSettings = new ShareSettingsOptions();
-                const actual = shareSettings.normalizeSharePathInput(...fnParams);
+            it(desc, () => {
+                const actual = normalizeSharePathInput(...fnParams);
                 expect(actual).toStrictEqual(expected);
             });
         });
