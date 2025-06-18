@@ -1881,7 +1881,7 @@
     "share_root_not_shared": "Note '{{noteTitle}}' has #shareRoot label but is not Shared",
     "share_root_multiple_found": "Found multiple shared notes with a #shareRoot label: {{- foundNoteTitles}}. The note {{- activeNoteTitle}} will be used as shared root note.",
     "share_path": "Share path",
-    "share_path_description": "The url prefix for shared notes (e.g. '/share' --> '/share/noteId' or '/custom-path' --> '/custom-path/noteId'). In order for the change to take effect, you need to restart the server.",
+    "share_path_description": "The url prefix for shared notes (e.g. '/share' --> '/share/noteId' or '/custom-path' --> '/custom-path/noteId').",
     "share_path_placeholder": "/share or /custom-path",
     "share_subtree": "Share subtree",
     "share_subtree_description": "Share the entire subtree, not just the note"
