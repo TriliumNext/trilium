@@ -2,11 +2,11 @@
 
 import html from "html";
 import dateUtils from "../date_utils.js";
-import path from "path";
+import path, { join } from "path";
 import mimeTypes from "mime-types";
 import mdService from "./markdown.js";
 import packageInfo from "../../../package.json" with { type: "json" };
-import { getContentDisposition, escapeHtml, getResourceDir } from "../utils.js";
+import { getContentDisposition, escapeHtml, getResourceDir, isDev } from "../utils.js";
 import protectedSessionService from "../protected_session.js";
 import sanitize from "sanitize-filename";
 import fs from "fs";
@@ -19,9 +19,12 @@ import type NoteMeta from "../meta/note_meta.js";
 import type AttachmentMeta from "../meta/attachment_meta.js";
 import type AttributeMeta from "../meta/attribute_meta.js";
 import type BBranch from "../../becca/entities/bbranch.js";
+import type BNote from "../../becca/entities/bnote.js";
 import type { Response } from "express";
 import type { NoteMetaFile } from "../meta/note_meta.js";
-import cssContent from "@triliumnext/ckeditor5/content.css";
+//import cssContent from "@triliumnext/ckeditor5/content.css";
+import { renderNoteForExport } from "../../share/content_renderer.js";
+import { RESOURCE_DIR } from "../resource_dir.js";
 
 type RewriteLinksFn = (content: string, noteMeta: NoteMeta) => string;
 
@@ -314,7 +317,7 @@ async function exportToZip(taskContext: TaskContext, branch: BBranch, format: "h
         }
     }
 
-    function prepareContent(title: string, content: string | Buffer, noteMeta: NoteMeta): string | Buffer {
+    function prepareContent(note: BNote | undefined, title: string, content: string | Buffer, noteMeta: NoteMeta): string | Buffer {
         if (["html", "markdown"].includes(noteMeta?.format || "")) {
             content = content.toString();
             content = rewriteFn(content, noteMeta);
@@ -326,11 +329,18 @@ async function exportToZip(taskContext: TaskContext, branch: BBranch, format: "h
                     throw new Error("Missing note path.");
                 }
 
-                const cssUrl = `${"../".repeat(noteMeta.notePath.length - 1)}style.css`;
+                const basePath = "../".repeat(noteMeta.notePath.length - 1);
                 const htmlTitle = escapeHtml(title);
 
-                // <base> element will make sure external links are openable - https://github.com/zadam/trilium/issues/1289#issuecomment-704066809
-                content = `<html>
+                if (note) {
+                    content = renderNoteForExport(note, branch, basePath);
+
+                    // TODO: Fix double rewrite.
+                    content = rewriteFn(content, noteMeta);
+                } else {
+                    const cssUrl = basePath + "style.css";
+                    // <base> element will make sure external links are openable - https://github.com/zadam/trilium/issues/1289#issuecomment-704066809
+                    content = `<html>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -346,6 +356,7 @@ async function exportToZip(taskContext: TaskContext, branch: BBranch, format: "h
   </div>
 </body>
 </html>`;
+                }
             }
 
             return content.length < 100_000 ? html.prettyPrint(content, { indent_size: 2 }) : content;
@@ -375,7 +386,7 @@ ${markdownContent}`;
 
             let content: string | Buffer = `<p>This is a clone of a note. Go to its <a href="${targetUrl}">primary location</a>.</p>`;
 
-            content = prepareContent(noteMeta.title, content, noteMeta);
+            content = prepareContent(undefined, noteMeta.title, content, noteMeta);
 
             archive.append(content, { name: filePathPrefix + noteMeta.dataFileName });
 
@@ -391,7 +402,7 @@ ${markdownContent}`;
         }
 
         if (noteMeta.dataFileName) {
-            const content = prepareContent(noteMeta.title, note.getContent(), noteMeta);
+            const content = prepareContent(note, noteMeta.title, note.getContent(), noteMeta);
 
             archive.append(content, {
                 name: filePathPrefix + noteMeta.dataFileName,
@@ -507,12 +518,15 @@ ${markdownContent}`;
         archive.append(fullHtml, { name: indexMeta.dataFileName });
     }
 
-    function saveCss(rootMeta: NoteMeta, cssMeta: NoteMeta) {
-        if (!cssMeta.dataFileName) {
-            return;
-        }
+    function saveAssets(rootMeta: NoteMeta, assetsMeta: NoteMeta[]) {
+        for (const assetMeta of assetsMeta) {
+            if (!assetMeta.dataFileName) {
+                continue;
+            }
 
-        archive.append(cssContent, { name: cssMeta.dataFileName });
+            let cssContent = getShareThemeAssets(assetMeta.dataFileName);
+            archive.append(cssContent, { name: assetMeta.dataFileName });
+        }
     }
 
     const existingFileNames: Record<string, number> = format === "html" ? { navigation: 0, index: 1 } : {};
@@ -529,7 +543,7 @@ ${markdownContent}`;
 
     let navigationMeta: NoteMeta | null = null;
     let indexMeta: NoteMeta | null = null;
-    let cssMeta: NoteMeta | null = null;
+    let assetsMeta: NoteMeta[] = [];
 
     if (format === "html") {
         navigationMeta = {
@@ -546,12 +560,26 @@ ${markdownContent}`;
 
         metaFile.files.push(indexMeta);
 
-        cssMeta = {
-            noImport: true,
-            dataFileName: "style.css"
-        };
+        const assets = [
+            "style.css",
+            "script.js",
+            "boxicons.css",
+            "boxicons.eot",
+            "boxicons.woff2",
+            "boxicons.woff",
+            "boxicons.ttf",
+            "boxicons.svg",
+            "icon-color.svg"
+        ];
 
-        metaFile.files.push(cssMeta);
+        for (const asset of assets) {
+            const assetMeta = {
+                noImport: true,
+                dataFileName: asset
+            };
+            assetsMeta.push(assetMeta);
+            metaFile.files.push(assetMeta);
+        }
     }
 
     for (const noteMeta of Object.values(noteIdToMeta)) {
@@ -585,13 +613,13 @@ ${markdownContent}`;
     saveNote(rootMeta, "");
 
     if (format === "html") {
-        if (!navigationMeta || !indexMeta || !cssMeta) {
+        if (!navigationMeta || !indexMeta || !assetsMeta) {
             throw new Error("Missing meta.");
         }
 
         saveNavigation(rootMeta, navigationMeta);
         saveIndex(rootMeta, indexMeta);
-        saveCss(rootMeta, cssMeta);
+        saveAssets(rootMeta, assetsMeta);
     }
 
     const note = branch.getNote();
@@ -621,6 +649,28 @@ async function exportToZipFile(noteId: string, format: "markdown" | "html", zipF
     await exportToZip(taskContext, note.getParentBranches()[0], format, fileOutputStream, false, zipExportOptions);
 
     log.info(`Exported '${noteId}' with format '${format}' to '${zipFilePath}'`);
+}
+
+function getShareThemeAssets(nameWithExtension: string) {
+    // Rename share.css to style.css.
+    if (nameWithExtension === "style.css") {
+        nameWithExtension = "share.css";
+    } else if (nameWithExtension === "script.js") {
+        nameWithExtension = "share.js";
+    }
+
+    let path: string | undefined;
+    if (nameWithExtension === "icon-color.svg") {
+        path = join(RESOURCE_DIR, "images", nameWithExtension);
+    } else if (isDev) {
+        path = join(getResourceDir(), "..", "..", "client", "dist", "src", nameWithExtension);
+    }
+
+    if (!path) {
+        throw new Error("Not yet defined.");
+    }
+
+    return fs.readFileSync(path);
 }
 
 export default {
