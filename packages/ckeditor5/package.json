@@ -36,7 +36,7 @@
     "@triliumnext/ckeditor5-math": "workspace:*",
     "@triliumnext/ckeditor5-mermaid": "workspace:*",
     "ckeditor5": "45.2.0",
-    "ckeditor5-premium-features": "45.2.0"
+    "ckeditor5-premium-features": "45.2.1"
   },
   "devDependencies": {
     "@types/jquery": "3.5.32"
