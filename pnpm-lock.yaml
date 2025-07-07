@@ -182,8 +182,8 @@ importers:
         specifier: 0.1.8
         version: 0.1.8(mermaid@11.8.0)
       '@mind-elixir/node-menu':
-        specifier: 1.0.5
-        version: 1.0.5(mind-elixir@4.6.2)
+        specifier: 5.0.0
+        version: 5.0.0(mind-elixir@4.6.2)
       '@popperjs/core':
         specifier: 2.11.8
         version: 2.11.8
@@ -3680,10 +3680,10 @@ packages:
   '@microsoft/tsdoc@0.15.1':
     resolution: {integrity: sha512-4aErSrCR/On/e5G2hDP0wjooqDdauzEbIq8hIkIe5pXV0rtWJZvdCEKL0ykZxex+IxIwBp0eGeV48hQN07dXtw==}
 
-  '@mind-elixir/node-menu@1.0.5':
-    resolution: {integrity: sha512-tlw85nwtfEoF47mLecRSMkcNW6D9ScDyg1YI+InZKtSgsvvnEm72kOyksp8B1haLk2ctVMFPJ7ay84MtWgrBGQ==}
+  '@mind-elixir/node-menu@5.0.0':
+    resolution: {integrity: sha512-fpKMhcKTIl0/L0ghsltbodv8EGw87uExloqwHGRJLF4IO/NfKrteVjq3Kd1B8gf7UqkQAigMV6LxS4XKSS3ESw==}
     peerDependencies:
-      mind-elixir: '>4.4.1'
+      mind-elixir: '>5.0.0'
 
   '@mixmark-io/domino@2.2.0':
     resolution: {integrity: sha512-Y28PR25bHXUg88kCV7nivXrP2Nj2RueZ3/l/jdx6J9f8J4nsEGcgX0Qe6lt7Pa+J79+kPiJU3LguR6O/6zrLOw==}
@@ -18488,7 +18488,7 @@ snapshots:
 
   '@microsoft/tsdoc@0.15.1': {}
 
-  '@mind-elixir/node-menu@1.0.5(mind-elixir@4.6.2)':
+  '@mind-elixir/node-menu@5.0.0(mind-elixir@4.6.2)':
     dependencies:
       mind-elixir: 4.6.2
 
