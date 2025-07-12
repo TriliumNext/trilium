@@ -17,7 +17,7 @@
 		"@eslint/js": "^9.18.0",
 		"@sveltejs/adapter-auto": "^6.0.0",
 		"@sveltejs/kit": "^2.16.0",
-		"@sveltejs/vite-plugin-svelte": "^5.0.0",
+		"@sveltejs/vite-plugin-svelte": "^6.0.0",
 		"@tailwindcss/typography": "^0.5.15",
 		"@tailwindcss/vite": "^4.0.0",
 		"eslint": "^9.18.0",
