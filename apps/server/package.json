@@ -85,7 +85,7 @@
     "jsdom": "26.1.0",
     "marked": "16.0.0",
     "mime-types": "3.0.1",
-    "multer": "2.0.1",
+    "multer": "2.0.2",
     "normalize-strings": "1.1.1",
     "ollama": "0.5.16",
     "openai": "5.9.2",
