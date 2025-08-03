@@ -127,6 +127,7 @@
         "collapseSubTree": "折叠子树",
         "tabShortcuts": "标签页快捷键",
         "newTabNoteLink": "<kbd>CTRL+click</kbd> - 在笔记链接上使用CTRL+点击（或中键点击）在新标签页中打开笔记",
+        "newTabWithActivationNoteLink": "<kbd>Ctrl+Shift+click</kbd> - (或 <kbd>Shift+middle mouse click</kbd>) 在笔记链接打开并激活笔记在一个新的选项卡",
         "onlyInDesktop": "仅在桌面版（电子构建）中",
         "openEmptyTab": "打开空白标签页",
         "closeActiveTab": "关闭活跃标签页",
@@ -210,6 +211,7 @@
         "okButton": "确定"
     },
     "jump_to_note": {
+        "search_placeholder": "按名称或类型搜索笔记 > 查看命令...",
         "close": "关闭",
         "search_button": "全文搜索 <kbd>Ctrl+回车</kbd>"
     },
@@ -231,6 +233,8 @@
         "move_success_message": "所选笔记已移动到"
     },
     "note_type_chooser": {
+        "change_path_prompt": "更改创建新笔记的位置：",
+        "search_placeholder": "按名称搜索路径（默认为空） ",
         "modal_title": "选择笔记类型",
         "close": "关闭",
         "modal_body": "选择新笔记的类型或模板：",
@@ -439,7 +443,8 @@
         "other_notes_with_name": "其它含有 {{attributeType}} 名为 \"{{attributeName}}\" 的的笔记",
         "and_more": "... 以及另外 {{count}} 个",
         "print_landscape": "导出为 PDF 时，将页面方向更改为横向而不是纵向。",
-        "print_page_size": "导出为 PDF 时，更改页面大小。支持的值：<code>A0</code>、<code>A1</code>、<code>A2</code>、<code>A3</code>、<code>A4</code>、<code>A5</code>、<code>A6</code>、<code>Legal</code>、<code>Letter</code>、<code>Tabloid</code>、<code>Ledger</code>。"
+        "print_page_size": "导出为 PDF 时，更改页面大小。支持的值：<code>A0</code>、<code>A1</code>、<code>A2</code>、<code>A3</code>、<code>A4</code>、<code>A5</code>、<code>A6</code>、<code>Legal</code>、<code>Letter</code>、<code>Tabloid</code>、<code>Ledger</code>。",
+        "color_type": "颜色"
     },
     "attribute_editor": {
         "help_text_body1": "要添加标签，只需输入例如 <code>#rock</code> 或者如果您还想添加值，则例如 <code>#year = 2020</code>",
@@ -743,7 +748,8 @@
     "basic_properties": {
         "note_type": "笔记类型",
         "editable": "可编辑",
-        "basic_properties": "基本属性"
+        "basic_properties": "基本属性",
+        "language": "语言"
     },
     "book_properties": {
         "view_type": "视图类型",
@@ -753,8 +759,12 @@
         "expand_all_children": "展开所有子项",
         "collapse": "折叠",
         "expand": "展开",
+        "book_properties": "集合属性",
         "invalid_view_type": "无效的查看类型 '{{type}}'",
-        "calendar": "日历"
+        "calendar": "日历",
+        "table": "表格",
+        "geo-map": "地理地图",
+        "board": "看板"
     },
     "edited_notes": {
         "no_edited_notes_found": "今天还没有编辑过的笔记...",
@@ -831,7 +841,8 @@
         "unknown_label_type": "未知的标签类型 '{{type}}'",
         "unknown_attribute_type": "未知的属性类型 '{{type}}'",
         "add_new_attribute": "添加新属性",
-        "remove_this_attribute": "移除此属性"
+        "remove_this_attribute": "移除此属性",
+        "remove_color": "移除此颜色标签 "
     },
     "script_executor": {
         "query": "查询",
@@ -1088,6 +1099,7 @@
         "title": "内容宽度",
         "default_description": "Trilium默认会限制内容的最大宽度以提高在宽屏中全屏时的可读性。",
         "max_width_label": "内容最大宽度(像素)",
+        "max_width_unit": "像素",
         "apply_changes_description": "要应用内容宽度更改，请点击",
         "reload_button": "重载前端",
         "reload_description": "来自外观选项的更改"
@@ -1118,6 +1130,148 @@
         "layout-vertical-description": "启动栏位于左侧（默认）",
         "layout-horizontal-description": "启动栏位于标签页栏下方，标签页栏现在是全宽的。"
     },
+    "ai_llm": {
+      "not_started": "未开始",
+      "title": "AI设置",
+      "processed_notes": "已处理笔记",
+      "total_notes": "笔记总数",
+      "progress": "进度",
+      "queued_notes": "排队中笔记",
+      "failed_notes": "失败笔记",
+      "last_processed": "最后处理时间",
+      "refresh_stats": "刷新统计数据",
+      "enable_ai_features": "启用AI/LLM功能",
+      "enable_ai_description": "启用笔记摘要、内容生成等AI功能及其他LLM能力",
+      "openai_tab": "OpenAI",
+      "anthropic_tab": "Anthropic",
+      "voyage_tab": "Voyage AI",
+      "ollama_tab": "Ollama",
+      "enable_ai": "启用AI/LLM功能",
+      "enable_ai_desc": "启用笔记摘要、内容生成等AI功能及其他LLM能力",
+      "provider_configuration": "AI提供商配置",
+      "provider_precedence": "提供商优先级",
+      "provider_precedence_description": "按优先级排序的提供商列表（用逗号分隔，例如：'openai,anthropic,ollama'）",
+      "temperature": "温度参数",
+      "temperature_description": "控制响应的随机性（0 = 确定性输出，2 = 最大随机性）",
+      "system_prompt": "系统提示词",
+      "system_prompt_description": "所有AI交互使用的默认系统提示词",
+      "openai_configuration": "OpenAI配置",
+      "openai_settings": "OpenAI设置",
+      "api_key": "API密钥",
+      "url": "基础URL",
+      "model": "模型",
+      "openai_api_key_description": "用于访问OpenAI服务的API密钥",
+      "anthropic_api_key_description": "用于访问Claude模型的Anthropic API密钥",
+      "default_model": "默认模型",
+      "openai_model_description": "示例：gpt-4o、gpt-4-turbo、gpt-3.5-turbo",
+      "base_url": "基础URL",
+      "openai_url_description": "默认：https://api.openai.com/v1",
+      "anthropic_settings": "Anthropic设置",
+      "anthropic_url_description": "Anthropic API的基础URL（默认：https://api.anthropic.com）",
+      "anthropic_model_description": "用于聊天补全的Anthropic Claude模型",
+      "voyage_settings": "Voyage AI设置",
+      "ollama_settings": "Ollama设置",
+      "ollama_url_description": "Ollama API的URL（默认：http://localhost:11434）",
+      "ollama_model_description": "用于聊天补全的 Ollama 模型",
+      "anthropic_configuration": "Anthropic配置",
+      "voyage_configuration": "Voyage AI配置",
+      "voyage_url_description": "默认：https://api.voyageai.com/v1",
+      "ollama_configuration": "Ollama配置",
+      "enable_ollama": "启用Ollama",
+      "enable_ollama_description": "启用Ollama以使用本地AI模型",
+      "ollama_url": "Ollama URL",
+      "ollama_model": "Ollama模型",
+      "refresh_models": "刷新模型",
+      "refreshing_models": "刷新中...",
+      "enable_automatic_indexing": "启用自动索引",
+      "rebuild_index": "重建索引",
+      "rebuild_index_error": "启动索引重建失败。请查看日志了解详情。",
+      "note_title": "笔记标题",
+      "error": "错误",
+      "last_attempt": "最后尝试时间",
+      "actions": "操作",
+      "retry": "重试",
+      "partial": "{{ percentage }}% 已完成",
+      "retry_queued": "笔记已加入重试队列",
+      "retry_failed": "笔记加入重试队列失败",
+      "max_notes_per_llm_query": "每次查询的最大笔记数",
+      "max_notes_per_llm_query_description": "AI上下文包含的最大相似笔记数量",
+      "active_providers": "活跃提供商",
+      "disabled_providers": "已禁用提供商",
+      "remove_provider": "从搜索中移除提供商",
+      "restore_provider": "将提供商恢复到搜索中",
+      "similarity_threshold": "相似度阈值",
+      "similarity_threshold_description": "纳入LLM查询上下文的笔记最低相似度分数（0-1）",
+      "reprocess_index": "重建搜索索引",
+      "reprocessing_index": "重建中...",
+      "reprocess_index_started": "搜索索引优化已在后台启动",
+      "reprocess_index_error": "重建搜索索引失败",
+      "index_rebuild_progress": "索引重建进度",
+      "index_rebuilding": "正在优化索引（{{percentage}}%）",
+      "index_rebuild_complete": "索引优化完成",
+      "index_rebuild_status_error": "检查索引重建状态失败",
+      "never": "从未",
+      "processing": "处理中（{{percentage}}%）",
+      "incomplete": "未完成（{{percentage}}%）",
+      "complete": "已完成（100%）",
+      "refreshing": "刷新中...",
+      "auto_refresh_notice": "每 {{seconds}} 秒自动刷新",
+      "note_queued_for_retry": "笔记已加入重试队列",
+      "failed_to_retry_note": "重试笔记失败",
+      "all_notes_queued_for_retry": "所有失败笔记已加入重试队列",
+      "failed_to_retry_all": "重试笔记失败",
+      "ai_settings": "AI设置",
+      "api_key_tooltip": "用于访问服务的API密钥",
+      "empty_key_warning": {
+        "anthropic": "Anthropic API密钥为空。请输入有效的API密钥。",
+        "openai": "OpenAI API密钥为空。请输入有效的API密钥。",
+        "voyage": "Voyage API密钥为空。请输入有效的API密钥。",
+        "ollama": "Ollama API密钥为空。请输入有效的API密钥。"
+      },
+      "agent": {
+        "processing": "处理中...",
+        "thinking": "思考中...",
+        "loading": "加载中...",
+        "generating": "生成中..."
+      },
+      "name": "AI",
+      "openai": "OpenAI",
+      "use_enhanced_context": "使用增强上下文",
+      "enhanced_context_description": "为AI提供来自笔记及其相关笔记的更多上下文，以获得更好的响应",
+      "show_thinking": "显示思考过程",
+      "show_thinking_description": "显示AI的思维链过程",
+      "enter_message": "输入你的消息...",
+      "error_contacting_provider": "联系AI提供商失败。请检查你的设置和网络连接。",
+      "error_generating_response": "生成AI响应失败",
+      "index_all_notes": "为所有笔记建立索引",
+      "index_status": "索引状态",
+      "indexed_notes": "已索引笔记",
+      "indexing_stopped": "索引已停止",
+      "indexing_in_progress": "索引进行中...",
+      "last_indexed": "最后索引时间",
+      "n_notes_queued": "{{ count }} 条笔记已加入索引队列",
+      "n_notes_queued_plural": "{{ count }} 条笔记已加入索引队列",
+      "note_chat": "笔记聊天",
+      "notes_indexed": "{{ count }} 条笔记已索引",
+      "notes_indexed_plural": "{{ count }} 条笔记已索引",
+      "sources": "来源",
+      "start_indexing": "开始索引",
+      "use_advanced_context": "使用高级上下文",
+      "ollama_no_url": "Ollama 未配置。请输入有效的URL。",
+      "chat": {
+        "root_note_title": "AI聊天记录",
+        "root_note_content": "此笔记包含你保存的AI聊天对话。",
+        "new_chat_title": "新聊天",
+        "create_new_ai_chat": "创建新的AI聊天"
+      },
+      "create_new_ai_chat": "创建新的AI聊天",
+      "configuration_warnings": "你的AI配置存在一些问题。请检查你的设置。",
+      "experimental_warning": "LLM功能目前处于实验阶段 - 特此提醒。",
+      "selected_provider": "已选提供商",
+      "selected_provider_description": "选择用于聊天和补全功能的AI提供商",
+      "select_model": "选择模型...",
+      "select_provider": "选择提供商..."
+    },
     "zoom_factor": {
         "title": "缩放系数（仅桌面客户端有效）",
         "description": "缩放也可以通过 CTRL+- 和 CTRL+= 快捷键进行控制。"
@@ -1125,7 +1279,11 @@
     "code_auto_read_only_size": {
         "title": "自动只读大小",
         "description": "自动只读大小是指笔记超过设置的大小后自动设置为只读模式（为性能考虑）。",
-        "label": "自动只读大小（代码笔记）"
+        "label": "自动只读大小（代码笔记）",
+        "unit": "字符"
+    },
+    "code-editor-options": {
+      "title": "编辑器"
     },
     "code_mime_types": {
         "title": "下拉菜单可用的MIME文件类型"
@@ -1144,6 +1302,7 @@
         "download_images_description": "粘贴的 HTML 可能包含在线图片的引用，Trilium 会找到这些引用并下载图片，以便它们可以离线使用。",
         "enable_image_compression": "启用图片压缩",
         "max_image_dimensions": "图片的最大宽度/高度（超过此限制的图像将会被缩放）。",
+        "max_image_dimensions_unit": "像素",
         "jpeg_quality_description": "JPEG 质量（10 - 最差质量，100 最佳质量，建议为 50 - 85）"
     },
     "attachment_erasure_timeout": {
@@ -1175,6 +1334,7 @@
         "note_revisions_snapshot_limit_title": "笔记修订快照限制",
         "note_revisions_snapshot_limit_description": "笔记修订快照数限制指的是每个笔记可以保存的最大历史记录数量。其中 -1 表示没有限制，0 表示删除所有历史记录。您可以通过 #versioningLimit 标签设置单个笔记的最大修订记录数量。",
         "snapshot_number_limit_label": "笔记修订快照数量限制：",
+        "snapshot_number_limit_unit": "快照",
         "erase_excess_revision_snapshots": "立即删除多余的修订快照",
         "erase_excess_revision_snapshots_prompt": "多余的修订快照已被删除。"
     },
@@ -1217,13 +1377,21 @@
     "table_of_contents": {
         "title": "目录",
         "description": "当笔记中有超过一定数量的标题时，显示目录。您可以自定义此数量：",
+        "unit": "标题",
         "disable_info": "您可以设置一个非常大的数来禁用目录。",
         "shortcut_info": "您可以在 “选项” -> “快捷键” 中配置一个键盘快捷键，以便快速切换右侧面板（包括目录）（名称为 'toggleRightPane'）。"
     },
     "text_auto_read_only_size": {
         "title": "自动只读大小",
         "description": "自动只读笔记大小是超过该大小后，笔记将以只读模式显示（出于性能考虑）。",
-        "label": "自动只读大小（文本笔记）"
+        "label": "自动只读大小（文本笔记）",
+        "unit": "字符"
+    },
+    "custom_date_time_format": {
+      "title": "自定义日期/时间格式",
+      "description": "通过<kbd></kbd>或工具栏的方式可自定义日期和时间格式，有关日期/时间格式字符串中各个字符的含义，请参阅<a href=\"https://day.js.org/docs/en/display/format\" target=\"_blank\" rel=\"noopener noreferrer\">Day.js docs</a>。",
+      "format_string": "日期/时间格式字符串：",
+      "formatted_time": "格式化后日期/时间："
     },
     "i18n": {
         "title": "本地化",
@@ -1365,6 +1533,7 @@
         "config_title": "同步配置",
         "server_address": "服务器实例地址",
         "timeout": "同步超时（单位：毫秒）",
+        "timeout_unit": "毫秒",
         "proxy_label": "同步代理服务器（可选）",
         "note": "注意",
         "note_description": "代理设置留空则使用系统代理（仅桌面客户端有效）。",
@@ -1429,11 +1598,13 @@
         "move-to": "移动到...",
         "paste-into": "粘贴到里面",
         "paste-after": "粘贴到后面",
+        "duplicate": "复制",
         "export": "导出",
         "import-into-note": "导入到笔记",
         "apply-bulk-actions": "应用批量操作",
         "converted-to-attachments": "{{count}} 个笔记已被转换为附件。",
-        "convert-to-attachment-confirm": "确定要将选中的笔记转换为其父笔记的附件吗？"
+        "convert-to-attachment-confirm": "确定要将选中的笔记转换为其父笔记的附件吗？",
+        "open-in-popup": "快速编辑"
     },
     "shared_info": {
         "shared_publicly": "此笔记已公开分享于",
@@ -1459,7 +1630,11 @@
         "confirm-change": "当笔记内容不为空时，不建议更改笔记类型。您仍然要继续吗？",
         "geo-map": "地理地图",
         "beta-feature": "测试版",
-        "task-list": "待办事项列表"
+        "task-list": "待办事项列表",
+        "ai-chat": "AI聊天",
+        "task-list": "任务列表",
+        "new-feature": "新建",
+        "collections": "集合"
     },
     "protect_note": {
         "toggle-on": "保护笔记",
@@ -1569,7 +1744,9 @@
     },
     "clipboard": {
         "cut": "笔记已剪切到剪贴板。",
-        "copied": "笔记已复制到剪贴板。"
+        "copied": "笔记已复制到剪贴板。",
+        "copy_failed": "由于权限问题，无法复制到剪贴板。 ",
+        "copy_success": "已复制到剪贴板。"
     },
     "entrypoints": {
         "note-revision-created": "笔记修订已创建。",
@@ -1620,7 +1797,8 @@
         "word_wrapping": "自动换行",
         "theme_none": "无语法高亮",
         "theme_group_light": "浅色主题",
-        "theme_group_dark": "深色主题"
+        "theme_group_dark": "深色主题",
+        "copy_title": "复制到剪贴板"
     },
     "classic_editor_toolbar": {
         "title": "格式"
@@ -1658,7 +1836,8 @@
     "link_context_menu": {
         "open_note_in_new_tab": "在新标签页中打开笔记",
         "open_note_in_new_split": "在新分屏中打开笔记",
-        "open_note_in_new_window": "在新窗口中打开笔记"
+        "open_note_in_new_window": "在新窗口中打开笔记",
+        "open_note_in_popup": "快速编辑"
     },
     "electron_integration": {
         "desktop-application": "桌面应用程序",
@@ -1678,7 +1857,8 @@
         "full-text-search": "全文搜索"
     },
     "note_tooltip": {
-        "note-has-been-deleted": "笔记已被删除。"
+        "note-has-been-deleted": "笔记已被删除。",
+        "quick-edit": "快速编辑"
     },
     "geo-map": {
         "create-child-note-title": "创建一个新的子笔记并将其添加到地图中",
@@ -1687,7 +1867,8 @@
     },
     "geo-map-context": {
         "open-location": "打开位置",
-        "remove-from-map": "从地图中移除"
+        "remove-from-map": "从地图中移除",
+        "add-note": "在这个位置添加一个标记"
     },
     "help-button": {
         "title": "打开相关帮助页面"
@@ -1719,5 +1900,110 @@
             "tomorrow": "明天",
             "yesterday": "昨天"
         }
+    },
+    "content_widget": {
+      "unknown_widget": "未知组件：\"{{id}}\"."
+    },
+    "note_language": {
+      "not_set": "不设置",
+      "configure-languages": "设置语言..."
+    },
+    "content_language": {
+      "title": "内容语言",
+      "description": "选择一种或多种语言出现在只读或可编辑文本注释的基本属性，这将支持拼写检查或从右向左之类的功能。"
+    },
+    "switch_layout_button": {
+      "title_vertical": "将编辑面板移至底部",
+      "title_horizontal": "将编辑面板移至左侧"
+    },
+    "toggle_read_only_button": {
+      "unlock-editing": "解锁编辑",
+      "lock-editing": "锁定编辑"
+    },
+    "png_export_button": {
+      "button_title": "将图表导出为PNG"
+    },
+    "svg": {
+      "export_to_png": "无法将图表导出为PNG。"
+    },
+    "code_theme": {
+      "title": "外观",
+      "word_wrapping": "自动换行",
+      "color-scheme": "配色方案"
+    },
+    "cpu_arch_warning": {
+      "title": "请下载ARM64版本",
+      "message_macos": "TriliumNext当前正在通过Rosetta 2转译运行，这意味着您在Apple Silicon芯片的Mac上使用的是Intel（x64）版本。这将显著影响性能和电池续航。",
+      "message_windows": "TriliumNext当前正在模拟环境中运行，这意味着您在ARM架构的Windows设备上使用的是Intel（x64）版本。这将显著影响性能和电池续航。",
+      "recommendation": "为获得最佳体验，请从我们的发布页面下载TriliumNext的原生ARM64版本。",
+      "download_link": "下载原生版本",
+      "continue_anyway": "仍然继续",
+      "dont_show_again": "不再显示此警告"
+    },
+    "editorfeatures": {
+      "title": "功能",
+      "emoji_completion_enabled": "启用表情自动补全",
+      "note_completion_enabled": "启用笔记自动补全"
+    },
+    "table_view": {
+      "new-row": "新增行",
+      "new-column": "新增列",
+      "sort-column-by": "按\"{{title}}\"排序",
+      "sort-column-ascending": "升序",
+      "sort-column-descending": "降序",
+      "sort-column-clear": "清除排序",
+      "hide-column": "隐藏\"{{title}}\"列",
+      "show-hide-columns": "显示/隐藏列",
+      "row-insert-above": "在上方插入行",
+      "row-insert-below": "在下方插入行",
+      "row-insert-child": "插入子笔记",
+      "add-column-to-the-left": "在左侧添加列",
+      "add-column-to-the-right": "在右侧添加列",
+      "edit-column": "编辑列",
+      "delete_column_confirmation": "确定要删除此列吗？所有笔记中对应的属性都将被移除。",
+      "delete-column": "删除列",
+      "new-column-label": "标签",
+      "new-column-relation": "关联"
+    },
+    "book_properties_config": {
+      "hide-weekends": "隐藏周末",
+      "display-week-numbers": "显示周数",
+      "map-style": "地图样式：",
+      "max-nesting-depth": "最大嵌套深度：",
+      "raster": "栅格",
+      "vector_light": "矢量（浅色）",
+      "vector_dark": "矢量（深色）",
+      "show-scale": "显示比例尺"
+    },
+    "table_context_menu": {
+      "delete_row": "删除行"
+    },
+    "board_view": {
+      "delete-note": "删除笔记",
+      "move-to": "移动到",
+      "insert-above": "在上方插入",
+      "insert-below": "在下方插入",
+      "delete-column": "删除列",
+      "delete-column-confirmation": "确定要删除此列吗？此列下所有笔记中对应的属性也将被删除。",
+      "new-item": "新增项目",
+      "add-column": "添加列"
+    },
+    "command_palette": {
+      "tree-action-name": "树形：{{name}}",
+      "export_note_title": "导出笔记",
+      "export_note_description": "导出当前笔记",
+      "show_attachments_title": "显示附件",
+      "show_attachments_description": "查看笔记附件",
+      "search_notes_title": "搜索笔记",
+      "search_notes_description": "打开高级搜索",
+      "search_subtree_title": "在子树中搜索",
+      "search_subtree_description": "在当前子树范围内搜索",
+      "search_history_title": "显示搜索历史",
+      "search_history_description": "查看之前的搜索记录",
+      "configure_launch_bar_title": "配置启动栏",
+      "configure_launch_bar_description": "打开启动栏配置，添加或移除项目。"
+    },
+    "content_renderer": {
+      "open_externally": "在外部打开"
     }
 }
