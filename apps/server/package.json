@@ -39,7 +39,7 @@
     "@types/ws": "8.18.1",
     "@types/xml2js": "0.4.14",
     "express-http-proxy": "2.1.1",
-    "@anthropic-ai/sdk": "0.58.0",
+    "@anthropic-ai/sdk": "0.59.0",
     "@braintree/sanitize-url": "7.1.1",
     "@triliumnext/commons": "workspace:*",
     "@triliumnext/express-partial-content": "workspace:*",
