@@ -5,18 +5,7 @@ import protectedSessionService from "../../services/protected_session.js";
 import noteService from "../../services/notes.js";
 import becca from "../../becca/becca.js";
 import type { Request } from "express";
-
-interface RecentChangeRow {
-    noteId: string;
-    current_isDeleted: boolean;
-    current_deleteId: string;
-    current_title: string;
-    current_isProtected: boolean;
-    title: string;
-    utcDate: string;
-    date: string;
-    canBeUndeleted?: boolean;
-}
+import type { RecentChangeRow } from "@triliumnext/commons";
 
 function getRecentChanges(req: Request) {
     const { ancestorNoteId } = req.params;

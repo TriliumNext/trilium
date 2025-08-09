@@ -233,16 +233,16 @@ div.tn-tool-dialog {
 
 /* Item title link */
 
-.recent-changes-content ul li .note-title a {
+.recent-changes-content ul li a {
     color: currentColor;
 }
 
-.recent-changes-content ul li .note-title a:hover {
+.recent-changes-content ul li a:hover {
     text-decoration: underline;
 }
 
 /* Item title for deleted notes */
-.recent-changes-content ul li.deleted-note .note-title > .note-title {
+.recent-changes-content ul li.deleted-note .note-title {
     text-decoration: line-through;
 }
 

@@ -12,7 +12,7 @@ import ValidationError from "../../errors/validation_error.js";
 import blobService from "../../services/blob.js";
 import type { Request } from "express";
 import type BBranch from "../../becca/entities/bbranch.js";
-import type { AttributeRow } from "@triliumnext/commons";
+import type { AttributeRow, DeleteNotesPreview } from "@triliumnext/commons";
 
 /**
  * @swagger
@@ -339,7 +339,7 @@ function getDeleteNotesPreview(req: Request) {
     return {
         noteIdsToBeDeleted: Array.from(noteIdsToBeDeleted),
         brokenRelations
-    };
+    } satisfies DeleteNotesPreview;
 }
 
 function forceSaveRevision(req: Request) {

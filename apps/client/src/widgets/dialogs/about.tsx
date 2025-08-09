@@ -22,46 +22,44 @@ function AboutDialogComponent() {
 
     return (
         <Modal className="about-dialog" size="lg" title={t("about.title")} onShown={onShown}>
-            {(appInfo !== null) ? (
-                <table className="table table-borderless">
-                    <tbody>
-                        <tr>
-                            <th>{t("about.homepage")}</th>
-                            <td><a className="tn-link external" href="https://github.com/TriliumNext/Trilium" style={forceWordBreak}>https://github.com/TriliumNext/Trilium</a></td>
-                        </tr>
-                        <tr>
-                            <th>{t("about.app_version")}</th>
-                            <td className="app-version">{appInfo.appVersion}</td>
-                        </tr>
-                        <tr>
-                            <th>{t("about.db_version")}</th>
-                            <td className="db-version">{appInfo.dbVersion}</td>
-                        </tr>
-                        <tr>
-                            <th>{t("about.sync_version")}</th>
-                            <td className="sync-version">{appInfo.syncVersion}</td>
-                        </tr>
-                        <tr>
-                            <th>{t("about.build_date")}</th>
-                            <td className="build-date">{formatDateTime(appInfo.buildDate)}</td>
-                        </tr>
-                        <tr>
-                            <th>{t("about.build_revision")}</th>
-                            <td>
-                                <a className="tn-link build-revision external" href={`https://github.com/TriliumNext/Trilium/commit/${appInfo.buildRevision}`} target="_blank" style={forceWordBreak}>{appInfo.buildRevision}</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>{t("about.data_directory")}</th>
-                            <td className="data-directory">
-                                <DirectoryLink directory={appInfo.dataDirectory} style={forceWordBreak} />
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            ) : (
-                <div className="loading-spinner"></div>
-            )}
+            <table className="table table-borderless">
+                <tbody>
+                    <tr>
+                        <th>{t("about.homepage")}</th>
+                        <td><a className="tn-link external" href="https://github.com/TriliumNext/Trilium" style={forceWordBreak}>https://github.com/TriliumNext/Trilium</a></td>
+                    </tr>
+                    <tr>
+                        <th>{t("about.app_version")}</th>
+                        <td className="app-version">{appInfo?.appVersion}</td>
+                    </tr>
+                    <tr>
+                        <th>{t("about.db_version")}</th>
+                        <td className="db-version">{appInfo?.dbVersion}</td>
+                    </tr>
+                    <tr>
+                        <th>{t("about.sync_version")}</th>
+                        <td className="sync-version">{appInfo?.syncVersion}</td>
+                    </tr>
+                    <tr>
+                        <th>{t("about.build_date")}</th>
+                        <td className="build-date">
+                            {appInfo?.buildDate ? formatDateTime(appInfo.buildDate) : ""}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>{t("about.build_revision")}</th>
+                        <td>
+                            {appInfo?.buildRevision && <a className="tn-link build-revision external" href={`https://github.com/TriliumNext/Trilium/commit/${appInfo.buildRevision}`} target="_blank" style={forceWordBreak}>{appInfo.buildRevision}</a>}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>{t("about.data_directory")}</th>
+                        <td className="data-directory">
+                            {appInfo?.dataDirectory && (<DirectoryLink directory={appInfo.dataDirectory} style={forceWordBreak} />)}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </Modal>
     );
 }

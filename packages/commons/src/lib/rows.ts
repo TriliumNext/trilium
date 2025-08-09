@@ -28,10 +28,10 @@ export interface RevisionRow {
     title: string;
     blobId?: string;
     dateLastEdited?: string;
-    dateCreated: string;
+    dateCreated?: string;
     utcDateLastEdited?: string;
     utcDateCreated: string;
-    utcDateModified: string;
+    utcDateModified?: string;
     contentLength?: number;
 }
 

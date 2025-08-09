@@ -3,6 +3,7 @@
 languageIds:
   - javascript
   - typescript
+  - typescriptreact
   - html
 
 # An array of RegExes to find the key usage. **The key should be captured in the first match group**.
@@ -25,6 +26,7 @@ scopeRangeRegex: "useTranslation\\(\\s*\\[?\\s*['\"`](.*?)['\"`]"
 # The "$1" will be replaced by the keypath specified.
 refactorTemplates:
   - t("$1")
+  - {t("$1")}
   - ${t("$1")}
   - <%= t("$1") %>
 

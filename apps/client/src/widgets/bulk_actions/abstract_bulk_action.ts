@@ -1,10 +1,9 @@
-import { t } from "../../services/i18n.js";
 import server from "../../services/server.js";
 import ws from "../../services/ws.js";
-import utils from "../../services/utils.js";
 import type FAttribute from "../../entities/fattribute.js";
+import { VNode } from "preact";
 
-interface ActionDefinition {
+export interface ActionDefinition {
     script: string;
     relationName: string;
     targetNoteId: string;
@@ -27,26 +26,9 @@ export default abstract class AbstractBulkAction {
         this.actionDef = actionDef;
     }
 
-    render() {
-        try {
-            const $rendered = this.doRender();
-
-            $rendered
-                .find(".action-conf-del")
-                .on("click", () => this.deleteAction())
-                .attr("title", t("abstract_bulk_action.remove_this_search_action"));
-
-            utils.initHelpDropdown($rendered);
-
-            return $rendered;
-        } catch (e: any) {
-            logError(`Failed rendering search action: ${JSON.stringify(this.attribute.dto)} with error: ${e.message} ${e.stack}`);
-            return null;
-        }
-    }
-
     // to be overridden
-    abstract doRender(): JQuery<HTMLElement>;
+    abstract doRender(): VNode;
+
     static get actionName() {
         return "";
     }
@@ -66,9 +48,6 @@ export default abstract class AbstractBulkAction {
 
     async deleteAction() {
         await server.remove(`notes/${this.attribute.noteId}/attributes/${this.attribute.attributeId}`);
-
         await ws.waitForMaxKnownEntityChangeId();
-
-        //await this.triggerCommand('refreshSearchDefinition');
     }
 }

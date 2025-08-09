@@ -1,0 +1,16 @@
+.export-dialog form .form-check {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.export-dialog form .format-choice {
+    padding-left: 40px;
+}
+
+.export-dialog form .opml-versions {
+    padding-left: 60px;
+}
+
+.export-dialog form .form-check-label {
+    padding: 2px;
+}

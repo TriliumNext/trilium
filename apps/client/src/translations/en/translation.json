@@ -34,7 +34,7 @@
     "link_title_mirrors": "link title mirrors the note's current title",
     "link_title_arbitrary": "link title can be changed arbitrarily",
     "link_title": "Link title",
-    "button_add_link": "Add link <kbd>enter</kbd>"
+    "button_add_link": "Add link"
   },
   "branch_prefix": {
     "edit_branch_prefix": "Edit branch prefix",
@@ -68,7 +68,7 @@
     "search_for_note_by_its_name": "search for note by its name",
     "cloned_note_prefix_title": "Cloned note will be shown in note tree with given prefix",
     "prefix_optional": "Prefix (optional)",
-    "clone_to_selected_note": "Clone to selected note <kbd>enter</kbd>",
+    "clone_to_selected_note": "Clone to selected note",
     "no_path_to_clone_to": "No path to clone to.",
     "note_cloned": "Note \"{{clonedTitle}}\" has been cloned into \"{{targetTitle}}\""
   },
@@ -87,9 +87,9 @@
     "delete_all_clones_description": "Delete also all clones (can be undone in recent changes)",
     "erase_notes_description": "Normal (soft) deletion only marks the notes as deleted and they can be undeleted (in recent changes dialog) within a period of time. Checking this option will erase the notes immediately and it won't be possible to undelete the notes.",
     "erase_notes_warning": "Erase notes permanently (can't be undone), including all clones. This will force application reload.",
-    "notes_to_be_deleted": "Following notes will be deleted ({{- noteCount}})",
+    "notes_to_be_deleted": "Following notes will be deleted ({{notesCount}})",
     "no_note_to_delete": "No note will be deleted (only clones).",
-    "broken_relations_to_be_deleted": "Following relations will be broken and deleted ({{- relationCount}})",
+    "broken_relations_to_be_deleted": "Following relations will be broken and deleted ({{ relationCount}})",
     "cancel": "Cancel",
     "ok": "OK",
     "deleted_relation_text": "Note {{- note}} (to be deleted) is referenced by relation {{- relation}} originating from {{- source}}."
@@ -113,21 +113,21 @@
     "format_pdf": "PDF - for printing or sharing purposes."
   },
   "help": {
-    "fullDocumentation": "Help (full documentation is available <a class=\"external\" href=\"https://triliumnext.github.io/Docs/\">online</a>)",
+    "title": "Cheatsheet",
     "close": "Close",
     "noteNavigation": "Note navigation",
-    "goUpDown": "<kbd>UP</kbd>, <kbd>DOWN</kbd> - go up/down in the list of notes",
-    "collapseExpand": "<kbd>LEFT</kbd>, <kbd>RIGHT</kbd> - collapse/expand node",
+    "goUpDown": "go up/down in the list of notes",
+    "collapseExpand": "collapse/expand node",
     "notSet": "not set",
     "goBackForwards": "go back / forwards in the history",
     "showJumpToNoteDialog": "show <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/note-navigation.html#jump-to-note\">\"Jump to\" dialog</a>",
     "scrollToActiveNote": "scroll to active note",
-    "jumpToParentNote": "<kbd>Backspace</kbd> - jump to parent note",
+    "jumpToParentNote": "jump to parent note",
     "collapseWholeTree": "collapse whole note tree",
     "collapseSubTree": "collapse sub-tree",
     "tabShortcuts": "Tab shortcuts",
-    "newTabNoteLink": "<kbd>Ctrl+click</kbd> - (or <kbd>middle mouse click</kbd>) on note link opens note in a new tab",
-    "newTabWithActivationNoteLink": "<kbd>Ctrl+Shift+click</kbd> - (or <kbd>Shift+middle mouse click</kbd>) on note link opens and activates the note in a new tab",
+    "newTabNoteLink": "on note link opens note in a new tab",
+    "newTabWithActivationNoteLink": "on note link opens and activates the note in a new tab",
     "onlyInDesktop": "Only in desktop (Electron build)",
     "openEmptyTab": "open empty tab",
     "closeActiveTab": "close active tab",
@@ -142,14 +142,14 @@
     "moveNoteUpHierarchy": "move note up in the hierarchy",
     "multiSelectNote": "multi-select note above/below",
     "selectAllNotes": "select all notes in the current level",
-    "selectNote": "<kbd>Shift+click</kbd> - select note",
+    "selectNote": "select note",
     "copyNotes": "copy active note (or current selection) into clipboard (used for <a class=\"external\" href=\"https://triliumnext.github.io/Docs/Wiki/cloning-notes.html#cloning-notes\">cloning</a>)",
     "cutNotes": "cut current note (or current selection) into clipboard (used for moving notes)",
     "pasteNotes": "paste note(s) as sub-note into active note (which is either move or clone depending on whether it was copied or cut into clipboard)",
     "deleteNotes": "delete note / sub-tree",
     "editingNotes": "Editing notes",
     "editNoteTitle": "in tree pane will switch from tree pane into note title. Enter from note title will switch focus to text editor. <kbd>Ctrl+.</kbd> will switch back from editor to tree pane.",
-    "createEditLink": "<kbd>Ctrl+K</kbd> - create / edit external link",
+    "createEditLink": "create / edit external link",
     "createInternalLink": "create internal link",
     "followLink": "follow link under cursor",
     "insertDateTime": "insert current date and time at caret position",
@@ -203,7 +203,7 @@
     "box_size_small": "small (~ 10 lines)",
     "box_size_medium": "medium (~ 30 lines)",
     "box_size_full": "full (box shows complete text)",
-    "button_include": "Include note <kbd>enter</kbd>"
+    "button_include": "Include note"
   },
   "info": {
     "modalTitle": "Info message",
@@ -213,13 +213,13 @@
   "jump_to_note": {
     "search_placeholder": "Search for note by its name or type > for commands...",
     "close": "Close",
-    "search_button": "Search in full text <kbd>Ctrl+Enter</kbd>"
+    "search_button": "Search in full text"
   },
   "markdown_import": {
     "dialog_title": "Markdown import",
     "close": "Close",
     "modal_body_text": "Because of browser sandbox it's not possible to directly read clipboard from JavaScript. Please paste the Markdown to import to textarea below and click on Import button",
-    "import_button": "Import Ctrl+Enter",
+    "import_button": "Import",
     "import_success": "Markdown content has been imported into the document."
   },
   "move_to": {
@@ -228,7 +228,7 @@
     "notes_to_move": "Notes to move",
     "target_parent_note": "Target parent note",
     "search_placeholder": "search for note by its name",
-    "move_button": "Move to selected note <kbd>enter</kbd>",
+    "move_button": "Move to selected note",
     "error_no_path": "No path to move to.",
     "move_success_message": "Selected notes have been moved into "
   },
@@ -238,18 +238,20 @@
     "modal_title": "Choose note type",
     "close": "Close",
     "modal_body": "Choose note type / template of the new note:",
-    "templates": "Templates:"
+    "templates": "Templates",
+    "builtin_templates": "Built-in Templates"
   },
   "password_not_set": {
     "title": "Password is not set",
     "close": "Close",
     "body1": "Protected notes are encrypted using a user password, but password has not been set yet.",
-    "body2": "To be able to protect notes, click <a class=\"open-password-options-button\" href=\"javascript:\">here</a> to open the Options dialog and set your password."
+    "body2": "To be able to protect notes, click the button below to open the Options dialog and set your password.",
+    "go_to_password_options": "Go to Password options"
   },
   "prompt": {
     "title": "Prompt",
     "close": "Close",
-    "ok": "OK <kbd>enter</kbd>",
+    "ok": "OK",
     "defaultTitle": "Prompt"
   },
   "protected_session_password": {
@@ -257,7 +259,7 @@
     "help_title": "Help on Protected notes",
     "close_label": "Close",
     "form_label": "To proceed with requested action you need to start protected session by entering password:",
-    "start_button": "Start protected session <kbd>enter</kbd>"
+    "start_button": "Start protected session"
   },
   "recent_changes": {
     "title": "Recent changes",
@@ -309,13 +311,13 @@
     "sort_with_respect_to_different_character_sorting": "sort with respect to different character sorting and collation rules in different languages or regions.",
     "natural_sort_language": "Natural sort language",
     "the_language_code_for_natural_sort": "The language code for natural sort, e.g. \"zh-CN\" for Chinese.",
-    "sort": "Sort <kbd>enter</kbd>"
+    "sort": "Sort"
   },
   "upload_attachments": {
     "upload_attachments_to_note": "Upload attachments to note",
     "close": "Close",
     "choose_files": "Choose files",
-    "files_will_be_uploaded": "Files will be uploaded as attachments into",
+    "files_will_be_uploaded": "Files will be uploaded as attachments into {{noteTitle}}",
     "options": "Options",
     "shrink_images": "Shrink images",
     "upload": "Upload",
@@ -2007,6 +2009,7 @@
     "open_externally": "Open externally"
   },
   "modal": {
-    "close": "Close"
+    "close": "Close",
+    "help_title": "Display more information about this screen"
   }
 }

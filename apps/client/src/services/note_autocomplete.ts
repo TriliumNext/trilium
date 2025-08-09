@@ -38,7 +38,7 @@ export interface Suggestion {
     commandShortcut?: string;
 }
 
-interface Options {
+export interface Options {
     container?: HTMLElement;
     fastSearch?: boolean;
     allowCreatingNotes?: boolean;
@@ -82,12 +82,12 @@ async function autocompleteSource(term: string, cb: (rows: Suggestion[]) => void
     // Check if we're in command mode
     if (options.isCommandPalette && term.startsWith(">")) {
         const commandQuery = term.substring(1).trim();
-        
+
         // Get commands (all if no query, filtered if query provided)
-        const commands = commandQuery.length === 0 
+        const commands = commandQuery.length === 0
             ? commandRegistry.getAllCommands()
             : commandRegistry.searchCommands(commandQuery);
-            
+
         // Convert commands to suggestions
         const commandSuggestions: Suggestion[] = commands.map(cmd => ({
             action: "command",
@@ -99,7 +99,7 @@ async function autocompleteSource(term: string, cb: (rows: Suggestion[]) => void
             commandShortcut: cmd.shortcut,
             icon: cmd.icon
         }));
-        
+
         cb(commandSuggestions);
         return;
     }
@@ -450,6 +450,21 @@ function init() {
             .val(note ? note.title : "")
             .setSelectedNotePath(noteId);
     };
+}
+
+/**
+ * Convenience function which triggers the display of recent notes in the autocomplete input and focuses it.
+ *
+ * @param inputElement - The input element to trigger recent notes on.
+ */
+export function triggerRecentNotes(inputElement: HTMLInputElement | null | undefined) {
+    if (!inputElement) {
+        return;
+    }
+
+    const $el = $(inputElement);
+    showRecentNotes($el);
+    $el.trigger("focus").trigger("select");
 }
 
 export default {

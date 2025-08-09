@@ -7,7 +7,7 @@ import becca from "../becca.js";
 import AbstractBeccaEntity from "./abstract_becca_entity.js";
 import sql from "../../services/sql.js";
 import BAttachment from "./battachment.js";
-import type { AttachmentRow, NoteType, RevisionRow } from "@triliumnext/commons";
+import type { AttachmentRow, NoteType, RevisionPojo, RevisionRow } from "@triliumnext/commons";
 import eraseService from "../../services/erase.js";
 
 interface ContentOpts {
@@ -201,7 +201,7 @@ class BRevision extends AbstractBeccaEntity<BRevision> {
             utcDateModified: this.utcDateModified,
             content: this.content, // used when retrieving full note revision to frontend
             contentLength: this.contentLength
-        };
+        } satisfies RevisionPojo;
     }
 
     override getPojoToSave() {

@@ -642,6 +642,10 @@ table.promoted-attributes-in-tooltip th {
     z-index: calc(var(--ck-z-panel) - 1) !important;
 }
 
+.tooltip.tooltip-top {
+    z-index: 32767 !important;
+}
+
 .tooltip-trigger {
     background: transparent;
     pointer-events: none;

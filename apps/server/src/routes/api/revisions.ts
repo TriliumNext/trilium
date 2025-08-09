@@ -12,6 +12,7 @@ import type { Request, Response } from "express";
 import type BRevision from "../../becca/entities/brevision.js";
 import type BNote from "../../becca/entities/bnote.js";
 import type { NotePojo } from "../../becca/becca-interface.js";
+import { RevisionItem, RevisionPojo, RevisionRow } from "@triliumnext/commons";
 
 interface NotePath {
     noteId: string;
@@ -41,7 +42,7 @@ function getRevisions(req: Request) {
         WHERE revisions.noteId = ?
         ORDER BY revisions.utcDateCreated DESC`,
         [req.params.noteId]
-    );
+    ) satisfies RevisionItem[];
 }
 
 function getRevision(req: Request) {
@@ -59,7 +60,7 @@ function getRevision(req: Request) {
         }
     }
 
-    return revision;
+    return revision satisfies RevisionPojo;
 }
 
 function getRevisionFilename(revision: BRevision) {
