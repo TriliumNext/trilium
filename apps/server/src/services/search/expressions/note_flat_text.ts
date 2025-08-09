@@ -7,6 +7,7 @@ import Expression from "./expression.js";
 import NoteSet from "../note_set.js";
 import becca from "../../../becca/becca.js";
 import { normalize } from "../../utils.js";
+import { normalizeSearchText, fuzzyMatchWord, fuzzyMatchWordWithResult } from "../utils/text_utils.js";
 import beccaService from "../../../becca/becca_service.js";
 
 class NoteFlatTextExp extends Expression {
@@ -15,7 +16,8 @@ class NoteFlatTextExp extends Expression {
     constructor(tokens: string[]) {
         super();
 
-        this.tokens = tokens;
+        // Normalize tokens using centralized normalization function
+        this.tokens = tokens.map(token => normalizeSearchText(token));
     }
 
     execute(inputNoteSet: NoteSet, executionContext: any, searchContext: SearchContext) {
@@ -61,8 +63,8 @@ class NoteFlatTextExp extends Expression {
             }
 
             for (const attribute of note.getOwnedAttributes()) {
-                const normalizedName = normalize(attribute.name);
-                const normalizedValue = normalize(attribute.value);
+                const normalizedName = normalizeSearchText(attribute.name);
+                const normalizedValue = normalizeSearchText(attribute.value);
 
                 for (const token of remainingTokens) {
                     if (normalizedName.includes(token) || normalizedValue.includes(token)) {
@@ -72,11 +74,11 @@ class NoteFlatTextExp extends Expression {
             }
 
             for (const parentNote of note.parents) {
-                const title = normalize(beccaService.getNoteTitle(note.noteId, parentNote.noteId));
+                const title = normalizeSearchText(beccaService.getNoteTitle(note.noteId, parentNote.noteId));
                 const foundTokens: string[] = foundAttrTokens.slice();
 
                 for (const token of remainingTokens) {
-                    if (title.includes(token)) {
+                    if (this.smartMatch(title, token, searchContext)) {
                         foundTokens.push(token);
                     }
                 }
@@ -91,7 +93,7 @@ class NoteFlatTextExp extends Expression {
             }
         };
 
-        const candidateNotes = this.getCandidateNotes(inputNoteSet);
+        const candidateNotes = this.getCandidateNotes(inputNoteSet, searchContext);
 
         for (const note of candidateNotes) {
             // autocomplete should be able to find notes by their noteIds as well (only leafs)
@@ -108,18 +110,18 @@ class NoteFlatTextExp extends Expression {
                 }
 
                 for (const attribute of note.ownedAttributes) {
-                    if (normalize(attribute.name).includes(token) || normalize(attribute.value).includes(token)) {
+                    if (normalizeSearchText(attribute.name).includes(token) || normalizeSearchText(attribute.value).includes(token)) {
                         foundAttrTokens.push(token);
                     }
                 }
             }
 
             for (const parentNote of note.parents) {
-                const title = normalize(beccaService.getNoteTitle(note.noteId, parentNote.noteId));
+                const title = normalizeSearchText(beccaService.getNoteTitle(note.noteId, parentNote.noteId));
                 const foundTokens = foundAttrTokens.slice();
 
                 for (const token of this.tokens) {
-                    if (title.includes(token)) {
+                    if (this.smartMatch(title, token, searchContext)) {
                         foundTokens.push(token);
                     }
                 }
@@ -152,12 +154,13 @@ class NoteFlatTextExp extends Expression {
     /**
      * Returns noteIds which have at least one matching tokens
      */
-    getCandidateNotes(noteSet: NoteSet): BNote[] {
+    getCandidateNotes(noteSet: NoteSet, searchContext?: SearchContext): BNote[] {
         const candidateNotes: BNote[] = [];
 
         for (const note of noteSet.notes) {
+            const normalizedFlatText = normalizeSearchText(note.getFlatText());
             for (const token of this.tokens) {
-                if (note.getFlatText().includes(token)) {
+                if (this.smartMatch(normalizedFlatText, token, searchContext)) {
                     candidateNotes.push(note);
                     break;
                 }
@@ -165,6 +168,34 @@ class NoteFlatTextExp extends Expression {
         }
 
         return candidateNotes;
+    }
+
+    /**
+     * Smart matching that tries exact match first, then fuzzy fallback
+     * @param text The text to search in
+     * @param token The token to search for
+     * @param searchContext The search context to track matched words for highlighting
+     * @returns True if match found (exact or fuzzy)
+     */
+    private smartMatch(text: string, token: string, searchContext?: SearchContext): boolean {
+        // Exact match has priority
+        if (text.includes(token)) {
+            return true;
+        }
+        
+        // Fuzzy fallback only if enabled and for tokens >= 4 characters
+        if (searchContext?.enableFuzzyMatching && token.length >= 4) {
+            const matchedWord = fuzzyMatchWordWithResult(token, text);
+            if (matchedWord) {
+                // Track the fuzzy matched word for highlighting
+                if (!searchContext.highlightedTokens.includes(matchedWord)) {
+                    searchContext.highlightedTokens.push(matchedWord);
+                }
+                return true;
+            }
+        }
+        
+        return false;
     }
 }
 

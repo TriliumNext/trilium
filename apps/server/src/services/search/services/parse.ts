@@ -40,7 +40,7 @@ function getFulltext(_tokens: TokenData[], searchContext: SearchContext) {
     }
 }
 
-const OPERATORS = new Set(["=", "!=", "*=*", "*=", "=*", ">", ">=", "<", "<=", "%="]);
+const OPERATORS = new Set(["=", "!=", "*=*", "*=", "=*", ">", ">=", "<", "<=", "%=", "~=", "~*"]);
 
 function isOperator(token: TokenData) {
     if (Array.isArray(token)) {

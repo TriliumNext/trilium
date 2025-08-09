@@ -553,6 +553,71 @@ describe("Search", () => {
         expect(becca.notes[searchResults[0].noteId].title).toEqual("Reddit is bad");
     });
 
+    it("search completes in reasonable time", () => {
+        // Create a moderate-sized dataset to test performance
+        const countries = ["Austria", "Belgium", "Croatia", "Denmark", "Estonia", "Finland", "Germany", "Hungary", "Ireland", "Japan"];
+        const europeanCountries = note("Europe");
+        
+        countries.forEach(country => {
+            europeanCountries.child(note(country).label("type", "country").label("continent", "Europe"));
+        });
+        
+        rootNote.child(europeanCountries);
+
+        const searchContext = new SearchContext();
+        const startTime = Date.now();
+        
+        // Perform a search that exercises multiple features
+        const searchResults = searchService.findResultsWithQuery("#type=country AND continent", searchContext);
+        
+        const endTime = Date.now();
+        const duration = endTime - startTime;
+        
+        // Search should complete in under 1 second for reasonable dataset
+        expect(duration).toBeLessThan(1000);
+        expect(searchResults.length).toEqual(10);
+    });
+
+    it("progressive search always puts exact matches before fuzzy matches", () => {
+        rootNote
+            .child(note("Analysis Report")) // Exact match
+            .child(note("Data Analysis")) // Exact match
+            .child(note("Test Analysis")) // Exact match
+            .child(note("Statistical Analysis")) // Exact match
+            .child(note("Business Analysis")) // Exact match
+            .child(note("Advanced Anaylsis")) // Fuzzy match (typo)
+            .child(note("Quick Anlaysis")); // Fuzzy match (typo)
+
+        const searchContext = new SearchContext();
+        const searchResults = searchService.findResultsWithQuery("analysis", searchContext);
+
+        // Should find all matches but exact ones should come first
+        expect(searchResults.length).toEqual(7);
+
+        // Get note titles in result order
+        const resultTitles = searchResults.map(r => becca.notes[r.noteId].title);
+        
+        // Find all exact matches (contain "analysis")
+        const exactMatchIndices = resultTitles.map((title, index) => 
+            title.toLowerCase().includes("analysis") ? index : -1
+        ).filter(index => index !== -1);
+        
+        // Find all fuzzy matches (contain typos)
+        const fuzzyMatchIndices = resultTitles.map((title, index) => 
+            (title.includes("Anaylsis") || title.includes("Anlaysis")) ? index : -1
+        ).filter(index => index !== -1);
+
+        expect(exactMatchIndices.length).toEqual(5);
+        expect(fuzzyMatchIndices.length).toEqual(2);
+
+        // CRITICAL: All exact matches must appear before all fuzzy matches
+        const lastExactIndex = Math.max(...exactMatchIndices);
+        const firstFuzzyIndex = Math.min(...fuzzyMatchIndices);
+        
+        expect(lastExactIndex).toBeLessThan(firstFuzzyIndex);
+    });
+
+
     // FIXME: test what happens when we order without any filter criteria
 
     // it("comparison between labels", () => {

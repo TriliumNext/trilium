@@ -17,6 +17,8 @@ import type { SearchParams, TokenStructure } from "./types.js";
 import type Expression from "../expressions/expression.js";
 import sql from "../../sql.js";
 import scriptService from "../../script.js";
+import striptags from "striptags";
+import protectedSessionService from "../../protected_session.js";
 
 export interface SearchNoteResult {
     searchResultNoteIds: string[];
@@ -235,12 +237,38 @@ function findResultsWithExpression(expression: Expression, searchContext: Search
         loadNeededInfoFromDatabase();
     }
 
+    // Phase 1: Try exact matches first (without fuzzy matching)
+    const exactResults = performSearch(expression, searchContext, false);
+    
+    // Check if we have sufficient high-quality results
+    const minResultThreshold = 5;
+    const minScoreForQuality = 10; // Minimum score to consider a result "high quality"
+    
+    const highQualityResults = exactResults.filter(result => result.score >= minScoreForQuality);
+    
+    // If we have enough high-quality exact matches, return them
+    if (highQualityResults.length >= minResultThreshold) {
+        return exactResults;
+    }
+    
+    // Phase 2: Add fuzzy matching as fallback
+    const fuzzyResults = performSearch(expression, searchContext, true);
+    
+    // Merge results, ensuring exact matches always rank higher than fuzzy matches
+    return mergeExactAndFuzzyResults(exactResults, fuzzyResults);
+}
+
+function performSearch(expression: Expression, searchContext: SearchContext, enableFuzzyMatching: boolean): SearchResult[] {
     const allNoteSet = becca.getAllNoteSet();
 
     const noteIdToNotePath: Record<string, string[]> = {};
     const executionContext = {
         noteIdToNotePath
     };
+
+    // Store original fuzzy setting and temporarily override it
+    const originalFuzzyMatching = searchContext.enableFuzzyMatching;
+    searchContext.enableFuzzyMatching = enableFuzzyMatching;
 
     const noteSet = expression.execute(allNoteSet, executionContext, searchContext);
 
@@ -255,8 +283,11 @@ function findResultsWithExpression(expression: Expression, searchContext: Search
     });
 
     for (const res of searchResults) {
-        res.computeScore(searchContext.fulltextQuery, searchContext.highlightedTokens);
+        res.computeScore(searchContext.fulltextQuery, searchContext.highlightedTokens, enableFuzzyMatching);
     }
+
+    // Restore original fuzzy setting
+    searchContext.enableFuzzyMatching = originalFuzzyMatching;
 
     if (!noteSet.sorted) {
         searchResults.sort((a, b) => {
@@ -277,6 +308,49 @@ function findResultsWithExpression(expression: Expression, searchContext: Search
     }
 
     return searchResults;
+}
+
+function mergeExactAndFuzzyResults(exactResults: SearchResult[], fuzzyResults: SearchResult[]): SearchResult[] {
+    // Create a map of exact result note IDs for deduplication
+    const exactNoteIds = new Set(exactResults.map(result => result.noteId));
+    
+    // Add fuzzy results that aren't already in exact results
+    const additionalFuzzyResults = fuzzyResults.filter(result => !exactNoteIds.has(result.noteId));
+    
+    // Sort exact results by score (best exact matches first)
+    exactResults.sort((a, b) => {
+        if (a.score > b.score) {
+            return -1;
+        } else if (a.score < b.score) {
+            return 1;
+        }
+
+        // if score does not decide then sort results by depth of the note.
+        if (a.notePathArray.length === b.notePathArray.length) {
+            return a.notePathTitle < b.notePathTitle ? -1 : 1;
+        }
+
+        return a.notePathArray.length < b.notePathArray.length ? -1 : 1;
+    });
+    
+    // Sort fuzzy results by score (best fuzzy matches first)
+    additionalFuzzyResults.sort((a, b) => {
+        if (a.score > b.score) {
+            return -1;
+        } else if (a.score < b.score) {
+            return 1;
+        }
+
+        // if score does not decide then sort results by depth of the note.
+        if (a.notePathArray.length === b.notePathArray.length) {
+            return a.notePathTitle < b.notePathTitle ? -1 : 1;
+        }
+
+        return a.notePathArray.length < b.notePathArray.length ? -1 : 1;
+    });
+    
+    // CRITICAL: Always put exact matches before fuzzy matches, regardless of scores
+    return [...exactResults, ...additionalFuzzyResults];
 }
 
 function parseQueryToExpression(query: string, searchContext: SearchContext) {
@@ -337,6 +411,91 @@ function findFirstNoteWithQuery(query: string, searchContext: SearchContext): BN
     return searchResults.length > 0 ? becca.notes[searchResults[0].noteId] : null;
 }
 
+function extractContentSnippet(noteId: string, searchTokens: string[], maxLength: number = 200): string {
+    const note = becca.notes[noteId];
+    if (!note) {
+        return "";
+    }
+
+    // Only extract content for text-based notes
+    if (!["text", "code", "mermaid", "canvas", "mindMap"].includes(note.type)) {
+        return "";
+    }
+
+    try {
+        let content = note.getContent();
+        
+        if (!content || typeof content !== "string") {
+            return "";
+        }
+
+        // Handle protected notes
+        if (note.isProtected && protectedSessionService.isProtectedSessionAvailable()) {
+            try {
+                content = protectedSessionService.decryptString(content) || "";
+            } catch (e) {
+                return ""; // Can't decrypt, don't show content
+            }
+        } else if (note.isProtected) {
+            return ""; // Protected but no session available
+        }
+
+        // Strip HTML tags for text notes
+        if (note.type === "text") {
+            content = striptags(content);
+        }
+
+        // Normalize whitespace
+        content = content.replace(/\s+/g, " ").trim();
+
+        if (!content) {
+            return "";
+        }
+
+        // Try to find a snippet around the first matching token
+        const normalizedContent = normalizeString(content.toLowerCase());
+        let snippetStart = 0;
+        let matchFound = false;
+
+        for (const token of searchTokens) {
+            const normalizedToken = normalizeString(token.toLowerCase());
+            const matchIndex = normalizedContent.indexOf(normalizedToken);
+            
+            if (matchIndex !== -1) {
+                // Center the snippet around the match
+                snippetStart = Math.max(0, matchIndex - maxLength / 2);
+                matchFound = true;
+                break;
+            }
+        }
+
+        // Extract snippet
+        let snippet = content.substring(snippetStart, snippetStart + maxLength);
+        
+        // Try to start/end at word boundaries
+        if (snippetStart > 0) {
+            const firstSpace = snippet.indexOf(" ");
+            if (firstSpace > 0 && firstSpace < 20) {
+                snippet = snippet.substring(firstSpace + 1);
+            }
+            snippet = "..." + snippet;
+        }
+        
+        if (snippetStart + maxLength < content.length) {
+            const lastSpace = snippet.lastIndexOf(" ");
+            if (lastSpace > snippet.length - 20) {
+                snippet = snippet.substring(0, lastSpace);
+            }
+            snippet = snippet + "...";
+        }
+
+        return snippet;
+    } catch (e) {
+        log.error(`Error extracting content snippet for note ${noteId}: ${e}`);
+        return "";
+    }
+}
+
 function searchNotesForAutocomplete(query: string, fastSearch: boolean = true) {
     const searchContext = new SearchContext({
         fastSearch: fastSearch,
@@ -351,6 +510,11 @@ function searchNotesForAutocomplete(query: string, fastSearch: boolean = true) {
 
     const trimmed = allSearchResults.slice(0, 200);
 
+    // Extract content snippets
+    for (const result of trimmed) {
+        result.contentSnippet = extractContentSnippet(result.noteId, searchContext.highlightedTokens);
+    }
+
     highlightSearchResults(trimmed, searchContext.highlightedTokens, searchContext.ignoreInternalAttributes);
 
     return trimmed.map((result) => {
@@ -360,6 +524,8 @@ function searchNotesForAutocomplete(query: string, fastSearch: boolean = true) {
             noteTitle: title,
             notePathTitle: result.notePathTitle,
             highlightedNotePathTitle: result.highlightedNotePathTitle,
+            contentSnippet: result.contentSnippet,
+            highlightedContentSnippet: result.highlightedContentSnippet,
             icon: icon ?? "bx bx-note"
         };
     });
@@ -381,26 +547,11 @@ function highlightSearchResults(searchResults: SearchResult[], highlightedTokens
     highlightedTokens.sort((a, b) => (a.length > b.length ? -1 : 1));
 
     for (const result of searchResults) {
-        const note = becca.notes[result.noteId];
-
         result.highlightedNotePathTitle = result.notePathTitle.replace(/[<{}]/g, "");
-
-        if (highlightedTokens.find((token) => note.type.includes(token))) {
-            result.highlightedNotePathTitle += ` "type: ${note.type}'`;
-        }
-
-        if (highlightedTokens.find((token) => note.mime.includes(token))) {
-            result.highlightedNotePathTitle += ` "mime: ${note.mime}'`;
-        }
-
-        for (const attr of note.getAttributes()) {
-            if (attr.type === "relation" && attr.name === "internalLink" && ignoreInternalAttributes) {
-                continue;
-            }
-
-            if (highlightedTokens.find((token) => normalize(attr.name).includes(token) || normalize(attr.value).includes(token))) {
-                result.highlightedNotePathTitle += ` "${formatAttribute(attr)}'`;
-            }
+        
+        // Initialize highlighted content snippet
+        if (result.contentSnippet) {
+            result.highlightedContentSnippet = escapeHtml(result.contentSnippet).replace(/[<{}]/g, "");
         }
     }
 
@@ -419,40 +570,36 @@ function highlightSearchResults(searchResults: SearchResult[], highlightedTokens
             const tokenRegex = new RegExp(escapeRegExp(token), "gi");
             let match;
 
-            // Find all matches
-            if (!result.highlightedNotePathTitle) {
-                continue;
+            // Highlight in note path title
+            if (result.highlightedNotePathTitle) {
+                const titleRegex = new RegExp(escapeRegExp(token), "gi");
+                while ((match = titleRegex.exec(normalizeString(result.highlightedNotePathTitle))) !== null) {
+                    result.highlightedNotePathTitle = wrapText(result.highlightedNotePathTitle, match.index, token.length, "{", "}");
+                    // 2 characters are added, so we need to adjust the index
+                    titleRegex.lastIndex += 2;
+                }
             }
-            while ((match = tokenRegex.exec(normalizeString(result.highlightedNotePathTitle))) !== null) {
-                result.highlightedNotePathTitle = wrapText(result.highlightedNotePathTitle, match.index, token.length, "{", "}");
 
-                // 2 characters are added, so we need to adjust the index
-                tokenRegex.lastIndex += 2;
+            // Highlight in content snippet
+            if (result.highlightedContentSnippet) {
+                const contentRegex = new RegExp(escapeRegExp(token), "gi");
+                while ((match = contentRegex.exec(normalizeString(result.highlightedContentSnippet))) !== null) {
+                    result.highlightedContentSnippet = wrapText(result.highlightedContentSnippet, match.index, token.length, "{", "}");
+                    // 2 characters are added, so we need to adjust the index
+                    contentRegex.lastIndex += 2;
+                }
             }
         }
     }
 
     for (const result of searchResults) {
-        if (!result.highlightedNotePathTitle) {
-            continue;
+        if (result.highlightedNotePathTitle) {
+            result.highlightedNotePathTitle = result.highlightedNotePathTitle.replace(/{/g, "<b>").replace(/}/g, "</b>");
         }
-        result.highlightedNotePathTitle = result.highlightedNotePathTitle.replace(/"/g, "<small>").replace(/'/g, "</small>").replace(/{/g, "<b>").replace(/}/g, "</b>");
-    }
-}
-
-function formatAttribute(attr: BAttribute) {
-    if (attr.type === "relation") {
-        return `~${escapeHtml(attr.name)}=…`;
-    } else if (attr.type === "label") {
-        let label = `#${escapeHtml(attr.name)}`;
-
-        if (attr.value) {
-            const val = /[^\w-]/.test(attr.value) ? `"${attr.value}"` : attr.value;
-
-            label += `=${escapeHtml(val)}`;
+        
+        if (result.highlightedContentSnippet) {
+            result.highlightedContentSnippet = result.highlightedContentSnippet.replace(/{/g, "<b>").replace(/}/g, "</b>");
         }
-
-        return label;
     }
 }
 
