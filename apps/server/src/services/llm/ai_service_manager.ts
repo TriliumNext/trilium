@@ -39,10 +39,26 @@ interface NoteContext {
     score?: number;
 }
 
-export class AIServiceManager implements IAIServiceManager {
-    private currentService: AIService | null = null;
-    private currentProvider: ServiceProviders | null = null;
+// Service cache entry with TTL
+interface ServiceCacheEntry {
+    service: AIService;
+    provider: ServiceProviders;
+    createdAt: number;
+    lastUsed: number;
+}
+
+// Disposable interface for proper resource cleanup
+export interface Disposable {
+    dispose(): void | Promise<void>;
+}
+
+export class AIServiceManager implements IAIServiceManager, Disposable {
+    private serviceCache: Map<ServiceProviders, ServiceCacheEntry> = new Map();
+    private readonly SERVICE_TTL_MS = 5 * 60 * 1000; // 5 minutes TTL
+    private readonly CLEANUP_INTERVAL_MS = 60 * 1000; // Cleanup check every minute
+    private cleanupTimer: NodeJS.Timeout | null = null;
     private initialized = false;
+    private disposed = false;
 
     constructor() {
         // Initialize tools immediately
@@ -50,7 +66,8 @@ export class AIServiceManager implements IAIServiceManager {
             log.error(`Error initializing LLM tools during AIServiceManager construction: ${error.message || String(error)}`);
         });
 
-        // Removed complex provider change listener - we'll read options fresh each time
+        // Start periodic cleanup of stale services
+        this.startCleanupTimer();
 
         this.initialized = true;
     }
@@ -372,34 +389,103 @@ export class AIServiceManager implements IAIServiceManager {
     }
 
     /**
-     * Clear the current provider (forces recreation on next access)
+     * Start the cleanup timer for removing stale services
      */
-    public clearCurrentProvider(): void {
-        this.currentService = null;
-        this.currentProvider = null;
-        log.info('Cleared current provider - will be recreated on next access');
+    private startCleanupTimer(): void {
+        if (this.cleanupTimer) return;
+        
+        this.cleanupTimer = setInterval(() => {
+            this.cleanupStaleServices();
+        }, this.CLEANUP_INTERVAL_MS);
     }
 
     /**
-     * Get or create the current provider instance - only one instance total
+     * Stop the cleanup timer
+     */
+    private stopCleanupTimer(): void {
+        if (this.cleanupTimer) {
+            clearInterval(this.cleanupTimer);
+            this.cleanupTimer = null;
+        }
+    }
+
+    /**
+     * Cleanup stale services that haven't been used recently
+     */
+    private cleanupStaleServices(): void {
+        if (this.disposed) return;
+
+        const now = Date.now();
+        const staleProviders: ServiceProviders[] = [];
+
+        for (const [provider, entry] of this.serviceCache.entries()) {
+            if (now - entry.lastUsed > this.SERVICE_TTL_MS) {
+                staleProviders.push(provider);
+            }
+        }
+
+        for (const provider of staleProviders) {
+            this.disposeService(provider);
+        }
+
+        if (staleProviders.length > 0) {
+            log.info(`Cleaned up ${staleProviders.length} stale service(s): ${staleProviders.join(', ')}`);
+        }
+    }
+
+    /**
+     * Dispose a specific service
+     */
+    private disposeService(provider: ServiceProviders): void {
+        const entry = this.serviceCache.get(provider);
+        if (entry) {
+            // If the service implements disposable, call dispose
+            if ('dispose' in entry.service && typeof (entry.service as any).dispose === 'function') {
+                try {
+                    (entry.service as any).dispose();
+                } catch (error) {
+                    log.error(`Error disposing ${provider} service: ${error}`);
+                }
+            }
+            this.serviceCache.delete(provider);
+            log.info(`Disposed ${provider} service`);
+        }
+    }
+
+    /**
+     * Clear all cached providers (forces recreation on next access)
+     */
+    public clearCurrentProvider(): void {
+        // Clear all cached services
+        for (const provider of this.serviceCache.keys()) {
+            this.disposeService(provider);
+        }
+        log.info('Cleared all cached providers - will be recreated on next access');
+    }
+
+    /**
+     * Get or create a provider instance with proper caching and TTL
      */
     private async getOrCreateChatProvider(providerName: ServiceProviders): Promise<AIService | null> {
-        // If provider type changed, clear the old one
-        if (this.currentProvider && this.currentProvider !== providerName) {
-            log.info(`Provider changed from ${this.currentProvider} to ${providerName}, clearing old service`);
-            this.currentService = null;
-            this.currentProvider = null;
+        if (this.disposed) {
+            throw new Error('AIServiceManager has been disposed');
         }
 
-        // Return existing service if it matches and is available
-        if (this.currentService && this.currentProvider === providerName && this.currentService.isAvailable()) {
-            return this.currentService;
-        }
-
-        // Clear invalid service
-        if (this.currentService) {
-            this.currentService = null;
-            this.currentProvider = null;
+        // Check cache first
+        const cached = this.serviceCache.get(providerName);
+        if (cached && cached.service.isAvailable()) {
+            // Update last used time
+            cached.lastUsed = Date.now();
+            
+            // Check if service is still within TTL
+            if (Date.now() - cached.createdAt <= this.SERVICE_TTL_MS) {
+                log.info(`Using cached ${providerName} service (age: ${Math.round((Date.now() - cached.createdAt) / 1000)}s)`);
+                return cached.service;
+            } else {
+                // Service is stale, dispose and recreate
+                log.info(`Cached ${providerName} service is stale, recreating`);
+                this.disposeService(providerName);
+            }
         }
 
         // Create new service for the requested provider
@@ -443,9 +529,14 @@ export class AIServiceManager implements IAIServiceManager {
             }
 
             if (service) {
-                // Cache the new service
-                this.currentService = service;
-                this.currentProvider = providerName;
+                // Cache the new service with metadata
+                const now = Date.now();
+                this.serviceCache.set(providerName, {
+                    service,
+                    provider: providerName,
+                    createdAt: now,
+                    lastUsed: now
+                });
                 log.info(`Created and cached new ${providerName} service`);
                 return service;
             }
@@ -454,6 +545,26 @@ export class AIServiceManager implements IAIServiceManager {
         }
 
         return null;
+    }
+
+    /**
+     * Dispose of all resources and cleanup
+     */
+    async dispose(): Promise<void> {
+        if (this.disposed) return;
+
+        log.info('Disposing AIServiceManager...');
+        this.disposed = true;
+
+        // Stop cleanup timer
+        this.stopCleanupTimer();
+
+        // Dispose all cached services
+        for (const provider of this.serviceCache.keys()) {
+            this.disposeService(provider);
+        }
+
+        log.info('AIServiceManager disposed successfully');
     }
 
     /**
@@ -644,12 +755,21 @@ export class AIServiceManager implements IAIServiceManager {
     }
 
     /**
+     * Check if a service cache entry is stale
+     */
+    private isServiceStale(entry: ServiceCacheEntry): boolean {
+        const now = Date.now();
+        return now - entry.lastUsed > this.SERVICE_TTL_MS;
+    }
+
+    /**
      * Check if a specific provider is available
      */
     isProviderAvailable(provider: string): boolean {
-        // Check if this is the current provider and if it's available
-        if (this.currentProvider === provider && this.currentService) {
-            return this.currentService.isAvailable();
+        // Check if we have a cached service for this provider
+        const cachedEntry = this.serviceCache.get(provider as ServiceProviders);
+        if (cachedEntry && !this.isServiceStale(cachedEntry)) {
+            return cachedEntry.service.isAvailable();
         }
 
         // For other providers, check configuration
@@ -673,8 +793,9 @@ export class AIServiceManager implements IAIServiceManager {
      * Get metadata about a provider
      */
     getProviderMetadata(provider: string): ProviderMetadata | null {
-        // Only return metadata if this is the current active provider
-        if (this.currentProvider === provider && this.currentService) {
+        // Check if we have a cached service for this provider
+        const cachedEntry = this.serviceCache.get(provider as ServiceProviders);
+        if (cachedEntry && !this.isServiceStale(cachedEntry)) {
             return {
                 name: provider,
                 capabilities: {
@@ -706,21 +827,40 @@ export class AIServiceManager implements IAIServiceManager {
 
 }
 
-// Don't create singleton immediately, use a lazy-loading pattern
+// Singleton instance (lazy-loaded) - can be disposed and recreated
 let instance: AIServiceManager | null = null;
 
 /**
- * Get the AIServiceManager instance (creates it if not already created)
+ * Get the AIServiceManager instance (creates it if not already created or disposed)
  */
 function getInstance(): AIServiceManager {
-    if (!instance) {
+    if (!instance || (instance as any).disposed) {
         instance = new AIServiceManager();
     }
     return instance;
 }
 
+/**
+ * Create a new AIServiceManager instance (for testing or isolated contexts)
+ */
+function createNewInstance(): AIServiceManager {
+    return new AIServiceManager();
+}
+
+/**
+ * Dispose the current singleton instance
+ */
+async function disposeInstance(): Promise<void> {
+    if (instance) {
+        await instance.dispose();
+        instance = null;
+    }
+}
+
 export default {
     getInstance,
+    createNewInstance,
+    disposeInstance,
     // Also export methods directly for convenience
     isAnyServiceAvailable(): boolean {
         return getInstance().isAnyServiceAvailable();

@@ -1,7 +1,4 @@
 import type { Message } from "../ai_interface.js";
-// These imports need to be added for the factory to work
-import { OpenAIMessageFormatter } from "../formatters/openai_formatter.js";
-import { OllamaMessageFormatter } from "../formatters/ollama_formatter.js";
 
 /**
  * Interface for provider-specific message formatters
@@ -32,6 +29,41 @@ export interface MessageFormatter {
      * @returns Maximum context length in characters
      */
     getMaxContextLength(): number;
+}
+
+/**
+ * Default message formatter implementation
+ */
+class DefaultMessageFormatter implements MessageFormatter {
+    formatMessages(messages: Message[], systemPrompt?: string, context?: string): Message[] {
+        const formattedMessages: Message[] = [];
+        
+        // Add system prompt if provided
+        if (systemPrompt || context) {
+            const systemContent = [systemPrompt, context].filter(Boolean).join('\n\n');
+            if (systemContent) {
+                formattedMessages.push({
+                    role: 'system',
+                    content: systemContent
+                });
+            }
+        }
+        
+        // Add the rest of the messages
+        formattedMessages.push(...messages);
+        
+        return formattedMessages;
+    }
+
+    cleanContextContent(content: string): string {
+        // Basic cleanup: trim and remove excessive whitespace
+        return content.trim().replace(/\n{3,}/g, '\n\n');
+    }
+
+    getMaxContextLength(): number {
+        // Default to a reasonable context length
+        return 10000;
+    }
 }
 
 /**
@@ -69,23 +101,9 @@ export class MessageFormatterFactory {
             return this.formatters[providerKey];
         }
 
-        // Create and cache new formatter
-        switch (providerKey) {
-            case 'openai':
-                this.formatters[providerKey] = new OpenAIMessageFormatter();
-                break;
-            case 'anthropic':
-                console.warn('Anthropic formatter not available, using OpenAI formatter as fallback');
-                this.formatters[providerKey] = new OpenAIMessageFormatter();
-                break;
-            case 'ollama':
-                this.formatters[providerKey] = new OllamaMessageFormatter();
-                break;
-            default:
-                // Default to OpenAI formatter for unknown providers
-                console.warn(`No specific formatter for provider: ${providerName}. Using OpenAI formatter as default.`);
-                this.formatters[providerKey] = new OpenAIMessageFormatter();
-        }
+        // For now, all providers use the default formatter
+        // In the future, we can add provider-specific formatters here
+        this.formatters[providerKey] = new DefaultMessageFormatter();
 
         return this.formatters[providerKey];
     }
