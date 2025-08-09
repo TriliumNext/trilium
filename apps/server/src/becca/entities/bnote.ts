@@ -1758,6 +1758,41 @@ class BNote extends AbstractBeccaEntity<BNote> {
         return childBranches;
     }
 
+    /**
+     * Return an attribute by it's attributeId.  Requires the attribute cache to be available.
+     * @param attributeId - the id of the attribute owned by this note
+     * @returns - the BAttribute with the given id or undefined if not found.
+     */
+    getAttributeById(attributeId : string): BAttribute | undefined {
+        this.__ensureAttributeCacheIsAvailable();
+
+        if (!this.__attributeCache) {
+            throw new Error("Attribute cache not available.");
+        }
+
+        return this.__attributeCache.find((attr) => attr.attributeId === attributeId);
+    }
+
+    /**
+     * Sets an attribute's value by it's attributeId.
+     * @param attributeId - the id of the attribute owned by this note
+     * @param value - the new value to replace
+     */
+    setAttributeValueById(attributeId : string, value? : string) {
+        const attributes = this.getOwnedAttributes();
+        const attr = attributes.find((attr) => attr.attributeId === attributeId);
+
+        value = value?.toString() || "";
+
+        if (attr) {
+            if (attr.value !== value) {
+                attr.value = value;
+                attr.save();
+            }
+        } else {
+            throw new Error(`Attribute with id ${attributeId} not found.`);
+        }
+    }
 }
 
 export default BNote;
